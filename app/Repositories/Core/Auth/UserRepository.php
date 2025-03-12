@@ -60,16 +60,25 @@ class UserRepository extends BaseRepository
 
     public function getPermissionsForFrontEnd()
     {
-        $permissions = resolve(UserRepository::class)
-            ->getAuthUserPermissions();
-
-        return $permissions->map(function ($permission) {
-            return [
-                $permission['name'] => true
-            ];
+        $permissions = resolve(UserRepository::class)->getAuthUserPermissions();
+    
+        $formattedPermissions = $permissions->map(function ($permission) {
+            return [$permission['name'] => true];
         })->reduce(function ($pre, $permission) {
             return array_merge($pre, $permission);
         }, []);
+    
+        // Inject "DTR - Clock In/Out" into the sidebar
+        $formattedPermissions['custom_menus'] = [
+            [
+                'name' => 'DTR - Clock In/Out',
+                'url' => '/dtr/clock-in-out',
+                'icon' => 'clock',
+                'permission' => true
+            ]
+        ];
+    
+        return $formattedPermissions;
     }
 
 }

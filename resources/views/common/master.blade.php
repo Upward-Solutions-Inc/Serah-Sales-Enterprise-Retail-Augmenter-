@@ -24,6 +24,7 @@
 <body>
 <div id="app" class="@yield('class')">
     @yield('master')
+    @yield('content')
 </div>
 @guest()
     <script>

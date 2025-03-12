@@ -14,6 +14,9 @@
                      logo-icon-src="{{ $logo_icon }}"
                      logo-url="{{ request()->root()  }}">
             </sidebar>
+            <script>
+                console.log("Permissions Data:", @json($permissions));
+            </script>
         @show
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">
@@ -22,7 +25,7 @@
         </div>
     </div>
 @endsection
-
+    
 @push('before-scripts')
     <script>
         window.tenant = <?php echo json_encode(tenant()) ?>

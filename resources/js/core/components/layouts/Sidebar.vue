@@ -10,8 +10,8 @@
         </div>
 
         <ul class="nav nav-scrolling">
-
-            <li class="nav-item" v-for="(item, index) in data" :key="index" v-if="item.permission">
+            <!-- 🔥 Render Default Sidebar Items -->
+            <li class="nav-item" v-for="(item, index) in data" :key="'menu-' + index" v-if="item.permission">
                 <a class="nav-link"
                    :href="item.id ? '#'+item.id : item.url"
                    :data-toggle="item.id ? 'collapse' : false"
@@ -28,7 +28,7 @@
                     <ul class="nav flex-column sub-menu">
                         <li class="nav-item"
                             v-for="(submenuItem, index) in item.subMenu"
-                            :key="index"
+                            :key="'submenu-' + index"
                             v-if="submenuItem.permission === true || submenuItem.permission === ''">
                             <a class="nav-link" :href="submenuItem.url">
                                 {{ textTruncate(submenuItem.name, 22) }}
@@ -36,6 +36,16 @@
                         </li>
                     </ul>
                 </div>
+            </li>
+
+            <!-- 🔥 Inject Custom Menus from `localStorage.permissions.custom_menus` -->
+            <li class="nav-item" v-for="(menu, index) in customMenus" :key="'custom-' + index" v-if="menu.permission">
+                <a class="nav-link" :href="menu.url">
+                    <span class="icon-wrapper">
+                        <app-icon :name="menu.icon" class="menu-icon"/>
+                    </span>
+                    <span class="menu-title">{{ textTruncate(menu.name) }}</span>
+                </a>
             </li>
         </ul>
     </nav>
@@ -64,7 +74,17 @@ export default {
             default: '/'
         }
     },
+    data() {
+        return {
+            customMenus: [] // Store custom menus
+        };
+    },
     mounted() {
+        // 🔥 Load custom menus from `localStorage.permissions`
+        const permissions = JSON.parse(localStorage.getItem('permissions')) || {};
+        this.customMenus = permissions.custom_menus || [];
+        console.log("🔥 Custom Menus Loaded:", this.customMenus);
+
         this.$nextTick(function () {
             let body = $('body'),
                 current = location.pathname,
@@ -72,7 +92,6 @@ export default {
                 sidebarType = localStorage.getItem('sidebar');
 
             $(function () {
-                // Add active class to nav-link based on url dynamically
                 function addActiveClass(element) {
                     if (element.attr('href').indexOf(current) !== -1) {
                         element.parents('.nav-item').last().addClass('active');
@@ -106,16 +125,13 @@ export default {
                     addActiveClass($this);
                 });
 
-                // Close other submenu in sidebar on opening any
                 sidebar.on('show.bs.collapse', '.collapse', function () {
                     sidebar.find('.collapse.show').collapse('hide');
                 });
 
-                // Change sidebar and content-wrapper height
                 applyStyles();
 
                 function applyStyles() {
-                    //Applying perfect scrollbar
                     if (!body.hasClass("rtl")) {
                         if (body.hasClass("sidebar-fixed")) {
                             let fixedSidebarScroll = new PerfectScrollbar('#sidebar .nav');
@@ -124,7 +140,6 @@ export default {
                 }
             });
 
-            // Sidebar collapse menu on hover
             $(document).on('mouseenter mouseleave click', '.sidebar .nav-item', function (ev) {
                 let body = $('body');
                 let sidebarIconOnly = body.hasClass("sidebar-icon-only");
@@ -147,12 +162,9 @@ export default {
                 }
             });
 
-            // Close collapse menu when mouse leave from sidebar hover only
             $(document).on('mouseenter mouseleave', '.sidebar-hover-only .sidebar', function (ev) {
                 if (ev.type === 'mouseleave') {
                     $('.sidebar').find('.collapse.show').collapse('hide');
-                } else {
-
                 }
             });
         });
