@@ -12,14 +12,36 @@
         @show
 
         @section('side-bar')
-            <sidebar :data="{{ json_encode($permissions)  }}"
+            @php
+                $sidebarMenu = json_decode(json_encode($permissions), true);
+
+                $sidebarMenu[] = [
+                    'id' => 'hr_system',
+                    'icon' => 'briefcase',
+                    'name' => 'HR System',
+                    'permission' => true,
+                    'subMenu' => [
+                        [
+                            'name' => 'Daily Time Record',
+                            'url' => url('/dtr/clock-in-out'),
+                            'permission' => true
+                        ],
+                        [
+                            'name' => 'Payroll',
+                            'url' => url('/payroll/reports'),
+                            'permission' => true
+                        ]
+                    ]
+                ];
+            @endphp
+            <sidebar :data="{{ json_encode($sidebarMenu)  }}"
                      logo-src="{{ $logo }}"
                      logo-icon-src="{{ $logo_icon }}"
                      logo-url="{{ request()->root()  }}">
             </sidebar>
-            <script>
+            <!-- <script>
                 console.log("Permissions Data:", @json($permissions));
-            </script>
+            </script> -->
         @show
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">
