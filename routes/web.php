@@ -83,11 +83,5 @@ Route::get('/php-info-test', [InstallDemoDataController::class, 'phpInfo']);
 
 //============================================================================
 //Added Application
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dtr/clock-in-out', function () {
-        return view('custom.dtr.clock_in_out');
-    })->name('dtr.clock_in_out');
-
-    Route::post('/dtr/clock-in', [App\Http\Controllers\Application\DTR\DtrController::class, 'clockIn']);
-    Route::post('/dtr/clock-out', [App\Http\Controllers\Application\DTR\DtrController::class, 'clockOut']);
-});
+require base_path('routes/dtr/dtr.php');
+require base_path('routes/payroll/payroll.php');

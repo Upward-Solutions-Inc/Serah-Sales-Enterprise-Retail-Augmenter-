@@ -80,7 +80,3 @@ Vue.prototype.$hub = new Vue();
 
 import AppCookie from "./helpers/cookies/AppCookies";
 window.AppCookie = AppCookie;
-
-new Vue({
-    el: '#app'
-});

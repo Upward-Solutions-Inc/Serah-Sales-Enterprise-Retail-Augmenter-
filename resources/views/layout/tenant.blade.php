@@ -6,6 +6,9 @@
             <app-top-navigation-bar logo-icon-src="{{ $logo_icon }}"
                                     :profile-data="{{ json_encode($top_bar_menu) }}">
             </app-top-navigation-bar>
+            <script>
+                console.log("Top Bar Menu Data:", @json($top_bar_menu));
+            </script>
         @show
 
         @section('side-bar')

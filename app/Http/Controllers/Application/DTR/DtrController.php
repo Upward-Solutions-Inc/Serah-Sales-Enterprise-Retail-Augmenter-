@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Log;
 
 class DtrController extends Controller
 {
+    public function index()
+    {
+        return view('custom.dtr.clock_in_out');
+    }
+
     public function clockIn(Request $request)
     {
         $user = Auth::user();
