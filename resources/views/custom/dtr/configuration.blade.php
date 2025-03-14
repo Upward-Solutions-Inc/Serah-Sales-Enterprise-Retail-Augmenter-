@@ -38,19 +38,22 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Grace Period (Morning Shift)</label>
-                                <input type="time" class="form-control" value="08:05">
+                                <input type="text" class="form-control timepicker" name="grace_period_morning" 
+                                       value="{{ $dtrConfig->grace_period_morning ?? '08:05 AM' }}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>Morning Shift In</label>
-                                <input type="time" class="form-control" value="08:00">
+                                <label>Morning Shift Start</label>
+                                <input type="text" class="form-control timepicker" name="morning_shift_start" 
+                                       value="{{ $dtrConfig->morning_shift_start ?? '08:00 AM' }}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>Morning Shift Out</label>
-                                <input type="time" class="form-control" value="12:00">
+                                <label>Morning Shift End</label>
+                                <input type="text" class="form-control timepicker" name="morning_shift_end" 
+                                       value="{{ $dtrConfig->morning_shift_end ?? '12:00 PM' }}">
                             </div>
                         </div>
                     </div>
@@ -59,19 +62,22 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Grace Period (Afternoon Shift)</label>
-                                <input type="time" class="form-control" value="13:05">
+                                <input type="text" class="form-control timepicker" name="grace_period_afternoon" 
+                                       value="{{ $dtrConfig->grace_period_afternoon ?? '01:05 PM' }}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>Afternoon Shift In</label>
-                                <input type="time" class="form-control" value="13:00">
+                                <label>Afternoon Shift Start</label>
+                                <input type="text" class="form-control timepicker" name="afternoon_shift_start" 
+                                       value="{{ $dtrConfig->afternoon_shift_start ?? '01:00 PM' }}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Afternoon Shift Out</label>
-                                <input type="time" class="form-control" value="17:00">
+                                <input type="text" class="form-control timepicker" name="afternoon_shift_out" 
+                                       value="{{ $dtrConfig->afternoon_shift_out ?? '05:00 PM' }}">
                             </div>
                         </div>
                     </div>
@@ -79,8 +85,9 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="form-group">
-                                <label>Surplus Time Considered As Overtime (Default 30 min)</label>
-                                <input type="time" class="form-control" value="17:30">
+                                <label>Overtime Threshold</label>
+                                <input type="text" class="form-control timepicker" name="overtime_threshold" 
+                                       value="{{ $dtrConfig->overtime_threshold ?? '05:30 PM' }}">
                             </div>
                         </div>
                     </div>
@@ -89,7 +96,31 @@
 
             <!-- Specific Tab -->
             <div class="tab-pane fade" id="specific" role="tabpanel">
-                <p>Specific configuration settings go here...</p>
+                <form action="">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Grace Period (Night Shift)</label>
+                                <input type="text" class="form-control timepicker" name="grace_period_night" 
+                                       value="{{ $dtrConfig->grace_period_night ?? '05:05 PM' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Night Shift Start</label>
+                                <input type="text" class="form-control timepicker" name="night_shift_start" 
+                                       value="{{ $dtrConfig->night_shift_start ?? '05:00 PM' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Night Shift End</label>
+                                <input type="text" class="form-control timepicker" name="night_shift_end" 
+                                       value="{{ $dtrConfig->night_shift_end ?? '03:00 AM' }}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
 
             <!-- Action Buttons -->
@@ -101,8 +132,19 @@
     </div>
 </div>
 
-
 <script>
-
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr(".timepicker", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "h:i K", // 12-hour format with AM/PM
+            time_24hr: false
+        });
+    });
 </script>
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 @endsection

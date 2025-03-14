@@ -11,11 +11,11 @@
         </div>
 
         <div class="row no-gutter">
-            <div class="col-lg-3 mt-5">
+            <div class="col-lg-2 mt-5">
                 <div class="card text-center shadow pt-4">
                     <h6 class="card-title">Employee Profile</h6>
                     <div class="d-flex justify-content-center">
-                        <img src="{{ auth()->user()->profile_picture ?? 'https://static.vecteezy.com/system/resources/thumbnails/024/983/914/small_2x/simple-user-default-icon-free-png.png' }}" 
+                        <img src="{{ auth()->user()->profile_picture ?? '/images/avatar.png' }}" 
                             alt="Profile Picture"
                             class="rounded-circle"
                             style="width: 80px; height: 80px; object-fit: cover;">
@@ -33,7 +33,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-9 mt-2">
+            <div class="col-lg-10 mt-2">
                 <div class="datatable">
                     <div class="my-2 d-flex justify-content-between">
                         <div class="d-flex align-items-center">
@@ -51,16 +51,13 @@
                                         <span class="font-size-default">Date</span>
                                     </th>
                                     <th track-by="2" class="datatable-th pt-0">
-                                        <span class="font-size-default">Morning In</span>
+                                        <span class="font-size-default">Shift</span>
+                                    </th>
+                                    <th track-by="2" class="datatable-th pt-0">
+                                        <span class="font-size-default">Clock In</span>
                                     </th>
                                     <th track-by="3" class="datatable-th pt-0">
-                                        <span class="font-size-default">Morning Out</span>
-                                    </th>
-                                    <th track-by="4" class="datatable-th pt-0">
-                                        <span class="font-size-default">Afternoon In</span>
-                                    </th>
-                                    <th track-by="5" class="datatable-th pt-0">
-                                        <span class="font-size-default">Afternoon Out</span>
+                                        <span class="font-size-default">Clock Out</span>
                                     </th>
                                     <th track-by="6" class="datatable-th pt-0 text-right">
                                         <span class="font-size-default">Late</span>
@@ -74,7 +71,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-
+                                <!-- contents here tr -->
                             </tbody>
                         </table>
                         <div class="no-data-found-wrapper text-center p-primary">
