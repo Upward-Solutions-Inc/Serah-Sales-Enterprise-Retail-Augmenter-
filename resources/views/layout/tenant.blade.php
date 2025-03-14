@@ -14,24 +14,26 @@
         @section('side-bar')
             @php
                 $sidebarMenu = json_decode(json_encode($permissions), true);
+                $sidebarMenu[] = [
+                    'name' => 'Daily Time Record',
+                    'id' => 'dtr_system',
+                    'icon' => 'clock',
+                    'subMenu' => [
+                        ['name' => 'Clock In/Out', 'url' => url('/dtr/clock-in-out'), 'permission' => true],
+                        ['name' => 'Configuration', 'url' => url('/dtr/configuration'), 'permission' => true]
+                    ],
+                    'permission' => true
+                ];
 
                 $sidebarMenu[] = [
-                    'id' => 'hr_system',
-                    'icon' => 'briefcase',
-                    'name' => 'HR System',
-                    'permission' => true,
+                    'name' => 'Payroll',
+                    'id' => 'payroll_system',
+                    'icon' => 'dollar-sign',
                     'subMenu' => [
-                        [
-                            'name' => 'Daily Time Record',
-                            'url' => url('/dtr/clock-in-out'),
-                            'permission' => true
-                        ],
-                        [
-                            'name' => 'Payroll',
-                            'url' => url('/payroll/reports'),
-                            'permission' => true
-                        ]
-                    ]
+                        ['name' => 'Payslip', 'url' => url('/payroll/payslip'), 'permission' => true],
+                        ['name' => 'Reports', 'url' => url('/payroll/reports'), 'permission' => true]
+                    ],
+                    'permission' => true
                 ];
             @endphp
             <sidebar :data="{{ json_encode($sidebarMenu)  }}"
@@ -39,9 +41,9 @@
                      logo-icon-src="{{ $logo_icon }}"
                      logo-url="{{ request()->root()  }}">
             </sidebar>
-            <!-- <script>
-                console.log("Permissions Data:", @json($permissions));
-            </script> -->
+            <script>
+                console.log("Permissions Data:", @json($sidebarMenu));
+            </script>
         @show
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">
