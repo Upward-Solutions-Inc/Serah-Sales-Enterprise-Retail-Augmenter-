@@ -12,7 +12,7 @@
     </div>
 
     <div class="row no-gutter">
-        <div class="col-lg-3 mt-5">
+        <div class="col-lg-2 mt-5">
             <div class="card text-center shadow pt-4">
                 <h6 class="card-title">Employee Profile</h6>
                 <div class="d-flex justify-content-center">
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="col-lg-9 mt-2">
+        <div class="col-lg-10 mt-2">
             <div class="datatable">
                 <div class="my-2 d-flex justify-content-between">
                     <div class="d-flex align-items-center">
