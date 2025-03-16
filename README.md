@@ -2,8 +2,8 @@
 
 # Modules & UI
 Daily Time Record  
-├── Clock In/Out ✔️
-├── Configuration ✔️
+├── Time Clock ✔️
+├── Schedule (Regular & Night) ✔️
 ├── Overtime  (request to HR/admin) ~
 ├── Time Logs ~
 
@@ -16,7 +16,7 @@ Payroll
 dtr_logs
 dtr_config
 
-# DTR Configuration
+# DTR Schedule
 - General Case
 ● TIME VARIABLES
 Grace Period | Morning shift In | Morning shift Out

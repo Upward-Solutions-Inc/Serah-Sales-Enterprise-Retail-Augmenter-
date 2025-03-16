@@ -1,29 +1,29 @@
 @extends('layout.tenant')
 
-@section('title', __('Configuration'))
+@section('title', __('Schedule'))
 
 @section('contents')
 <div class="content-wrapper">
     <div class="row">
         <div class="col-sm-3">
-            <h4>Configuration</h4>
+            <h4>Schedule</h4>
         </div>
     </div>
 
     <div class="container mt-4">
-        <h5>DTR Configuration</h5>
+        <h5>DTR Schedule</h5>
 
         <!-- Tab Navigation -->
         <div class="row">
             <ul class="nav nav-tabs custom-tabs" id="dtrTab" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" id="general-tab" data-toggle="tab" href="#general" role="tab">
-                        General
+                        Regular Shift
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="specific-tab" data-toggle="tab" href="#specific" role="tab">
-                        Specific
+                        Night Shift
                     </a>
                 </li>
             </ul>

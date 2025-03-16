@@ -19,8 +19,8 @@
                     'id' => 'dtr_system',
                     'icon' => 'clock',
                     'subMenu' => [
-                        ['name' => 'Clock In/Out', 'url' => url('/dtr/clock-in-out'), 'permission' => true],
-                        ['name' => 'Configuration', 'url' => url('/dtr/configuration'), 'permission' => true]
+                        ['name' => 'Time Clock', 'url' => url('/dtr/clock-in-out'), 'permission' => true],
+                        ['name' => 'Schedule', 'url' => url('/dtr/configuration'), 'permission' => true]
                     ],
                     'permission' => true
                 ];

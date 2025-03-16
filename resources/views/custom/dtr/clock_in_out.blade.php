@@ -1,12 +1,12 @@
 @extends('layout.tenant')
 
-@section('title', __('Clock In/Out'))
+@section('title', __('Time Clock'))
 
 @section('contents')
     <div class="content-wrapper">
         <div class="row">
             <div class="col-sm-3">
-                <h4>Clock In/Out</h4>
+                <h4>Time Clock</h4>
             </div>
         </div>
 
