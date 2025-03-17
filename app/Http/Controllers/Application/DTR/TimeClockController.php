@@ -7,11 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-class DtrController extends Controller
+class TimeClockController extends Controller
 {
     public function index()
-    {
-        return view('custom.dtr.clock_in_out');
+    {   
+        return view('custom.dtr.time_clock');
     }
 
     public function clockIn(Request $request)

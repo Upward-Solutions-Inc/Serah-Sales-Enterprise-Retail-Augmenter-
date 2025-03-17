@@ -108,7 +108,7 @@
             setInterval(updateDateTime, 1000); 
 
             document.getElementById("clockInBtn").addEventListener("click", function () {
-                fetch("/dtr/clock-in", {
+                fetch("/timeclock/clock-in", {
                     method: "POST",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
@@ -123,7 +123,7 @@
                     });
 
             document.getElementById("clockOutBtn").addEventListener("click", function () {
-                fetch("/dtr/clock-out", {
+                fetch("/timeclock/clock-out", {
                     method: "POST",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),

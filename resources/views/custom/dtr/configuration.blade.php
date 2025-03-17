@@ -4,6 +4,11 @@
 
 @section('contents')
 <div class="content-wrapper">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+        </div>
+    @endif
     <div class="row">
         <div class="col-sm-3">
             <h4>Schedule</h4>
@@ -31,9 +36,10 @@
 
         <!-- Tab Content -->
         <div class="tab-content mt-3">
-            <!-- General Tab -->
+            <!-- Regular Shift Tab -->
             <div class="tab-pane fade show active" id="general" role="tabpanel">
-                <form>
+                <form action="{{ route('config.config.store') }}" method="POST" id="regularShiftForm">
+                    @csrf
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
@@ -94,9 +100,10 @@
                 </form>
             </div>
 
-            <!-- Specific Tab -->
+            <!-- Night Shift Tab -->
             <div class="tab-pane fade" id="specific" role="tabpanel">
-                <form action="">
+                <form action="{{ route('config.config.store') }}" method="POST" id="nightShiftForm">
+                    @csrf
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
@@ -126,25 +133,50 @@
             <!-- Action Buttons -->
             <div class="mt-3 text-right">
                 <button type="button" class="btn btn-secondary">Cancel</button>
-                <button type="button" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-primary" id="saveChangesBtn">Save Changes</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // date-time
     document.addEventListener("DOMContentLoaded", function() {
+
+        setTimeout(function() {
+            document.querySelector(".alert-success").classList.add("fade");
+            setTimeout(function() {
+                document.querySelector(".alert-success").remove();
+            }, 500); // Wait for fade out
+        }, 1500); // Auto-close after 3 seconds
+
         flatpickr(".timepicker", {
             enableTime: true,
             noCalendar: true,
             dateFormat: "h:i K", // 12-hour format with AM/PM
             time_24hr: false
         });
+
+        let activeTab = localStorage.getItem("activeTab") || "#general";
+        $('.nav-tabs a[href="' + activeTab + '"]').tab('show');
+
+        $('.nav-tabs a').on('shown.bs.tab', function(event) {
+            localStorage.setItem("activeTab", $(event.target).attr("href"));
+        });
+
+        // Submit only the active tab's form
+        document.getElementById("saveChangesBtn").addEventListener("click", function() {
+            let activeTabId = document.querySelector(".tab-pane.active").id;
+            let activeForm = document.querySelector(`#${activeTabId} form`);
+            if (activeForm) {
+                activeForm.submit();
+            }
+        });
+
     });
 </script>
 
-<!-- Flatpickr CSS -->
+<!-- Flatpickr -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 @endsection

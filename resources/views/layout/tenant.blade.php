@@ -19,8 +19,8 @@
                     'id' => 'dtr_system',
                     'icon' => 'clock',
                     'subMenu' => [
-                        ['name' => 'Time Clock', 'url' => url('/dtr/clock-in-out'), 'permission' => true],
-                        ['name' => 'Schedule', 'url' => url('/dtr/configuration'), 'permission' => true]
+                        ['name' => 'Time Clock', 'url' => route('timeclock.time_clock'), 'permission' => true],
+                        ['name' => 'Schedule', 'url' => route('config.configuration'), 'permission' => true]
                     ],
                     'permission' => true
                 ];
@@ -30,8 +30,8 @@
                     'id' => 'payroll_system',
                     'icon' => 'dollar-sign',
                     'subMenu' => [
-                        ['name' => 'Payslip', 'url' => url('/payroll/payslip'), 'permission' => true],
-                        ['name' => 'Reports', 'url' => url('/payroll/reports'), 'permission' => true]
+                        ['name' => 'Payslip', 'url' => route('payslip.payslip'), 'permission' => true],
+                        ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true]
                     ],
                     'permission' => true
                 ];

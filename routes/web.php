@@ -83,5 +83,7 @@ Route::get('/php-info-test', [InstallDemoDataController::class, 'phpInfo']);
 
 //============================================================================
 //Added Application
-require base_path('routes/dtr/dtr.php');
-require base_path('routes/payroll/payroll.php');
+require base_path('routes/hr/dtr/time_clock.php');
+require base_path('routes/hr/dtr/config.php');
+require base_path('routes/hr/payroll/payroll.php');
+require base_path('routes/hr/payroll/payslip.php');
