@@ -6,9 +6,6 @@
             <app-top-navigation-bar logo-icon-src="{{ $logo_icon }}"
                                     :profile-data="{{ json_encode($top_bar_menu) }}">
             </app-top-navigation-bar>
-            <script>
-                console.log("Top Bar Menu Data:", @json($top_bar_menu));
-            </script>
         @show
 
         @section('side-bar')
@@ -41,9 +38,6 @@
                      logo-icon-src="{{ $logo_icon }}"
                      logo-url="{{ request()->root()  }}">
             </sidebar>
-            <script>
-                console.log("Permissions Data:", @json($sidebarMenu));
-            </script>
         @show
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">

@@ -132,3 +132,5 @@ DEDUCTIONS
 ✔Loan
 ✔Late
 |
+
+# use -- User.php -- to get the current log user
