@@ -40,6 +40,7 @@ return array(
     'App\\Console\\Commands\\DB\\DemoCommand' => $baseDir . '/app/Console/Commands/DB/DemoCommand.php',
     'App\\Console\\Commands\\Service\\CreateServiceCommand' => $baseDir . '/app/Console/Commands/Service/CreateServiceCommand.php',
     'App\\Console\\Kernel' => $baseDir . '/app/Console/Kernel.php',
+    'App\\Events\\DtrLogUpdated' => $baseDir . '/app/Events/DtrLogUpdated.php',
     'App\\Exceptions\\GeneralException' => $baseDir . '/app/Exceptions/GeneralException.php',
     'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
     'App\\Exceptions\\ReportableException' => $baseDir . '/app/Exceptions/ReportableException.php',

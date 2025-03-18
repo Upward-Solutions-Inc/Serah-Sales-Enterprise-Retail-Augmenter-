@@ -900,6 +900,7 @@ class ComposerStaticInit84f2585ba7c701085b23df810703bc44
         'App\\Console\\Commands\\DB\\DemoCommand' => __DIR__ . '/../..' . '/app/Console/Commands/DB/DemoCommand.php',
         'App\\Console\\Commands\\Service\\CreateServiceCommand' => __DIR__ . '/../..' . '/app/Console/Commands/Service/CreateServiceCommand.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
+        'App\\Events\\DtrLogUpdated' => __DIR__ . '/../..' . '/app/Events/DtrLogUpdated.php',
         'App\\Exceptions\\GeneralException' => __DIR__ . '/../..' . '/app/Exceptions/GeneralException.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Exceptions\\ReportableException' => __DIR__ . '/../..' . '/app/Exceptions/ReportableException.php',
