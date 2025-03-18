@@ -207,6 +207,7 @@ return [
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Milon\Barcode\BarcodeServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
+        BeyondCode\LaravelWebSockets\WebSocketsServiceProvider::class,
 
     ],
     /*
