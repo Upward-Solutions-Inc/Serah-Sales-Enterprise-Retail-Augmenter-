@@ -15,8 +15,8 @@ class DtrLogSeeder extends Seeder
             'user_id' => 1, // Directly assigning to user ID 1
             'date' => '2025-03-03',
             'shift' => 'Morning',
-            'clock_in' => Carbon::createFromFormat('Y-m-d h:i A', '2025-03-03 8:10 AM'),
-            'clock_out' => Carbon::createFromFormat('Y-m-d h:i A', '2025-03-03 12:00 PM'),
+            'clock_in' => Carbon::createFromFormat('h:i A', '8:10 AM'),
+            'clock_out' => Carbon::createFromFormat('h:i A', '12:00 PM'),
             'late_minutes' => 10,
             'overtime_minutes' => 0,
             'total_work_hours' => 3.83, // 3 hours 50 minutes
@@ -27,8 +27,8 @@ class DtrLogSeeder extends Seeder
             'user_id' => 1, // Directly assigning to user ID 1
             'date' => '2025-03-03',
             'shift' => 'Afternoon',
-            'clock_in' => Carbon::createFromFormat('Y-m-d h:i A', '2025-03-03 1:00 PM'),
-            'clock_out' => Carbon::createFromFormat('Y-m-d h:i A', '2025-03-03 5:30 PM'),
+            'clock_in' => Carbon::createFromFormat('h:i A', '1:00 PM'),
+            'clock_out' => Carbon::createFromFormat('h:i A', '5:30 PM'),
             'late_minutes' => 0,
             'overtime_minutes' => 30,
             'total_work_hours' => 4.5, // 4 hours 30 minutes

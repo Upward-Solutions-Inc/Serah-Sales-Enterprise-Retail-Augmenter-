@@ -70,23 +70,9 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse ($logs as $log)
-                                    <tr>
-                                        <td>{{ \Carbon\Carbon::parse($log->date)->format('M d, Y') }}</td>
-                                        <td>{{ $log->user->first_name ?? 'N/A' }} {{ $log->user->last_name ?? '' }}</td>
-                                        <td>{{ $log->shift }}</td>
-                                        <td>{{ $log->clock_in ? \Carbon\Carbon::parse($log->clock_in)->format('h:i A') : '-' }}</td>
-                                        <td>{{ $log->clock_out ? \Carbon\Carbon::parse($log->clock_out)->format('h:i A') : '-' }}</td>
-                                        <td>{{ $log->late_minutes }} min</td>
-                                        <td>{{ $log->overtime_minutes }} min</td>
-                                        <td>
-                                            {{ floor($log->total_work_hours) }} hrs 
-                                            {{ round(($log->total_work_hours - floor($log->total_work_hours)) * 60) }} mins
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
+                            <tbody id="logsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">
                                         <div class="no-data-found-wrapper text-center p-primary">
                                             <img src="http://127.0.0.1:8000/images/no_data.svg" alt="" class="mb-primary">
                                             <p class="mb-0 text-center">Nothing to show here</p>
@@ -95,8 +81,8 @@
                                             </p>
                                             <p class="mb-0 text-center text-secondary font-size-90">Thank you</p>
                                         </div>
-                                    </tr>
-                                @endforelse
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -105,106 +91,207 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            let clockInBtn = document.getElementById("clockInBtn");
-            let clockOutBtn = document.getElementById("clockOutBtn");
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tableBody = document.getElementById("logsTableBody");
+        const clockInBtn = document.getElementById("clockInBtn");
+        const clockOutBtn = document.getElementById("clockOutBtn");
+        const statusMessage = document.getElementById("statusMessage");
 
-            function updateDateTime() {
-                let now = new Date();
-                let options = { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric', 
-                    hour: 'numeric', 
-                    minute: '2-digit', 
-                    second: '2-digit',
-                    hour12: true 
-                };
-                document.getElementById("currentDateTime").innerText = now.toLocaleString('en-US', options);
-            }
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
 
-            // ✅ Check if the user has an open clock-in record
-            function checkClockStatus() {
-                fetch("/timeclock/status")
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.clocked_in) {
-                            clockInBtn.style.display = "none";
-                            clockOutBtn.style.display = "block";
-                        } else {
-                            clockInBtn.style.display = "block";
-                            clockOutBtn.style.display = "none";
-                        }
-                    })
-                    .catch(error => console.error("Failed to check clock status:", error));
-            }
-            
-            checkClockStatus(); // Call on page load
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        checkClockStatus();
+        reloadTable();
 
-            // ✅ Function to show loader & disable button
-            function setLoading(button, loading) {
-                if (loading) {
-                    button.disabled = true;
-                    button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
-                } else {
-                    button.disabled = false;
-                    button.innerHTML = button.dataset.originalText;
-                }
-            }
 
-            // ✅ Clock-In Event
-            clockInBtn.dataset.originalText = clockInBtn.innerHTML;
-            clockInBtn.addEventListener("click", function () {
-                setLoading(clockInBtn, true);
-                fetch("/timeclock/clock-in", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                        "Content-Type": "application/json",
-                    },
-                })
+        // Real-time Clock Display
+        function updateDateTime() {
+            let now = new Date();
+            let options = { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric', 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+            };
+            document.getElementById("currentDateTime").innerText = now.toLocaleString('en-US', options);
+        }
+
+
+        // Check Clock Status
+        function checkClockStatus() {
+            clockInBtn.style.display = "none";
+            clockOutBtn.style.display = "none";
+
+            fetch("/timeclock/status")
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById("statusMessage").innerText = data.message;
-                    setLoading(clockInBtn, false);
-                    checkClockStatus(); // ✅ Toggle button after clock-in
-                    reloadTable(); // ✅ Refresh table
+                    if (data.clocked_in) {
+                        clockInBtn.style.display = "none";
+                        clockOutBtn.style.display = "block";
+                    } else {
+                        clockInBtn.style.display = "block";
+                        clockOutBtn.style.display = "none";
+                    }
                 })
-                .catch(error => {
-                    alert("Clock In Failed!");
-                    setLoading(clockInBtn, false);
-                    console.error(error);
-                });
-            });
+                .catch(error => console.error("Failed to check clock status:", error));
+        }
 
-            // ✅ Clock-Out Event
-            clockOutBtn.dataset.originalText = clockOutBtn.innerHTML;
-            clockOutBtn.addEventListener("click", function () {
-                setLoading(clockOutBtn, true);
-                fetch("/timeclock/clock-out", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                        "Content-Type": "application/json",
-                    },
-                })
+
+        // Function to show loader & disable button
+        function setLoading(button, loading) {
+            if (loading) {
+                button.disabled = true;
+                button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.dataset.originalText;
+            }
+        }
+
+
+        // Function to Fetch & Render Table Data
+        function reloadTable() {
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center sr-only"></td></tr>';
+
+            fetch("/timeclock/logs")
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById("statusMessage").innerText = data.message;
-                    setLoading(clockOutBtn, false);
-                    checkClockStatus(); // ✅ Toggle button after clock-out
-                    reloadTable(); // ✅ Refresh table
+                    tableBody.innerHTML = data.map(log => `
+                        <tr>
+                            <td>${formatDate(log.date)}</td>
+                            <td>${log.user.first_name} ${log.user.last_name}</td>
+                            <td>${log.shift}</td>
+                            <td>${formatTime(log.clock_in)}</td>
+                            <td>${formatTime(log.clock_out)}</td>
+                            <td>${log.late_minutes} min</td>
+                            <td>${log.overtime_minutes} min</td>
+                            <td>${formatWorkHours(log.total_work_hours)}</td>
+                        </tr>
+                    `).join(""); 
                 })
                 .catch(error => {
-                    alert("Clock Out Failed!");
-                    setLoading(clockOutBtn, false);
-                    console.error(error);
+                    console.error("❌ Failed to reload table:", error);
+                    tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">⚠ Error loading data</td></tr>`;
+                });
+        }
+
+
+        // Clock-In Event
+        clockInBtn.dataset.originalText = clockInBtn.innerHTML;
+        clockInBtn.addEventListener("click", function () {
+            setLoading(clockInBtn, true);
+            fetch("/timeclock/clock-in", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusMessage.innerText = data.message;
+                setLoading(clockInBtn, false);
+                checkClockStatus();
+                reloadTable();
+                Swal.fire({
+                    icon: data.status === "success" ? "success" : "error",
+                    title: data.status === "success" ? "Clocked In!" : "Error",
+                    text: data.message,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            })
+            .catch(error => {
+                alert("Clock In Failed!");
+                setLoading(clockInBtn, false);
+                console.error(error);
+                Swal.fire({
+                    icon: "error",
+                    title: "Clock In Failed",
+                    text: "Something went wrong!",
                 });
             });
-
         });
-    </script>
+
+
+        // Clock-Out Event
+        clockOutBtn.dataset.originalText = clockOutBtn.innerHTML;
+        clockOutBtn.addEventListener("click", function () {
+            setLoading(clockOutBtn, true);
+            fetch("/timeclock/clock-out", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusMessage.innerText = data.message;
+                setLoading(clockOutBtn, false);
+                checkClockStatus();
+                reloadTable();
+                Swal.fire({
+                    icon: data.status === "success" ? "success" : "error",
+                    title: data.status === "success" ? "Clocked Out!" : "Error",
+                    text: data.message,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            })
+            .catch(error => {
+                alert("Clock Out Failed!");
+                setLoading(clockOutBtn, false);
+                console.error(error);
+                Swal.fire({
+                    icon: "error",
+                    title: "Clock Out Failed",
+                    text: "Something went wrong!",
+                });
+            });
+        });
+
+
+        // Function to Format Data
+        function formatTime(time) {
+            return time ? new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '-';
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        }
+
+        function formatWorkHours(hours) {
+            let h = Math.floor(hours);
+            let m = Math.round((hours - h) * 60);
+            return `${h} hrs ${m} mins`;
+        }
+
+
+        // ✅ WebSocket Listener for Real-time Updates
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: 'local', // This should match your PUSHER_APP_KEY
+            wsHost: window.location.hostname,
+            wsPort: 6001, // Port where WebSockets is running
+            forceTLS: false,
+            disableStats: true,
+        });
+
+        Echo.channel('dtr-logs')
+        .listen('.DtrLogUpdated', (data) => {
+            console.log("📡 Received Broadcast:", data);
+            reloadTable(); // Update UI on broadcast event
+        });
+
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.11.2/echo.iife.js"></script>
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+
 @endsection

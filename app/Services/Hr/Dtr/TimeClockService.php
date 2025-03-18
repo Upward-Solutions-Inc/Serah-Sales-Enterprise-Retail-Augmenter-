@@ -2,9 +2,11 @@
 
 namespace App\Services\Hr\Dtr;
 
+use App\Events\DtrLogUpdated;
 use App\Models\Hr\Dtr\DtrConfig;
 use App\Models\Hr\Dtr\DtrLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
 use Carbon\Carbon;
 
 class TimeClockService
@@ -13,47 +15,48 @@ class TimeClockService
     {
         $user = Auth::user();
         $currentDateTime = now();
-        $currentTime = $currentDateTime->format('H:i:s');
         $currentDate = $currentDateTime->format('Y-m-d');
-
+    
         // Get Shift Configurations
-        $shiftConfig = DtrConfig::first();
-
-        // Determine Shift
-        $shift = "Night Shift"; // Default
-        $shiftStart = $shiftConfig->night_shift_start ?? '22:00:00';
-
-        if ($currentTime >= $shiftConfig->morning_shift_start && $currentTime < $shiftConfig->afternoon_shift_start) {
-            $shift = "Morning Shift";
-            $shiftStart = $shiftConfig->morning_shift_start;
-        } elseif ($currentTime >= $shiftConfig->afternoon_shift_start && $currentTime < $shiftConfig->night_shift_start) {
-            $shift = "Afternoon Shift";
-            $shiftStart = $shiftConfig->afternoon_shift_start;
+        $shiftConfig = cache()->remember('dtr_config', now()->addMinutes(10), fn() => DtrConfig::first());
+    
+        $currentTime = Carbon::now();
+        $currentHour = $currentTime->format('h:i A'); // Format as AM/PM
+    
+        // Convert shift end times for accurate evening detection
+        $afternoonShiftEnd = Carbon::parse($shiftConfig->afternoon_shift_out);
+    
+        // Determine Shift Based on AM/PM Logic
+        if ($currentTime->format('A') === 'AM') {
+            $shift = "Morning";
+        } elseif ($currentTime->format('A') === 'PM' && $currentTime->lessThan($afternoonShiftEnd)) {
+            $shift = "Afternoon";
+        } else {
+            $shift = "Night"; // Default for anything after the afternoon shift end
         }
-
-        // Calculate Late Minutes
-        $lateMinutes = max(0, Carbon::parse($shiftStart)->diffInMinutes(Carbon::parse($currentTime), false));
-
+    
         // Save Clock-In Log
         DtrLog::create([
             'user_id' => $user->id,
             'date' => $currentDate,
             'shift' => $shift,
-            'clock_in' => $currentDateTime,
-            'late_minutes' => $lateMinutes,
-            'overtime_minutes' => 0, // Default until clock-out
-            'total_work_hours' => 0   // Default until clock-out
+            'clock_in' => $currentTime,
+            'late_minutes' => 0,
+            'overtime_minutes' => 0,
+            'total_work_hours' => 0
         ]);
-
+    
+        // ✅ Broadcast the event
+        broadcast(new DtrLogUpdated());
+    
         return [
             'status' => 'success',
             'message' => "Clocked in successfully for $shift!",
             'shift' => $shift,
-            'clock_in' => $currentDateTime->format('h:i A'),
-            'late_minutes' => $lateMinutes
+            'clock_in' => $currentDateTime->format('h:i A')
         ];
     }
-
+    
     public function clockOut()
     {
         $user = Auth::user();
@@ -62,8 +65,8 @@ class TimeClockService
 
         // Find the latest clock-in record for the user (without a clock-out time)
         $log = DtrLog::where('user_id', $user->id)
-            ->whereDate('date', $currentDate)
             ->whereNull('clock_out')
+            ->latest('clock_in')
             ->first();
 
         if (!$log) {
@@ -75,37 +78,42 @@ class TimeClockService
 
         // Get shift configuration
         $shiftConfig = DtrConfig::first();
-        $standardWorkHours = 8; // Default work hours
-        $shiftEnd = $shiftConfig->morning_shift_end; // Default shift end
+        $shiftEnd = match ($log->shift) {
+            'Afternoon' => $shiftConfig->afternoon_shift_out,
+            'Night' => $shiftConfig->night_shift_end,
+            default => $shiftConfig->morning_shift_end,
+        };
 
-        if ($log->shift === 'Afternoon Shift') {
-            $shiftEnd = $shiftConfig->afternoon_shift_out;
-        } elseif ($log->shift === 'Night Shift') {
-            $shiftEnd = $shiftConfig->night_shift_end;
-        }
-
-        // Calculate total work hours
+        // Convert times
         $clockInTime = Carbon::parse($log->clock_in);
         $clockOutTime = $currentDateTime;
-        $totalWorkHours = $clockInTime->diffInMinutes($clockOutTime) / 60; // Convert minutes to hours
-
-        // Calculate overtime
         $shiftEndTime = Carbon::parse($shiftEnd);
-        $overtimeMinutes = max(0, $clockOutTime->diffInMinutes($shiftEndTime, false));
 
-        // Update log with clock-out time, total work hours, and overtime
+        // Calculate total work hours
+        $totalWorkMinutes = $clockInTime->diffInMinutes($clockOutTime);
+        $totalWorkHours = round($totalWorkMinutes / 60, 2);
+
+        // ✅ Fix Overtime Calculation (only if clock-out is AFTER shift end)
+        $overtimeMinutes = $clockOutTime->greaterThan($shiftEndTime) 
+            ? $clockOutTime->diffInMinutes($shiftEndTime) 
+            : 0; 
+
+        // Update log
         $log->update([
             'clock_out' => $currentDateTime,
-            'total_work_hours' => round($totalWorkHours, 2),
+            'total_work_hours' => $totalWorkHours,
             'overtime_minutes' => $overtimeMinutes
         ]);
+
+        // Broadcast the event
+        broadcast(new DtrLogUpdated());
 
         return [
             'status' => 'success',
             'message' => "Clocked out successfully!",
             'clock_out' => $clockOutTime->format('h:i A'),
-            'total_hours' => round($totalWorkHours, 2) . ' hrs',
-            'overtime' => $overtimeMinutes . ' mins'
+            'total_hours' => "$totalWorkHours hrs",
+            'overtime' => "$overtimeMinutes mins"
         ];
     }
 }

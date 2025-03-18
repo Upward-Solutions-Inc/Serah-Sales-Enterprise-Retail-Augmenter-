@@ -8,4 +8,6 @@ Route::middleware(['auth'])->prefix('timeclock')->group(function () {
     Route::post('/clock-in', [TimeClockController::class, 'clockIn'])->name('timeclock.clock_in');
     Route::post('/clock-out', [TimeClockController::class, 'clockOut'])->name('timeclock.clock_out');
     Route::get('/status', [TimeClockController::class, 'clockStatus'])->name('timeclock.status');
+    Route::get('/logs', [TimeClockController::class, 'getLogs'])->name('timeclock.logs');
+
 });

@@ -6,7 +6,7 @@ use App\Http\Controllers\InstallDemoDataController;
 use App\Http\Controllers\SymlinkController;
 use App\Http\Middleware\PermissionMiddleware;
 use Illuminate\Support\Facades\Route;
-
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 
 Route::redirect('/', url('admin/users/login'));
 
@@ -72,6 +72,17 @@ Route::group(['prefix' => 'admin', 'middleware' => 'admin', 'as' => 'core.'], fu
      * These routes can not be hit if the password is expired
      */
     include_route_files(__DIR__ . '/core/');
+});
+
+
+// ===========================================================================
+// WebSockets
+WebSocketsRouter::webSocket('/app/{appKey}', \BeyondCode\LaravelWebSockets\WebSockets\WebSocketHandler::class);
+
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/websockets-dashboard', function () {
+        return view('websockets::dashboard');
+    })->name('websockets.dashboard');
 });
 
 //============================================================================

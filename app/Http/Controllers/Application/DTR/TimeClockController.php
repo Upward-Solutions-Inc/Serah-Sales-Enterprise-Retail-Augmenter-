@@ -58,5 +58,12 @@ class TimeClockController extends Controller
             return response()->json(['error' => 'Something went wrong! Check logs.'], 500);
         }
     }
+
+    public function getLogs()
+    {
+        $logs = \App\Models\Hr\Dtr\DtrLog::with('user')->orderBy('created_at', 'desc')->get();
+
+        return response()->json($logs);
+    }
     
 }
