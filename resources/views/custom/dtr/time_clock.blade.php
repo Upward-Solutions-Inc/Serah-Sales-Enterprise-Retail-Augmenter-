@@ -33,6 +33,7 @@
             </div>
 
             <div class="col-lg-10 mt-2">
+
                 <div class="datatable">
                     <div class="my-2 d-flex justify-content-between">
                         <div class="d-flex align-items-center">
@@ -86,6 +87,64 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="row mt-3">
+                    <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                        
+                        <!-- Items per page dropdown -->
+                        <div class="d-flex align-items-center">
+                            <div class="dropdown keep-inside-clicks-open">
+                                <button type="button" id="show-pagination-attendance-request-table" data-toggle="dropdown" 
+                                    class="btn btn-filter d-flex align-items-center" aria-expanded="true">
+                                    10
+                                    <img src="https://payday.gainhq.com/images/chevron-down.svg" alt="" 
+                                        style="height: 16px; width: 16px; margin-left: 5px;">
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-attendance-request-table">
+                                    <a href="#" class="dropdown-item active disabled">10</a>
+                                    <a href="#" class="dropdown-item">20</a>
+                                    <a href="#" class="dropdown-item">30</a>
+                                    <a href="#" class="dropdown-item">40</a>
+                                    <a href="#" class="dropdown-item">50</a>
+                                    <a href="#" class="dropdown-item">100</a>
+                                </div>
+                            </div>
+                            <label class="text-muted ml-2 mb-0">Items showing per page</label>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav>
+                            <ul class="pagination mb-0 justify-content-center justify-content-md-end">
+                                <li class="page-item disabled">
+                                    <a href="#" aria-label="Previous" class="page-link">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="feather feather-arrow-left">
+                                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                                            <polyline points="12 19 5 12 12 5"></polyline>
+                                        </svg>
+                                    </a>
+                                </li>
+                                <li class="page-item active"><a href="#" class="page-link">1</a></li>
+                                <li class="page-item"><a href="#" class="page-link">2</a></li>
+                                <li class="page-item"><a href="#" class="page-link">3</a></li>
+                                <li class="page-item"><a href="#" class="page-link">4</a></li>
+                                <li class="page-item"><a href="#" class="page-link">5</a></li>
+                                <li class="page-item">
+                                    <a href="#" aria-label="Next" class="page-link">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="feather feather-arrow-right">
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            <polyline points="12 5 19 12 12 19"></polyline>
+                                        </svg>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
