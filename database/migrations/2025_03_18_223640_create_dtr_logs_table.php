@@ -15,14 +15,14 @@ return new class extends Migration
     {
         Schema::create('dtr_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
-            $table->date('date');
-            $table->string('shift', 50);
-            $table->dateTime('clock_in')->nullable();
-            $table->dateTime('clock_out')->nullable();
-            $table->integer('late_minutes')->nullable();
-            $table->integer('overtime_minutes')->nullable();
-            $table->decimal('total_work_hours', 5, 2)->nullable();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->date('date'); // Store only the date
+            $table->string('shift', 20); // Morning, Afternoon, Night
+            $table->time('clock_in')->nullable(); // Store only time
+            $table->time('clock_out')->nullable(); // Store only time
+            $table->integer('late_minutes')->default(0);
+            $table->integer('overtime_minutes')->default(0);
+            $table->decimal('total_work_hours', 5, 2)->default(0.00);
             $table->timestamps();
         });
     }

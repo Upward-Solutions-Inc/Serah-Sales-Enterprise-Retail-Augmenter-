@@ -10,30 +10,28 @@ class DtrLogSeeder extends Seeder
 {
     public function run()
     {
-        // Insert Morning Shift for User ID 1
+        DtrLog::truncate(); // Clear previous data
+
         DtrLog::create([
-            'user_id' => 1, // Directly assigning to user ID 1
-            'date' => '2025-03-03',
+            'user_id' => 1, // Assuming user exists
+            'date' => '2025-03-18',
             'shift' => 'Morning',
-            'clock_in' => Carbon::createFromFormat('h:i A', '8:10 AM'),
-            'clock_out' => Carbon::createFromFormat('h:i A', '12:00 PM'),
+            'clock_in' => '08:10:00',
+            'clock_out' => '12:00:00',
             'late_minutes' => 10,
             'overtime_minutes' => 0,
-            'total_work_hours' => 3.83, // 3 hours 50 minutes
+            'total_work_hours' => 3.83,
         ]);
 
-        // Insert Afternoon Shift for User ID 1
         DtrLog::create([
-            'user_id' => 1, // Directly assigning to user ID 1
-            'date' => '2025-03-03',
+            'user_id' => 1,
+            'date' => '2025-03-18',
             'shift' => 'Afternoon',
-            'clock_in' => Carbon::createFromFormat('h:i A', '1:00 PM'),
-            'clock_out' => Carbon::createFromFormat('h:i A', '5:30 PM'),
+            'clock_in' => '13:00:00',
+            'clock_out' => '17:30:00',
             'late_minutes' => 0,
             'overtime_minutes' => 30,
-            'total_work_hours' => 4.5, // 4 hours 30 minutes
-        ]);
-
-        echo "✅ DTR logs seeded successfully for User ID 1!\n";
+            'total_work_hours' => 4.50,
+        ]);;
     }
 }

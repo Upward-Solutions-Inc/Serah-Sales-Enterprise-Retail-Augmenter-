@@ -25,7 +25,6 @@
                         <p class="text-muted small">({{ auth()->user()->role->name ?? 'Employee' }})</p>
                         <button id="clockInBtn" class="btn btn-success w-100">Clock In</button>
                         <button id="clockOutBtn" class="btn btn-danger w-100" style="display: none;">Clock Out</button>
-                        <p id="statusMessage" class="mt-3"></p>
                     </div>
                     <div class="card-footer bg-transparent small text-muted">
                         Today: <p id="currentDateTime" style="display: inline;"></p>
@@ -193,7 +192,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                statusMessage.innerText = data.message;
                 setLoading(clockInBtn, false);
                 checkClockStatus();
                 reloadTable();
@@ -231,7 +229,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                statusMessage.innerText = data.message;
                 setLoading(clockOutBtn, false);
                 checkClockStatus();
                 reloadTable();
@@ -258,7 +255,11 @@
 
         // Function to Format Data
         function formatTime(time) {
-            return time ? new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '-';
+            if (!time || time === "00:00:00") return "-";
+            let [hour, minute] = time.split(":"); // Extract HH and MM
+            let ampm = hour >= 12 ? "PM" : "AM";
+            hour = hour % 12 || 12; // Convert 24-hour format to 12-hour
+            return `${hour}:${minute} ${ampm}`;
         }
 
         function formatDate(date) {
