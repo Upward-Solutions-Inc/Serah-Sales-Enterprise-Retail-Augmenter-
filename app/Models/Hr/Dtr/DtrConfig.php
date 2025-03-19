@@ -10,27 +10,20 @@ class DtrConfig extends Model
 {
     use HasFactory;
 
-    protected $table = 'dtr_config'; // Table name
+    protected $table = 'dtr_config';
 
     protected $fillable = [
-        'grace_period_morning',
+        'grace_period',
+        'overtime',
         'morning_shift_start',
         'morning_shift_end',
-        'grace_period_afternoon',
         'afternoon_shift_start',
-        'afternoon_shift_out',
-        'overtime_threshold',
-        'grace_period_night',
+        'afternoon_shift_end',
         'night_shift_start',
         'night_shift_end'
     ];
 
     // Accessors for formatting time
-    public function getGracePeriodMorningAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('h:i A') : null;
-    }
-
     public function getMorningShiftStartAttribute($value)
     {
         return $value ? Carbon::parse($value)->format('h:i A') : null;
@@ -41,27 +34,12 @@ class DtrConfig extends Model
         return $value ? Carbon::parse($value)->format('h:i A') : null;
     }
 
-    public function getGracePeriodAfternoonAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('h:i A') : null;
-    }
-
     public function getAfternoonShiftStartAttribute($value)
     {
         return $value ? Carbon::parse($value)->format('h:i A') : null;
     }
 
-    public function getAfternoonShiftOutAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('h:i A') : null;
-    }
-
-    public function getOvertimeThresholdAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('h:i A') : null;
-    }
-
-    public function getGracePeriodNightAttribute($value)
+    public function getAfternoonShiftEndAttribute($value)
     {
         return $value ? Carbon::parse($value)->format('h:i A') : null;
     }
@@ -74,5 +52,15 @@ class DtrConfig extends Model
     public function getNightShiftEndAttribute($value)
     {
         return $value ? Carbon::parse($value)->format('h:i A') : null;
+    }
+
+    public function getGracePeriodAttribute($value)
+    {
+        return "{$value}";
+    }
+
+    public function getOvertimeAttribute($value)
+    {
+        return "{$value}";
     }
 }

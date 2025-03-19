@@ -8,17 +8,13 @@ use Carbon\Carbon;
 class DtrConfigService
 {
     public function saveConfig(array $data)
-    {
-        // Convert time fields from 12-hour format to MySQL 24-hour format
+    {   
+        // dd("Data received in service:", $data);
         $timeFields = [
-            'grace_period_morning',
             'morning_shift_start',
             'morning_shift_end',
-            'grace_period_afternoon',
             'afternoon_shift_start',
-            'afternoon_shift_out',
-            'overtime_threshold',
-            'grace_period_night',
+            'afternoon_shift_end',
             'night_shift_start',
             'night_shift_end'
         ];

@@ -103,8 +103,6 @@
                                 <div class="dropdown-menu dropdown-menu-attendance-request-table">
                                     <a href="#" class="dropdown-item active disabled">10</a>
                                     <a href="#" class="dropdown-item">20</a>
-                                    <a href="#" class="dropdown-item">30</a>
-                                    <a href="#" class="dropdown-item">40</a>
                                     <a href="#" class="dropdown-item">50</a>
                                     <a href="#" class="dropdown-item">100</a>
                                 </div>

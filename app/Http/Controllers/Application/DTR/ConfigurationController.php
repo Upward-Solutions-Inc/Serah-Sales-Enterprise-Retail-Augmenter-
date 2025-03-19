@@ -18,28 +18,27 @@ class ConfigurationController extends Controller
 
     public function index()
     {
-        $dtrConfig = DtrConfig::orderBy('updated_at', 'desc')->first() ?? new DtrConfig();
-        // dd($dtrConfig->toArray());
+        $dtrConfig = DtrConfig::latest('updated_at')->first() ?? new DtrConfig();
         return view('custom.dtr.configuration', compact('dtrConfig'));
     }
 
     public function store(Request $request)
-    {
+    {   
         $validatedData = $request->validate([
-            'grace_period_morning' => 'nullable|string',
+            'grace_period' => 'nullable|string',
+            'overtime' => 'nullable|integer|string',
             'morning_shift_start' => 'nullable|string',
             'morning_shift_end' => 'nullable|string',
-            'grace_period_afternoon' => 'nullable|string',
             'afternoon_shift_start' => 'nullable|string',
-            'afternoon_shift_out' => 'nullable|string',
-            'overtime_threshold' => 'nullable|string',
-            'grace_period_night' => 'nullable|string',
+            'afternoon_shift_end' => 'nullable|string',
             'night_shift_start' => 'nullable|string',
             'night_shift_end' => 'nullable|string',
         ]);
+        // dd("Data before sending to service:", $validatedData);
 
         $validatedData = array_filter($validatedData);
         $this->dtrConfigService->saveConfig($validatedData);
+
         return redirect()->route('config.configuration')->with('success', 'Configuration saved successfully.');
     }
 }
