@@ -11,7 +11,7 @@
         </div>
 
         <div class="row no-gutter">
-            <div class="col-lg-2 mt-5">
+            <div class="col-12 col-md-4 col-lg-3 mt-5">
                 <div class="card text-center shadow pt-4">
                     <h6 class="card-title">Employee Profile</h6>
                     <div class="d-flex justify-content-center">
@@ -23,8 +23,10 @@
                     <div class="card-body">
                         <h6 class="mb-1">{{ auth()->user()->name }}</h6>
                         <p class="text-muted small">({{ auth()->user()->role->name ?? 'Employee' }})</p>
-                        <button id="clockInBtn" class="btn btn-success w-100">Clock In</button>
-                        <button id="clockOutBtn" class="btn btn-danger w-100" style="display: none;">Clock Out</button>
+                        <button id="clockBtn" class="btn btn-success w-100">
+                            <span id="clockBtnText">Clock In</span>
+                            <span id="clockSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                        </button>
                     </div>
                     <div class="card-footer bg-transparent small text-muted">
                         Today: <p id="currentDateTime" style="display: inline;"></p>
@@ -32,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-10 mt-2">
+            <div class="col-lg-9 mt-2">
 
                 <div class="datatable">
                     <div class="my-2 d-flex justify-content-between">
@@ -150,9 +152,10 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const tableBody = document.getElementById("logsTableBody");
-        const clockInBtn = document.getElementById("clockInBtn");
-        const clockOutBtn = document.getElementById("clockOutBtn");
-        const statusMessage = document.getElementById("statusMessage");
+        const clockBtn = document.getElementById("clockBtn");
+        const clockBtnText = document.getElementById("clockBtnText");
+        const clockSpinner = document.getElementById("clockSpinner");
+        //const statusMessage = document.getElementById("statusMessage");
 
 
         updateDateTime();
@@ -177,36 +180,75 @@
         }
 
 
+        // Function to show loader & disable button
+        function setLoading(loading) {
+            if (loading) {
+                clockSpinner.classList.remove("d-none");
+                clockBtnText.textContent = "Processing...";
+                clockBtn.disabled = true;
+            } else {
+                clockSpinner.classList.add("d-none");
+                clockBtn.disabled = false;
+                checkClockStatus(); // Refresh button state
+            }
+        }
+
+
         // Check Clock Status
         function checkClockStatus() {
-            clockInBtn.style.display = "none";
-            clockOutBtn.style.display = "none";
-
             fetch("/timeclock/status")
                 .then(response => response.json())
                 .then(data => {
+                    console.log("Clock Status:", data); // Debugging Log
+
                     if (data.clocked_in) {
-                        clockInBtn.style.display = "none";
-                        clockOutBtn.style.display = "block";
+                        clockBtn.classList.remove("btn-success");
+                        clockBtn.classList.add("btn-danger");
+                        clockBtnText.textContent = "Clock Out";
                     } else {
-                        clockInBtn.style.display = "block";
-                        clockOutBtn.style.display = "none";
+                        clockBtn.classList.remove("btn-danger");
+                        clockBtn.classList.add("btn-success");
+                        clockBtnText.textContent = "Clock In";
                     }
                 })
                 .catch(error => console.error("Failed to check clock status:", error));
         }
 
-
-        // Function to show loader & disable button
-        function setLoading(button, loading) {
-            if (loading) {
-                button.disabled = true;
-                button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
-            } else {
-                button.disabled = false;
-                button.innerHTML = button.dataset.originalText;
-            }
-        }
+        clockBtn.addEventListener("click", function () {
+            setLoading(true);
+            let url = clockBtn.classList.contains("btn-danger") ? "/timeclock/clock-out" : "/timeclock/clock-in";
+            
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Clock Response:", data);
+                setLoading(false);
+                checkClockStatus();
+                reloadTable();
+                Swal.fire({
+                    icon: data.status === "success" ? "success" : "error",
+                    title: data.status === "success" ? (url.includes("clock-in") ? "Clocked In!" : "Clocked Out!") : "Error",
+                    text: data.message,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                setLoading(false);
+                Swal.fire({
+                    icon: "error",
+                    title: "Clock Action Failed",
+                    text: "Something went wrong!",
+                });
+            });
+        });
 
 
         // Function to Fetch & Render Table Data
@@ -234,80 +276,6 @@
                     tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">⚠ Error loading data</td></tr>`;
                 });
         }
-
-
-        // Clock-In Event
-        clockInBtn.dataset.originalText = clockInBtn.innerHTML;
-        clockInBtn.addEventListener("click", function () {
-            setLoading(clockInBtn, true);
-            fetch("/timeclock/clock-in", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    "Content-Type": "application/json",
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                setLoading(clockInBtn, false);
-                checkClockStatus();
-                reloadTable();
-                Swal.fire({
-                    icon: data.status === "success" ? "success" : "error",
-                    title: data.status === "success" ? "Clocked In!" : "Error",
-                    text: data.message,
-                    timer: 2500,
-                    showConfirmButton: false
-                });
-            })
-            .catch(error => {
-                alert("Clock In Failed!");
-                setLoading(clockInBtn, false);
-                console.error(error);
-                Swal.fire({
-                    icon: "error",
-                    title: "Clock In Failed",
-                    text: "Something went wrong!",
-                });
-            });
-        });
-
-
-        // Clock-Out Event
-        clockOutBtn.dataset.originalText = clockOutBtn.innerHTML;
-        clockOutBtn.addEventListener("click", function () {
-            setLoading(clockOutBtn, true);
-            fetch("/timeclock/clock-out", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    "Content-Type": "application/json",
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                setLoading(clockOutBtn, false);
-                checkClockStatus();
-                reloadTable();
-                Swal.fire({
-                    icon: data.status === "success" ? "success" : "error",
-                    title: data.status === "success" ? "Clocked Out!" : "Error",
-                    text: data.message,
-                    timer: 2500,
-                    showConfirmButton: false
-                });
-            })
-            .catch(error => {
-                alert("Clock Out Failed!");
-                setLoading(clockOutBtn, false);
-                console.error(error);
-                Swal.fire({
-                    icon: "error",
-                    title: "Clock Out Failed",
-                    text: "Something went wrong!",
-                });
-            });
-        });
 
 
         // Function to Format Data

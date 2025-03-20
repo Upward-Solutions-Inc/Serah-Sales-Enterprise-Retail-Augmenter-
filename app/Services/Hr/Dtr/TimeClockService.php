@@ -14,33 +14,33 @@ class TimeClockService
     public function clockIn()
     {
         $user = Auth::user();
-        $currentDateTime = now();
-        $currentDate = $currentDateTime->format('Y-m-d');
-        $currentTime = $currentDateTime->format('H:i:s');
+        $currentDate = now()->format('Y-m-d');
+        $currentTime = now()->format('H:i:s');
 
         // Get Shift Configurations
         $shiftConfig = cache()->remember('dtr_config', now()->addMinutes(10), fn() => DtrConfig::first());
 
+        $morningShiftEnd = Carbon::parse($shiftConfig->morning_shift_end)->format('H:i:s');
+        $afternoonShiftEnd = Carbon::parse($shiftConfig->afternoon_shift_end)->format('H:i:s');
+        $nightShiftEnd = Carbon::parse($shiftConfig->night_shift_end)->format('H:i:s');
+
         // Determine Shift
         $shift = match (true) {
-            $currentDateTime->between(Carbon::parse($shiftConfig->morning_shift_start), Carbon::parse($shiftConfig->morning_shift_end)) => "Morning",
-            $currentDateTime->between(Carbon::parse($shiftConfig->afternoon_shift_start), Carbon::parse($shiftConfig->afternoon_shift_end)) => "Afternoon",
-            // Night shift crosses midnight, so check both days
-            $currentDateTime->greaterThanOrEqualTo(Carbon::parse($shiftConfig->night_shift_start)) || 
-            $currentDateTime->lessThan(Carbon::parse($shiftConfig->night_shift_end)->addDay()) => "Night",
+            ($currentTime > $nightShiftEnd && $currentTime < $morningShiftEnd) => "Morning",
+            ($currentTime >= $morningShiftEnd && $currentTime < $afternoonShiftEnd) => "Afternoon",
+            ($currentTime >= $afternoonShiftEnd || $currentTime <= $nightShiftEnd) => "Night",
             default => "Night",
         };
 
         // Late Minutes Calculation
         $shiftStartTime = Carbon::parse(match ($shift) {
-            "Morning" => $shiftConfig->morning_shift_start,
-            "Afternoon" => $shiftConfig->afternoon_shift_start,
-            "Night" => $shiftConfig->night_shift_start,
-        });
+            "Morning" => $shiftConfig->morning_shift_start ?? '00:00:00',
+            "Afternoon" => $shiftConfig->afternoon_shift_start ?? '00:00:00',
+            "Night" => $shiftConfig->night_shift_start ?? '00:00:00',
+        })->format('H:i:s');
 
-        $clockInTime = Carbon::parse($currentTime);
-        $lateMinutes = $clockInTime->greaterThan($shiftStartTime) 
-            ? $shiftStartTime->diffInMinutes($clockInTime) 
+        $lateMinutes = Carbon::parse($currentTime)->greaterThan(Carbon::parse($shiftStartTime))
+            ? Carbon::parse($shiftStartTime)->diffInMinutes(Carbon::parse($currentTime))
             : 0;
 
         // Save Clock-In Log
@@ -81,7 +81,7 @@ class TimeClockService
 
         // Prep data variables
         $clockInTime = Carbon::parse($log->clock_in);
-        $clockOutTime = Carbon::parse($currentTime);
+        $clockOutTime = now();
         $shiftConfig = cache()->remember('dtr_config', now()->addMinutes(10), fn() => DtrConfig::first());
 
         $shifts = [
@@ -122,9 +122,17 @@ class TimeClockService
         $shiftEndTime = $shifts[$log->shift]['end'];
 
         // Calculate Overtime
-        $overtimeMinutes = ($clockOutTime->greaterThan($shiftEndTime) && $clockInTime->greaterThanOrEqualTo($shiftStartTime))
+        if ($shiftEndTime->lessThan($shiftStartTime)) { 
+            $shiftEndTime->addDay(); // Fix overnight shifts
+        }
+        
+        $overtimeMinutes = $clockOutTime->greaterThan($shiftEndTime)
             ? $shiftEndTime->diffInMinutes($clockOutTime)
-            : 0;    
+            : 0;
+
+        // $overtimeMinutes = ($clockOutTime->greaterThan($shiftEndTime) && $clockInTime->greaterThanOrEqualTo($shiftStartTime))
+        //     ? $shiftEndTime->diffInMinutes($clockOutTime)
+        //     : 0;    
 
         // Calculate total work hours
         $actualStartTime = $clockInTime->lessThan($shiftStartTime) ? $shiftStartTime : $clockInTime;
