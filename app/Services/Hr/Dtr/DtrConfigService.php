@@ -3,6 +3,7 @@
 namespace App\Services\Hr\Dtr;
 
 use App\Models\Hr\Dtr\DtrConfig;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class DtrConfigService
@@ -10,6 +11,8 @@ class DtrConfigService
     public function saveConfig(array $data)
     {   
         // dd("Data received in service:", $data);
+        Cache::forget('dtr_config');
+        // dd(Cache::get('dtr_config'));
         $timeFields = [
             'morning_shift_start',
             'morning_shift_end',

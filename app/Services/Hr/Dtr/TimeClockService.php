@@ -69,13 +69,13 @@ class TimeClockService
     public function clockOut()
     {
         $user = Auth::user();
-        $currentDateTime = now();
-        $currentTime = $currentDateTime->format('H:i:s');
+        // $currentDate = now()->format('Y-m-d');
+        $currentTime = now()->format('H:i:s');
 
         // Find the latest clock-in record for the user
         $log = DtrLog::where('user_id', $user->id)
             ->whereNull('clock_out')
-            ->orderBy('clock_in', 'asc')
+            ->orderBy('clock_in', 'desc')
             ->first();
         if (!$log) { return ['status' => 'error', 'message' => 'No active clock-in found!']; }
 
@@ -93,16 +93,20 @@ class TimeClockService
         // checking deadlock time
         $deadTimeRanges = [];
         $shiftKeys = array_keys($shifts);
-        for ($i = 0; $i < count($shiftKeys) - 1; $i++) {
+        for ($i = 0; $i < count($shiftKeys); $i++) {
+            $currentShiftEnd = $shifts[$shiftKeys[$i]]['end'];
+            $nextShiftStart = $shifts[$shiftKeys[($i + 1) % count($shifts)]]['start'];
+    
+            // Create deadtime gap between shift end & next shift start
             $deadTimeRanges[] = [
-                'start' => $shifts[$shiftKeys[$i]]['end'],
-                'end' => $shifts[$shiftKeys[$i + 1]]['start']
+                'start' => $currentShiftEnd,
+                'end' => $nextShiftStart
             ];
         }
 
         $isDeadTimeLog = false;
         foreach ($deadTimeRanges as $deadTime) {
-            if ($clockInTime->between($deadTime['start'], $deadTime['end']) && 
+            if ($clockInTime->between($deadTime['start'], $deadTime['end']) &&
                 $clockOutTime->between($deadTime['start'], $deadTime['end'])) {
                 $isDeadTimeLog = true;
                 break;
@@ -114,29 +118,33 @@ class TimeClockService
             $log->delete();
             return [
                 'status' => 'error',
-                'message' => 'Invalid clock-out. Entry deleted in 5 seconds.',
+                'message' => 'Invalid clock-out. Entry deleted because both clock-in & clock-out occurred in deadtime.'
             ];
         }
 
+        // Calculate Overtime
         $shiftStartTime = $shifts[$log->shift]['start'];
         $shiftEndTime = $shifts[$log->shift]['end'];
 
-        // Calculate Overtime
         if ($shiftEndTime->lessThan($shiftStartTime)) { 
             $shiftEndTime->addDay(); // Fix overnight shifts
         }
-        
+
+        if ($clockOutTime->lessThan($clockInTime)) {
+            $clockOutTime->addDay(); // Fix cases where clock-out is after midnight
+        }
+
         $overtimeMinutes = $clockOutTime->greaterThan($shiftEndTime)
             ? $shiftEndTime->diffInMinutes($clockOutTime)
-            : 0;
-
-        // $overtimeMinutes = ($clockOutTime->greaterThan($shiftEndTime) && $clockInTime->greaterThanOrEqualTo($shiftStartTime))
-        //     ? $shiftEndTime->diffInMinutes($clockOutTime)
-        //     : 0;    
+            : 0; 
 
         // Calculate total work hours
         $actualStartTime = $clockInTime->lessThan($shiftStartTime) ? $shiftStartTime : $clockInTime;
-        $totalWorkHours = round($actualStartTime->diffInMinutes($clockOutTime) / 60, 2);
+        $totalWorkMinutes = $actualStartTime->diffInMinutes($clockOutTime);
+        $totalWorkHours = round($totalWorkMinutes / 60, 2);
+
+        // $actualStartTime = $clockInTime->lessThan($shiftStartTime) ? $shiftStartTime : $clockInTime;
+        // $totalWorkHours = round($actualStartTime->diffInMinutes($clockOutTime) / 60, 2);
 
         // Update log
         $log->update([
@@ -153,7 +161,7 @@ class TimeClockService
             'message' => "Clocked out successfully!",
             'clock_out' => Carbon::parse($currentTime)->format('h:i A'),
             'overtime' => "$overtimeMinutes min",
-            'total_hours' => "$totalWorkHours h"
+            'total_hours' => $totalWorkHours
         ];
     }
 }
