@@ -20,6 +20,7 @@ class TimeClockService
         // Get Shift Configurations
         $shiftConfig = cache()->remember('dtr_config', now()->addMinutes(10), fn() => DtrConfig::first());
 
+        $morningShiftStart = Carbon::parse($shiftConfig->morning_shift_start)->hour;
         $morningShiftEnd = Carbon::parse($shiftConfig->morning_shift_end)->format('H:i:s');
         $afternoonShiftEnd = Carbon::parse($shiftConfig->afternoon_shift_end)->format('H:i:s');
         $nightShiftEnd = Carbon::parse($shiftConfig->night_shift_end)->format('H:i:s');
@@ -33,11 +34,16 @@ class TimeClockService
         };
 
         // Late Minutes Calculation
+        $shiftStartDate = $currentDate;
+        if ($shift == "Night" && now()->hour < $morningShiftStart) { 
+            $shiftStartDate = now()->subDay()->format('Y-m-d'); // Use previous day if after midnight
+        }
+
         $shiftStartTime = Carbon::parse(match ($shift) {
-            "Morning" => $shiftConfig->morning_shift_start ?? '00:00:00',
-            "Afternoon" => $shiftConfig->afternoon_shift_start ?? '00:00:00',
-            "Night" => $shiftConfig->night_shift_start ?? '00:00:00',
-        })->format('H:i:s');
+            "Morning" => "$currentDate " . $shiftConfig->morning_shift_start,
+            "Afternoon" => "$currentDate " . $shiftConfig->afternoon_shift_start,
+            "Night" => "$shiftStartDate " . $shiftConfig->night_shift_start,
+        });        
 
         $lateMinutes = Carbon::parse($currentTime)->greaterThan(Carbon::parse($shiftStartTime))
             ? Carbon::parse($shiftStartTime)->diffInMinutes(Carbon::parse($currentTime))
@@ -122,6 +128,30 @@ class TimeClockService
             ];
         }
 
+
+
+
+
+
+        // // Overtime Calculation
+        // $clockInTime = Carbon::parse($log->clock_in);
+        // $clockOutTime = Carbon::parse($currentTime);
+        // $shiftEnd = Carbon::parse($shiftEndTime);
+
+        // $overtimeMinutes = $clockOutTime->greaterThan($shiftEnd)
+        // ? $shiftEnd->diffInMinutes($clockOutTime)
+        // : 0;
+
+        // // Calculate total work hours
+        // $totalWorkMinutes = $clockInTime->diffInMinutes($clockOutTime);
+        // $totalWorkHours = round($totalWorkMinutes / 60, 2);
+
+
+
+
+
+
+
         // Calculate Overtime
         $shiftStartTime = $shifts[$log->shift]['start'];
         $shiftEndTime = $shifts[$log->shift]['end'];
@@ -145,6 +175,12 @@ class TimeClockService
 
         // $actualStartTime = $clockInTime->lessThan($shiftStartTime) ? $shiftStartTime : $clockInTime;
         // $totalWorkHours = round($actualStartTime->diffInMinutes($clockOutTime) / 60, 2);
+
+
+
+
+
+
 
         // Update log
         $log->update([

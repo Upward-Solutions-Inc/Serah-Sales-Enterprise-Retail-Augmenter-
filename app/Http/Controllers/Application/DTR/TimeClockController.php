@@ -46,7 +46,6 @@ class TimeClockController extends Controller
             $currentDate = now()->format('Y-m-d');
     
             $logExists = \App\Models\Hr\Dtr\DtrLog::where('user_id', $user->id)
-                ->whereDate('date', $currentDate)
                 ->whereNull('clock_out')
                 ->exists();
     
@@ -62,7 +61,6 @@ class TimeClockController extends Controller
     public function getLogs()
     {
         $logs = \App\Models\Hr\Dtr\DtrLog::with('user')->orderBy('created_at', 'desc')->get();
-
         return response()->json($logs);
     }
     
