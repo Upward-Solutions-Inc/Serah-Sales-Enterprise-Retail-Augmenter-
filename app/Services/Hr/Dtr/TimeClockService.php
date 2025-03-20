@@ -128,36 +128,16 @@ class TimeClockService
             ];
         }
 
-
-
-
-
-
-        // // Overtime Calculation
-        // $clockInTime = Carbon::parse($log->clock_in);
-        // $clockOutTime = Carbon::parse($currentTime);
-        // $shiftEnd = Carbon::parse($shiftEndTime);
-
-        // $overtimeMinutes = $clockOutTime->greaterThan($shiftEnd)
-        // ? $shiftEnd->diffInMinutes($clockOutTime)
-        // : 0;
-
-        // // Calculate total work hours
-        // $totalWorkMinutes = $clockInTime->diffInMinutes($clockOutTime);
-        // $totalWorkHours = round($totalWorkMinutes / 60, 2);
-
-
-
-
-
-
-
         // Calculate Overtime
         $shiftStartTime = $shifts[$log->shift]['start'];
         $shiftEndTime = $shifts[$log->shift]['end'];
 
         if ($shiftEndTime->lessThan($shiftStartTime)) { 
-            $shiftEndTime->addDay(); // Fix overnight shifts
+            if ($clockInTime->hour >= 12) { 
+                $shiftEndTime->addDay();
+            } else { 
+                $shiftEndTime = $shiftEndTime->setDate($clockOutTime->year, $clockOutTime->month, $clockOutTime->day);
+            }
         }
 
         if ($clockOutTime->lessThan($clockInTime)) {
@@ -165,19 +145,23 @@ class TimeClockService
         }
 
         $overtimeMinutes = $clockOutTime->greaterThan($shiftEndTime)
-            ? $shiftEndTime->diffInMinutes($clockOutTime)
-            : 0; 
+            ? $clockOutTime->diffInMinutes($shiftEndTime)
+            : 0;
 
-        // Calculate total work hours
-        $actualStartTime = $clockInTime->lessThan($shiftStartTime) ? $shiftStartTime : $clockInTime;
+
+        // Calculate Total Hours
+        if ($shiftStartTime->greaterThan($clockInTime) && $clockInTime->hour < 12) {
+            $shiftStartTime = $shiftStartTime->subDay();
+        }
+
+        $actualStartTime = $clockInTime->greaterThanOrEqualTo($shiftStartTime) ? $clockInTime : $shiftStartTime;
+
+        if ($clockOutTime->lessThan($actualStartTime)) {
+            $clockOutTime->addDay();
+        }
+
         $totalWorkMinutes = $actualStartTime->diffInMinutes($clockOutTime);
         $totalWorkHours = round($totalWorkMinutes / 60, 2);
-
-        // $actualStartTime = $clockInTime->lessThan($shiftStartTime) ? $shiftStartTime : $clockInTime;
-        // $totalWorkHours = round($actualStartTime->diffInMinutes($clockOutTime) / 60, 2);
-
-
-
 
 
 
