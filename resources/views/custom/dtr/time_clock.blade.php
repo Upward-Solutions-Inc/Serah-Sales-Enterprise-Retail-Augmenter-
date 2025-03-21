@@ -326,7 +326,7 @@
         function formatWorkHours(hours) {
             let h = Math.floor(hours);
             let m = Math.round((hours - h) * 60);
-            return `${h} hrs ${m} mins`;
+            return `${h} h ${m} min`;
         }
 
 
