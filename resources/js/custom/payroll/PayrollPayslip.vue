@@ -54,13 +54,11 @@
                         <td>{{ formatCurrency(payslip.net) }}</td>
                         <td>
                             <div class="dropdown">
-                                <a href="#" class="text-center" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </a>
+                                <i class="fas fa-ellipsis-v" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
                                 <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#">View</a>
-                                <a class="dropdown-item" href="#">Print</a>
-                                <a class="dropdown-item text-danger" href="#">Delete</a>
+                                  <a class="dropdown-item" href="#">View</a>
+                                  <a class="dropdown-item" href="#">Print</a>
+                                  <a class="dropdown-item text-danger" href="#">Delete</a>
                                 </div>
                             </div>
                         </td>

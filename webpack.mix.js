@@ -13,6 +13,7 @@ const mix = require('laravel-mix');
 mix.options({
     autoprefixer: {remove: false}
 });
+mix.disableNotifications();
 mix.setPublicPath('public')
     .setResourceRoot('../') // Turns assets paths in css relative to css file
     .sass('resources/sass/core/core.scss', 'css/core.css')
