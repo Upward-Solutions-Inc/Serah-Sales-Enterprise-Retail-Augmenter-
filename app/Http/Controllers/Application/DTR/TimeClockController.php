@@ -19,6 +19,8 @@ class TimeClockController extends Controller
 
     public function index()
     {   
+        // $user = auth()->user();
+        // dd($user);
         $logs = \App\Models\Hr\Dtr\DtrLog::with('user')->orderBy('created_at', 'desc')->get();
         return view('custom.dtr.time_clock', compact('logs'));
     }

@@ -1,5 +1,11 @@
 ********* Hr Management System Blueprint  *********
 
+# Things need to run
+- php artisan websockets:serve
+- php artisan serve
+
+
+
 # Modules & UI
 Daily Time Record  
 ├── Time Clock ✔️

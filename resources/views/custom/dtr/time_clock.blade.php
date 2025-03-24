@@ -15,14 +15,14 @@
                 <div class="card text-center shadow pt-4">
                     <h6 class="card-title">Employee Profile</h6>
                     <div class="d-flex justify-content-center">
-                        <img src="{{ auth()->user()->profile_picture ?? '/images/avatar.png' }}" 
+                        <img src="{{ auth()->user()->profilePicture->url ?? '/images/avatar.png' }}" 
                             alt="Profile Picture"
                             class="rounded-circle"
                             style="width: 80px; height: 80px; object-fit: cover;">
                     </div>
                     <div class="card-body">
                         <h6 class="mb-1">{{ auth()->user()->name }}</h6>
-                        <p class="text-muted small">({{ auth()->user()->role->name ?? 'Employee' }})</p>
+                        <p class="text-muted small">({{ auth()->user()->roles->first()->name ?? 'Employee' }})</p>
                         <button id="clockBtn" class="btn btn-success w-100">
                             <span id="clockBtnText">Clock In</span>
                             <span id="clockSpinner" class="spinner-border spinner-border-sm d-none"></span>
