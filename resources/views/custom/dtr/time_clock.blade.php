@@ -196,7 +196,7 @@
 
         // Check Clock Status
         function checkClockStatus() {
-            fetch("/timeclock/status")
+            fetch("/dtr/status")
                 .then(response => response.json())
                 .then(data => {
                     console.log("Clock Status:", data); // Debugging Log
@@ -216,7 +216,7 @@
 
         clockBtn.addEventListener("click", function () {
             setLoading(true);
-            let url = clockBtn.classList.contains("btn-danger") ? "/timeclock/clock-out" : "/timeclock/clock-in";
+            let url = clockBtn.classList.contains("btn-danger") ? "/dtr/clock-out" : "/dtr/clock-in";
             
             fetch(url, {
                 method: "POST",
@@ -255,7 +255,7 @@
         function reloadTable() {
         tableBody.innerHTML = '<tr><td colspan="8" class="text-center sr-only"></td></tr>';
 
-            fetch("/timeclock/logs")
+            fetch("/dtr/logs")
                 .then(response => response.json())
                 .then(data => {
                     tableBody.innerHTML = data.map(log => `

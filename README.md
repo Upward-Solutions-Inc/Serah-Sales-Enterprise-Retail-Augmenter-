@@ -78,7 +78,7 @@ Employee | Date | Shift | Clock In | Clock Out | Late | Overtime | Total Work Ho
 
 
 
-# Payrool
+# Payroll
 
 
 # Salary Computation
@@ -117,6 +117,7 @@ Dropdown - List of all users/employee (will need to select for their specific)
 GROSS PAY
 - Basic Pay
 ✔ Regular Workday (1.0x)
+✔ Regular Restday (1.3x)
 ✔ Regular Holiday (2.0x)
 
 - Overtime
@@ -130,11 +131,13 @@ GROSS PAY
 ✔ Christmas Bonus
 ✔ 13th Month Pay (Mandatory by Law) 
 
-DEDUCTIONS
+- DEDUCTIONS
 ✔ Income Tax (get the online matrix)
+
 ✔SSS (4.5%)
 ✔PhilHealth (2.5%)
 ✔Pagibig ( Default - 100 | 1,500 > MS= 1%, |  1,500 < MS= 2%),
+
 ✔Loan
 ✔Late
 |

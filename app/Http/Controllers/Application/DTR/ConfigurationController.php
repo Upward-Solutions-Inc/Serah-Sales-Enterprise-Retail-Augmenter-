@@ -39,6 +39,6 @@ class ConfigurationController extends Controller
         $validatedData = array_filter($validatedData);
         $this->dtrConfigService->saveConfig($validatedData);
 
-        return redirect()->route('config.configuration')->with('success', 'Configuration saved successfully.');
+        return redirect()->route('dtr.configuration')->with('success', 'Configuration saved successfully.');
     }
 }

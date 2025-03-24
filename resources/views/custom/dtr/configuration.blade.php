@@ -12,7 +12,7 @@
 
     <div class="container mt-4">
         <h5>DTR Schedule</h5>
-        <form action="{{ url('/config/configuration/store') }}" method="POST">
+        <form action="{{ route('dtr.store') }}" method="POST">
             @csrf
 
             <!-- Morning Shift -->

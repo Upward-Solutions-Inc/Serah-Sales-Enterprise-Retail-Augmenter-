@@ -94,7 +94,13 @@ Route::get('/php-info-test', [InstallDemoDataController::class, 'phpInfo']);
 
 //============================================================================
 //Added Application
-require base_path('routes/hr/dtr/time_clock.php');
-require base_path('routes/hr/dtr/config.php');
-require base_path('routes/hr/payroll/payroll.php');
-require base_path('routes/hr/payroll/payslip.php');
+Route::prefix('dtr')->middleware(['auth'])->group(function () {
+    require base_path('routes/hr/dtr/time_clock.php');
+    require base_path('routes/hr/dtr/config.php');
+});
+
+Route::prefix('payroll')->middleware(['auth'])->group(function () {
+    require base_path('routes/hr/payroll/payroll.php');
+    require base_path('routes/hr/payroll/payslip.php');
+    require base_path('routes/hr/payroll/computation.php');
+});

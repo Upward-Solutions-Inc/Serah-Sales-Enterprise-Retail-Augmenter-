@@ -8,6 +8,7 @@ import './common/Helper/helpers'
 import './common/commonComponent'
 import './tenant/TenantComponent-CP'
 import './tenant/TenantComponent-CPB'
+import './custom/core'
 
 
 const app = new Vue({
