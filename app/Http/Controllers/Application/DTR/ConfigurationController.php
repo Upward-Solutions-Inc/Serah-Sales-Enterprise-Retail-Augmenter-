@@ -18,15 +18,21 @@ class ConfigurationController extends Controller
 
     public function index()
     {
-        $dtrConfig = DtrConfig::latest('updated_at')->first() ?? new DtrConfig();
-        return view('custom.dtr.configuration', compact('dtrConfig'));
+        return view('custom.dtr.configuration');
     }
+
+    public function getConfig()
+    {
+        return response()->json(
+            DtrConfig::latest('updated_at')->first() ?? new DtrConfig()
+        );
+    }      
 
     public function store(Request $request)
     {   
         $validatedData = $request->validate([
-            'grace_period' => 'nullable|string',
-            'overtime' => 'nullable|integer|string',
+            'grace_period' => 'nullable|integer',
+            'overtime' => 'nullable|integer',
             'morning_shift_start' => 'nullable|string',
             'morning_shift_end' => 'nullable|string',
             'afternoon_shift_start' => 'nullable|string',
@@ -39,6 +45,6 @@ class ConfigurationController extends Controller
         $validatedData = array_filter($validatedData);
         $this->dtrConfigService->saveConfig($validatedData);
 
-        return redirect()->route('dtr.configuration')->with('success', 'Configuration saved successfully.');
+        return response()->json(['message' => 'Configuration saved successfully.']);
     }
 }

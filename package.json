@@ -1,6 +1,6 @@
 {
     "name": "@gainhq/Core.POS",
-    "author": "gainhq",
+    "author": "gainhq, --hr by: donald",
     "private": true,
     "scripts": {
         "dev": "mix",
@@ -94,6 +94,7 @@
         "esm": "^3.2.25",
         "feather-icons": "^4.26.0",
         "fecha": "^4.1.0",
+        "flatpickr": "^4.6.13",
         "moment": "^2.29.4",
         "nouislider": "^14.1.1",
         "print-js": "^1.6.0",
