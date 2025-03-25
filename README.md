@@ -108,11 +108,6 @@ Dropdown - List of all users/employee (will need to select for their specific)
 ✔ Late
 
 
-
-
-
-
-
 # Salaey Computation Matrix
 GROSS PAY
 - Basic Pay
