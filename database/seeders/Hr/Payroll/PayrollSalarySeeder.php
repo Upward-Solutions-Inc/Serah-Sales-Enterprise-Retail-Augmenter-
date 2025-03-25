@@ -7,6 +7,11 @@ use App\Models\Hr\Payroll\PayrollSalary;
 
 class PayrollSalarySeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run()
     {
         $salaries = [

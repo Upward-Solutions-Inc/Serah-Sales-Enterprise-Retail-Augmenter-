@@ -2980,6 +2980,7 @@ class ComposerStaticInit84f2585ba7c701085b23df810703bc44
         'Database\\Seeders\\Duration\\DurationSeeder' => __DIR__ . '/../..' . '/database/seeders/Duration/DurationSeeder.php',
         'Database\\Seeders\\Hr\\Dtr\\DtrConfigSeeder' => __DIR__ . '/../..' . '/database/seeders/Hr/Dtr/DtrConfigSeeder.php',
         'Database\\Seeders\\Hr\\Dtr\\DtrLogSeeder' => __DIR__ . '/../..' . '/database/seeders/Hr/Dtr/DtrLogSeeder.php',
+        'Database\\Seeders\\Hr\\Payroll\\PayrollComponentSeeder' => __DIR__ . '/../..' . '/database/seeders/Hr/Payroll/PayrollComponentSeeder.php',
         'Database\\Seeders\\Hr\\Payroll\\PayrollSalarySeeder' => __DIR__ . '/../..' . '/database/seeders/Hr/Payroll/PayrollSalarySeeder.php',
         'Database\\Seeders\\Payment\\PaymentMethodSeeder' => __DIR__ . '/../..' . '/database/seeders/Payment/PaymentMethodSeeder.php',
         'Database\\Seeders\\Product\\ProductSeeder' => __DIR__ . '/../..' . '/database/seeders/Product/ProductSeeder.php',

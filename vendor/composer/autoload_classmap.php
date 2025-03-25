@@ -2120,6 +2120,7 @@ return array(
     'Database\\Seeders\\Duration\\DurationSeeder' => $baseDir . '/database/seeders/Duration/DurationSeeder.php',
     'Database\\Seeders\\Hr\\Dtr\\DtrConfigSeeder' => $baseDir . '/database/seeders/Hr/Dtr/DtrConfigSeeder.php',
     'Database\\Seeders\\Hr\\Dtr\\DtrLogSeeder' => $baseDir . '/database/seeders/Hr/Dtr/DtrLogSeeder.php',
+    'Database\\Seeders\\Hr\\Payroll\\PayrollComponentSeeder' => $baseDir . '/database/seeders/Hr/Payroll/PayrollComponentSeeder.php',
     'Database\\Seeders\\Hr\\Payroll\\PayrollSalarySeeder' => $baseDir . '/database/seeders/Hr/Payroll/PayrollSalarySeeder.php',
     'Database\\Seeders\\Payment\\PaymentMethodSeeder' => $baseDir . '/database/seeders/Payment/PaymentMethodSeeder.php',
     'Database\\Seeders\\Product\\ProductSeeder' => $baseDir . '/database/seeders/Product/ProductSeeder.php',
