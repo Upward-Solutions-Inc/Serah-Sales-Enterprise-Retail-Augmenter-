@@ -122,10 +122,10 @@
 
         <div class="card p-3">
             <div class="row">
-                <!-- Earnings -->
+                <!-- Addtional Compensation -->
                 <div class="col-md-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5><i>Earnings</i></h5>
+                        <h5><i>Addtional Compensation</i></h5>
                         <div class="dropdown">
                             <i class="fas fa-ellipsis-v" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                 style="cursor: pointer;"></i>
