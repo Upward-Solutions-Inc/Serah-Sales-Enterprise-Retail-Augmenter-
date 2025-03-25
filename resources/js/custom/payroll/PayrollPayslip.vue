@@ -34,8 +34,14 @@
                 <p class="text-muted mb-0">Showing 0 to 0 items of 0</p>
               </div>
             </div>
-            <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary">
-              <table class="table table-striped table-borderless">
+            <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary position-relative">
+              <loader 
+                class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center"
+                style="top: 0; left: 0; z-index: 1050;" 
+                :visible="isLoading" 
+                v-if="isLoading" 
+              />
+              <table v-else class="table table-striped table-borderless">
                 <thead>
                   <tr>
                     <th v-for="(label, index) in headers" :key="index" class="datatable-th pt-0 text-center">
@@ -81,8 +87,12 @@
   </template>
   
   <script>
+  import Loader from '../components/Loader.vue'
   export default {
     name: 'PayrollPayslip',
+    components: {
+        Loader
+    },
     props: {
       name: String,
       role: String,
@@ -90,6 +100,8 @@
     },
     data() {
       return {
+        isLoading: false,
+
         currentDateTime: '',
 
         headers: [
@@ -117,27 +129,31 @@
       }
     },
     mounted() {
-      this.updateTime()
-      setInterval(this.updateTime, 1000)
+      this.isLoading = true
+
+      setTimeout(() => {
+        this.updateTime()
+        this.isLoading = false
+      }, 2000)
     },
     methods: {
-        formatCurrency(value) {
-            return `₱ ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-        },
+      formatCurrency(value) {
+        return `₱ ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+      },
 
-        updateTime() {
-            const now = new Date()
-            const options = {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-            }
-            this.currentDateTime = now.toLocaleString('en-US', options)
+      updateTime() {
+        const now = new Date()
+        const options = {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
         }
+        this.currentDateTime = now.toLocaleString('en-US', options)
+      }
     }
   }
   </script>  
