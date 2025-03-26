@@ -2,6 +2,8 @@
 
 namespace App\Models\Hr\Payroll;
 
+use App\Models\Core\Auth\Role;
+use App\Models\Pos\Inventory\BranchOrWarehouse;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollSalary extends Model
@@ -13,4 +15,14 @@ class PayrollSalary extends Model
         'branch_id',
         'monthly_salary',
     ];
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(BranchOrWarehouse::class, 'branch_id', 'id');
+    }
 }

@@ -15,3 +15,7 @@ export const DtrConfig = {
     fetch: '/dtr/configuration/data',
     store: '/dtr/configuration/store',
 }
+
+export const PayrollComputation = {
+  fetch: '/payroll/computation/data'
+}

@@ -111,13 +111,14 @@ Dropdown - List of all users/employee (will need to select for their specific)
 # Salaey Computation Matrix
 GROSS PAY
 - Basic Pay
-✔ Regular Workday (1.0x)
-✔ Regular Restday (1.3x)
-✔ Regular Holiday (2.0x)
+✔ Regular Workday (1.0x) - 0%
+✔ Night Diferential (1.1x) - 10%
+✔ Regular Restday (1.3x) - 30%
+✔ Regular Holiday (2.0x) - 200%
 
 - Overtime
-✔ Regular Overtime (1.25x Rate)
-✔ Rest Day Overtime (1.69x Rate)
+✔ Regular Overtime (1.25x Rate) - 25%
+✔ Rest Day Overtime (1.69x Rate) - 100% + 30% then 130% x 30% = 39% => 169%
 ✔ Holiday Overtime (2.6x Rate)
 
 - Bonus
