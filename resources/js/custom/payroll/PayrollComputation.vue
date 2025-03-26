@@ -97,20 +97,20 @@
           <div class="form-group">
             <label> Rest Day Pay</label>
             <div v-if="!editMode">
-              <input type="text" class="form-control" :value="formatRate(form.basic_restday)" readonly />
+              <input type="text" class="form-control" :value="formatRate(form.restpay)" readonly />
             </div>
             <div v-else>
-              <input type="number" class="form-control" v-model.number="form.basic_restday" />
+              <input type="number" class="form-control" v-model.number="form.restpay" />
             </div>
           </div>
 
           <div class="form-group">
             <label> Holiday Pay </label>
             <div v-if="!editMode">
-              <input type="text" class="form-control" :value="formatRate(form.basic_holiday)" readonly />
+              <input type="text" class="form-control" :value="formatRate(form.holiday)" readonly />
             </div>
             <div v-else>
-              <input type="number" class="form-control" v-model.number="form.basic_holiday" />
+              <input type="number" class="form-control" v-model.number="form.holiday" />
             </div>
           </div>
         </div>
@@ -309,7 +309,6 @@
             <input type="number" class="form-control" :value="pagibig" readonly/>
           </div>
 
-
           <div
             class="form-group"
             v-for="(item, index) in deductions"
@@ -448,8 +447,8 @@ export default {
       form: {
         // variables
         nightpay: 0,
-        basic_restday: 0,
-        basic_holiday: 0,
+        restpay: 0,
+        holiday: 0,
         ot_regular: 0,
         ot_restday: 0,
         ot_holiday: 0,
@@ -477,9 +476,9 @@ export default {
         this.branches = data.branches;
 
         // Map component values to form
-        this.form.basic_workday = this.getValue("nightpay");
-        this.form.basic_restday = this.getValue("restday");
-        this.form.basic_holiday = this.getValue("holiday");
+        this.form.nightpay = this.getValue("nightpay");
+        this.form.restpay = this.getValue("restpay");
+        this.form.holiday = this.getValue("holiday");
         this.form.ot_regular = this.getValue("ot_regular");
         this.form.ot_restday = this.getValue("ot_restday");
         this.form.ot_holiday = this.getValue("ot_holiday");
@@ -506,6 +505,61 @@ export default {
   },
 
   computed: {
+    // Basic Pay
+    semiMonthly() {
+      return this.form.monthly ? (this.form.monthly / 2).toFixed(2) : 0;
+    },
+    daily() {
+      return this.form.monthly ? (this.form.monthly / 22).toFixed(2) : 0;
+    },
+    hourly() {
+      return this.form.monthly ? (this.form.monthly / 22 / 8).toFixed(2) : 0;
+    },
+
+
+    // Deductions
+    incomeTax() {
+      const monthlySalary = parseFloat(this.form.monthly) || 0;
+      const annualSalary  = monthlySalary * 12;
+      let annualTax = 0;
+
+      if (annualSalary <= 250000) {
+        annualTax = 0;
+      } else if (annualSalary <= 400000) {
+        annualTax = (annualSalary - 250000) * 0.15;
+      } else if (annualSalary <= 800000) {
+        annualTax = 22500 + (annualSalary - 400000) * 0.20;
+      } else if (annualSalary <= 2000000) {
+        annualTax = 102500 + (annualSalary - 800000) * 0.25;
+      } else if (annualSalary <= 8000000) {
+        annualTax = 402500 + (annualSalary - 2000000) * 0.30;
+      } else {
+        annualTax = 2202500 + (annualSalary - 8000000) * 0.35;
+      }
+
+      // Convert annual to monthly
+      const monthlyTax = annualTax / 12;
+      return monthlyTax.toFixed(2);
+    },
+    sss() {
+      const monthly = parseFloat(this.form.monthly) || 0;
+      return (monthly * 0.045).toFixed(2);
+    },
+    philhealth() {
+      const monthly = parseFloat(this.form.monthly) || 0;
+      return (monthly * 0.025).toFixed(2);
+    },
+    pagibig() {
+      const monthly = parseFloat(this.form.monthly) || 0;
+      if (monthly < 1500) {
+        return (100).toFixed(2);
+      } else {
+        return (monthly * 0.02).toFixed(2);
+      }
+    },
+
+
+    // Total Computation
     grossPay() {
       let total = 0;
       for (let item of this.earnings) {
@@ -522,16 +576,6 @@ export default {
     },
     netPay() {
       return this.grossPay - this.totalDeduction;
-    },
-
-    semiMonthly() {
-      return this.form.monthly ? (this.form.monthly / 2).toFixed(2) : 0;
-    },
-    daily() {
-      return this.form.monthly ? (this.form.monthly / 22).toFixed(2) : 0;
-    },
-    hourly() {
-      return this.form.monthly ? (this.form.monthly / 22 / 8).toFixed(2) : 0;
     },
   },
 
