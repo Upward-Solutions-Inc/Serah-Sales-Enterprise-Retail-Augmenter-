@@ -20,5 +20,6 @@ export const PayrollComputation = {
   fetch: '/payroll/computation/data',
   updatePay: '/payroll/computation/updatePay',
   updateRate: '/payroll/computation/updateRate',
-  updateCompenOrDeduc: '/payroll/computation/updateCompenOrDeduc'
+  updateCompenOrDeduc: '/payroll/computation/updateCompenOrDeduc',
+  fetchDynamicData: '/payroll/computation/dynamicData',
 }

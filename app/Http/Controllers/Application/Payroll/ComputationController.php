@@ -89,23 +89,40 @@ class ComputationController extends Controller
             'philhealth' => 'PhilHealth',
             'pagibig'    => 'Pagibig'
           ];
-          
+
+          $updatedCodes = [];
+
           foreach ($componentFields as $code) {
-              if (isset($data[$code])) {
-                  $label = $labels[$code] ?? $code;
-                  $newValue = $data[$code];
-                  PayrollComponent::updateOrCreate(
-                      ['code' => $code, 'group' => 'rates'],
-                      [
-                        'label' => $label,   
-                        'value' => $newValue
-                      ]
-                  );
-              }
-          }
-          
+            if (isset($data[$code])) {
+                $component = PayrollComponent::where('code', $code)
+                    ->where('group', 'rates')
+                    ->first();
+
+                if (!$component) {
+                    PayrollComponent::create([
+                        'code'   => $code,
+                        'group'  => 'rates',
+                        'label'  => $labels[$code] ?? $code,
+                        'value'  => $data[$code]
+                    ]);
+                    $updatedCodes[] = $code;
+                } else {
+                    if ($component->value != $data[$code]) {
+                        $component->update([
+                            'label' => $labels[$code] ?? $code,
+                            'value' => $data[$code]
+                        ]);
+                        $updatedCodes[] = $code;
+                    }
+                }
+            }
+        }
+
         // Retrieve updated rate components as an array.
-        $updatedRates = PayrollComponent::where('group', 'rates')->get()->toArray();
+        $updatedRates = PayrollComponent::where('group', 'rates')
+        ->whereIn('code', $updatedCodes)
+        ->get()
+        ->toArray();
         
         return response()->json($updatedRates);
     }
@@ -117,9 +134,16 @@ class ComputationController extends Controller
         // Process dynamic earnings.
         if ($request->has('earnings') && is_array($request->earnings)) {
             foreach ($request->earnings as $earning) {
+                $rawLabel = trim($earning['label']);
+                $code = strtolower(str_replace(' ', '_', $rawLabel));
+                $label = ucwords(strtolower($rawLabel));
+
                 $component = PayrollComponent::updateOrCreate(
-                    ['code' => $earning['label'], 'group' => 'earnings'],
-                    ['label' => $earning['label'], 'value' => $earning['amount']]
+                    ['code' => $code, 'group' => 'earnings'],
+                    [
+                        'label' => $label,
+                        'value' => $earning['amount']
+                    ]
                 );
                 $response['earnings'][] = $component;
             }
@@ -128,9 +152,16 @@ class ComputationController extends Controller
         // Process dynamic deductions.
         if ($request->has('deductions') && is_array($request->deductions)) {
             foreach ($request->deductions as $deduction) {
+                $rawLabel = trim($deduction['label']);
+                $code = strtolower(str_replace(' ', '_', $rawLabel));
+                $label = ucwords(strtolower($rawLabel));
+
                 $component = PayrollComponent::updateOrCreate(
-                    ['code' => $deduction['label'], 'group' => 'deductions'],
-                    ['label' => $deduction['label'], 'value' => $deduction['amount']]
+                    ['code' => $code, 'group' => 'deductions'],
+                    [
+                        'label' => $label,
+                        'value' => $deduction['amount']
+                    ]
                 );
                 $response['deductions'][] = $component;
             }
@@ -138,4 +169,16 @@ class ComputationController extends Controller
 
         return response()->json($response);
     }
+
+    public function getDynamicData()
+    {
+        $earnings = PayrollComponent::where('group', 'earnings')->get();
+        $deductions = PayrollComponent::where('group', 'deductions')->get();
+
+        return response()->json([
+            'earnings' => $earnings,
+            'deductions' => $deductions
+        ]);
+    }
+
 }

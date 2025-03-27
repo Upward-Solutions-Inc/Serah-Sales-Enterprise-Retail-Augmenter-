@@ -227,7 +227,7 @@
           <div class="form-group" v-for="(item, index) in earnings" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input type="number" class="form-control" v-model.number="item.amount" />
+              <input type="text" class="form-control" :value="item.value" />
               <button v-if="editMode" class="btn btn-sm btn-danger ml-3" @click="removeEarning(index)">✕</button>
             </div>
           </div>
@@ -271,7 +271,7 @@
           <div class="form-group" v-for="(item, index) in deductions" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input type="number" class="form-control" v-model.number="item.amount" />
+              <input type="text" class="form-control" :value="item.value" />
               <button v-if="deductionEditMode" class="btn btn-sm btn-danger ml-3" @click="removeDeduction(index)">✕</button>
             </div>
           </div>
@@ -428,6 +428,13 @@ export default {
         this.updateMonthly();
       })
       .catch((error) => console.error(error));
+
+      api.get(PayrollComputation.fetchDynamicData)
+      .then(response => {
+        this.earnings = response.data.earnings || [];
+        this.deductions = response.data.deductions || [];
+      })
+      .catch(err => console.error(err));
   },
 
   watch: {
@@ -597,6 +604,9 @@ export default {
         $("#payrollModal").modal("hide");
         const data = response.data;
         let message = "<strong>Successfully Updated</strong><br/><br/>";
+
+        this.earnings = data.earnings || [];
+        this.deductions = data.deductions || [];
     
         if (data.earnings && data.earnings.length) {
           message += "<u>Earnings:</u><br/>";
