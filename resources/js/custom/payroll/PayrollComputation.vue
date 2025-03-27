@@ -6,13 +6,22 @@
       </div>
     </div>
 
-        <!-- Basic Pay -->
+    <!-- Basic Pay -->
     <div class="card p-3">
       <div class="row">
-        <div class="col-md-12 mb-3">
+        <div class="col-md-10 mb-2">
           <h5>
             <i>Basic Pay</i>
           </h5>
+        </div>
+        <div class="col-md-2 mb-2 text-right">
+          <button v-if="editModePay" class="btn btn-success btn-sm mr-2" 
+            @click="saveDataPay">
+            Save</button>
+          <button class="btn btn-primary btn-sm" 
+            @click="toggleEditPay">
+            {{ editModePay ? "Cancel" : "Edit" }}
+          </button>
         </div>
 
         <div class="col-lg-4">
@@ -37,22 +46,27 @@
         <div class="col-lg-4">
           <div class="form-group">
             <label>Monthly</label>
-            <input type="number" class="form-control" v-model.number="form.monthly"/>
+            <div v-if="!editModePay">
+              <input type="text" class="form-control" :value="formatCurrency(form.monthly)" readonly/>
+            </div>
+            <div v-else>
+              <input type="number" step="any" class="form-control" v-model.number="form.monthly"/>
+            </div>
           </div>
           <div class="form-group">
             <label>Semi-Monthly</label>
-            <input type="number" class="form-control" :value="semiMonthly" />
+            <input type="number" class="form-control" :value="semiMonthly" readonly/>
           </div>
         </div>
 
         <div class="col-lg-4">
           <div class="form-group">
             <label>Daily</label>
-            <input type="number" class="form-control" :value="daily" />
+            <input type="number" class="form-control" :value="daily" readonly/>
           </div>
           <div class="form-group">
             <label>Hourly</label>
-            <input type="number" class="form-control" :value="hourly" />
+            <input type="number" class="form-control" :value="hourly" readonly/>
           </div>
         </div>
       </div>
@@ -62,21 +76,18 @@
     <div class="card p-3">
       <div class="row align-items-center justify-content-between">
         <div class="col-md-10 mb-2">
-          <h5><i>Payroll Variables</i></h5>
-          <p class="text-muted small mt-2">
+          <h5><i>Payroll Variables Rates</i></h5>
+          <p v-if="editModeRate" class="text-muted small mt-2">
             Note: All inputs should be in decimal format (e.g. 2% → 0.02)
           </p>
         </div>
         <div class="col-md-2 mb-2 text-right">
-          <button
-            v-if="editMode"
-            class="btn btn-success btn-sm mr-2"
-            @click="saveData"
-          >
-            Save
-          </button>
-          <button class="btn btn-primary btn-sm" @click="toggleEdit">
-            {{ editMode ? "Cancel" : "Edit" }}
+          <button v-if="editModeRate" class="btn btn-success btn-sm mr-2" 
+            @click="saveDataRate">
+            Save</button>
+          <button class="btn btn-primary btn-sm" 
+            @click="toggleEditRate">
+            {{ editModeRate ? "Cancel" : "Edit" }}
           </button>
         </div>
 
@@ -86,7 +97,7 @@
 
           <div class="form-group">
             <label> Night Differential Pay </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatRate(form.nightpay)" readonly />
             </div>
             <div v-else>
@@ -96,7 +107,7 @@
 
           <div class="form-group">
             <label> Rest Day Pay</label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatRate(form.restpay)" readonly />
             </div>
             <div v-else>
@@ -106,7 +117,7 @@
 
           <div class="form-group">
             <label> Holiday Pay </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatRate(form.holiday)" readonly />
             </div>
             <div v-else>
@@ -121,7 +132,7 @@
 
           <div class="form-group">
             <label> Regular Overtime </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatRate(form.ot_regular)" readonly />
             </div>
             <div v-else>
@@ -131,7 +142,7 @@
 
           <div class="form-group">
             <label> Rest Day Overtime </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatRate(form.ot_restday)" readonly />
             </div>
             <div v-else>
@@ -141,7 +152,7 @@
 
           <div class="form-group">
             <label> Holiday Overtime </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatRate(form.ot_holiday)" readonly />
             </div>
             <div v-else>
@@ -156,7 +167,7 @@
 
           <div class="form-group">
             <label> Social Security System </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatPercent(form.sss)" readonly />
             </div>
             <div v-else>
@@ -166,7 +177,7 @@
 
           <div class="form-group">
             <label> PhilHealth </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatPercent(form.philhealth)" readonly />
             </div>
             <div v-else>
@@ -176,7 +187,7 @@
 
           <div class="form-group">
             <label> Pagibig </label>
-            <div v-if="!editMode">
+            <div v-if="!editModeRate">
               <input type="text" class="form-control" :value="formatPercent(form.pagibig)" readonly />
             </div>
             <div v-else>
@@ -187,6 +198,7 @@
       </div>
     </div>
 
+    <!-- Addional Compensation, Deductions & Total -->
     <div class="card p-3">
       <div class="row">
         <!-- Addtional Compensation -->
@@ -194,57 +206,29 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5><i>Addtional Compensation</i></h5>
             <div class="dropdown">
-              <i
-                class="fas fa-ellipsis-v"
-                id="dropdownMenu"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-                style="cursor: pointer"
-              ></i>
-
-              <div
-                class="dropdown-menu dropdown-menu-right"
-                aria-labelledby="dropdownMenu"
-              >
+              <i class="fas fa-ellipsis-v" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
+              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu">
                 <a class="dropdown-item" href="#" @click="editMode = !editMode">
-                  <i
-                    :class="[editMode ? 'fas fa-eye-slash' : 'fas fa-eye']"
-                    class="mr-2"
-                  ></i>
+                  <i :class="editMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
                   {{ editMode ? "Hide" : "Edit" }}
                 </a>
-                <a
-                  class="dropdown-item"
-                  href="#"
-                  @click="openModal('earning')"
-                  data-toggle="modal"
-                  data-target="#payrollModal"
-                >
+                <a class="dropdown-item" href="#" @click="openModal('earning')" data-toggle="modal" data-target="#payrollModal">
                   <i class="fas fa-plus mr-2"></i> Add
                 </a>
               </div>
             </div>
           </div>
-          <div
-            class="form-group"
-            v-for="(item, index) in earnings"
-            :key="index"
-          >
+          <!-- fixed -->
+          <div class="form-group">
+            <label>13th Month Pay</label>
+            <input type="number" class="form-control" :value="endYearPay" readonly/>
+          </div>
+          <!-- dynamic -->
+          <div class="form-group" v-for="(item, index) in earnings" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input
-                type="number"
-                class="form-control"
-                v-model.number="item.amount"
-              />
-              <button
-                v-if="editMode"
-                class="btn btn-sm btn-danger ml-3"
-                @click="removeEarning(index)"
-              >
-                ✕
-              </button>
+              <input type="number" class="form-control" v-model.number="item.amount" />
+              <button v-if="editMode" class="btn btn-sm btn-danger ml-3" @click="removeEarning(index)">✕</button>
             </div>
           </div>
         </div>
@@ -254,44 +238,19 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5><i>Deductions</i></h5>
             <div class="dropdown">
-              <i
-                class="fas fa-ellipsis-v"
-                id="deductionDropdown"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-                style="cursor: pointer"
-              ></i>
-              <div
-                class="dropdown-menu dropdown-menu-right"
-                aria-labelledby="deductionDropdown"
-              >
-                <a
-                  class="dropdown-item"
-                  href="#"
-                  @click="deductionEditMode = !deductionEditMode"
-                >
-                  <i
-                    :class="[
-                      deductionEditMode ? 'fas fa-eye-slash' : 'fas fa-eye',
-                    ]"
-                    class="mr-2"
-                  ></i>
-                  {{ deductionEditMode ? "Hide" : "Edit" }}
+              <i class="fas fa-ellipsis-v" id="deductionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
+              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="deductionDropdown">
+                <a class="dropdown-item" href="#" @click="deductionEditMode = !deductionEditMode">
+                  <i :class="deductionEditMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
+                  {{ deductionEditMode ? 'Hide' : 'Edit' }}
                 </a>
-                <a
-                  class="dropdown-item"
-                  href="#"
-                  @click="openModal('deduction')"
-                  data-toggle="modal"
-                  data-target="#payrollModal"
-                >
+                <a class="dropdown-item" href="#" @click="openModal('deduction')" data-toggle="modal" data-target="#payrollModal">
                   <i class="fas fa-plus mr-2"></i> Add
                 </a>
               </div>
             </div>
           </div>
-
+          <!-- fixed -->
           <div class="form-group">
             <label>Income Tax</label>
             <input type="number" class="form-control" :value="incomeTax" readonly/>
@@ -308,26 +267,12 @@
             <label>Pagibig</label>
             <input type="number" class="form-control" :value="pagibig" readonly/>
           </div>
-
-          <div
-            class="form-group"
-            v-for="(item, index) in deductions"
-            :key="index"
-          >
+          <!-- dynamic -->
+          <div class="form-group" v-for="(item, index) in deductions" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input
-                type="number"
-                class="form-control"
-                v-model.number="item.amount"
-              />
-              <button
-                v-if="deductionEditMode"
-                class="btn btn-sm btn-danger ml-3"
-                @click="removeDeduction(index)"
-              >
-                ✕
-              </button>
+              <input type="number" class="form-control" v-model.number="item.amount" />
+              <button v-if="deductionEditMode" class="btn btn-sm btn-danger ml-3" @click="removeDeduction(index)">✕</button>
             </div>
           </div>
         </div>
@@ -339,32 +284,18 @@
           </div>
           <div class="form-group">
             <label>Gross Pay</label>
-            <input
-              type="number"
-              class="form-control"
-              :value="grossPay"
-              readonly
-            />
+            <input type="number" class="form-control" :value="grossPay" readonly />
           </div>
           <div class="form-group">
             <label>Total Deduction</label>
-            <input
-              type="number"
-              class="form-control"
-              :value="totalDeduction"
-              readonly
-            />
+            <input type="number" class="form-control" :value="totalDeduction" readonly />
           </div>
           <div class="form-group">
             <label>Net Pay</label>
-            <input
-              type="number"
-              class="form-control font-weight-bold"
-              :value="netPay"
-              readonly
-            />
+            <input type="number" class="form-control font-weight-bold" :value="netPay" readonly />
           </div>
         </div>
+
       </div>
     </div>
 
@@ -415,7 +346,7 @@
             <button class="btn btn-secondary mr-3" data-dismiss="modal">
               Cancel
             </button>
-            <button class="btn btn-primary" @click="savePayroll">Save</button>
+            <button class="btn btn-primary" @click="saveCompenOrDeduc">Save</button>
           </div>
         </div>
       </div>
@@ -424,6 +355,7 @@
 </template>
 
 <script>
+import Swal from "sweetalert2";
 import api, { PayrollComputation } from "../api";
 export default {
   name: "PayrollComputation",
@@ -435,6 +367,10 @@ export default {
       salaries: [],
       earnings: [],
       deductions: [],
+
+      editModePay: false,
+      editModeRate: false,
+
       editMode: false,
       deductionEditMode: false,
 
@@ -474,6 +410,7 @@ export default {
         this.salaries = data.salaries;
         this.roles = data.roles;
         this.branches = data.branches;
+        this.currencySymbol = data.currency_symbol;
 
         // Map component values to form
         this.form.nightpay = this.getValue("nightpay");
@@ -494,32 +431,35 @@ export default {
   },
 
   watch: {
-    form: {
-      handler(newVal) {
-        localStorage.setItem("role_id", newVal.role_id || 0);
-        localStorage.setItem("branch_id", newVal.branch_id || 0);
-        this.updateMonthly();
-      },
-      deep: true,
+    'form.role_id'(newVal) {
+      localStorage.setItem("role_id", newVal || 0);
+      this.updateMonthly();
+    },
+    'form.branch_id'(newVal) {
+      localStorage.setItem("branch_id", newVal || 0);
+      this.updateMonthly();
     }
   },
 
   computed: {
     // Basic Pay
     semiMonthly() {
-      return this.form.monthly ? (this.form.monthly / 2).toFixed(2) : 0;
+      const monthly = this.getMonthly() || 0;
+      return (monthly / 2).toFixed(2);
     },
     daily() {
-      return this.form.monthly ? (this.form.monthly / 22).toFixed(2) : 0;
+      const monthly = this.getMonthly() || 0;
+      return (monthly / 22).toFixed(2);
     },
     hourly() {
-      return this.form.monthly ? (this.form.monthly / 22 / 8).toFixed(2) : 0;
+      const monthly = this.getMonthly() || 0;
+      return (monthly / 22 / 8).toFixed(2);
     },
 
 
     // Deductions
     incomeTax() {
-      const monthlySalary = parseFloat(this.form.monthly) || 0;
+      const monthlySalary = this.getMonthly() || 0;
       const annualSalary  = monthlySalary * 12;
       let annualTax = 0;
 
@@ -536,26 +476,35 @@ export default {
       } else {
         annualTax = 2202500 + (annualSalary - 8000000) * 0.35;
       }
-
       // Convert annual to monthly
       const monthlyTax = annualTax / 12;
       return monthlyTax.toFixed(2);
     },
     sss() {
-      const monthly = parseFloat(this.form.monthly) || 0;
-      return (monthly * 0.045).toFixed(2);
+      const monthly = this.getMonthly() || 0;
+      const rate = Number(this.form.sss) || 0;
+      return (monthly * rate).toFixed(2);
     },
     philhealth() {
-      const monthly = parseFloat(this.form.monthly) || 0;
-      return (monthly * 0.025).toFixed(2);
+      const monthly = this.getMonthly() || 0;
+      const rate = Number(this.form.philhealth) || 0;
+      return (monthly * rate).toFixed(2);
     },
     pagibig() {
-      const monthly = parseFloat(this.form.monthly) || 0;
+      const monthly = this.getMonthly() || 0;
+      const rate = Number(this.form.pagibig) || 0;
       if (monthly < 1500) {
         return (100).toFixed(2);
       } else {
-        return (monthly * 0.02).toFixed(2);
+        return (monthly * rate).toFixed(2);
       }
+    },
+
+
+    // Additional Compensation
+    endYearPay() {
+      const monthly = this.getMonthly() || 0;
+      return monthly.toFixed(2);
     },
 
 
@@ -580,21 +529,124 @@ export default {
   },
 
   methods: {
+    toggleEditPay() {
+      this.editModePay = !this.editModePay;
+    },
+    toggleEditRate() {
+      this.editModeRate = !this.editModeRate;
+    },
+
+    // for Basic Pay
+    saveDataPay() {
+      api.post(PayrollComputation.updatePay, this.form)
+      .then((response) => {
+        this.editModePay = false;
+        const payroll = response.data[0];
+        const designation = payroll.role ? payroll.role.name : 'N/A';
+        const branch = payroll.branch ? payroll.branch.name : 'N/A';
+        const salary = this.formatCurrency(payroll.monthly_salary);
+        console.log('Payroll response:', response.data)
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Successfully Updated',
+          html: `<strong>Designation:</strong> ${designation}<br/>
+                 <strong>Branch:</strong> ${branch}<br/>
+                 <strong>Salary:</strong> ${salary}`,
+        });
+      })
+      .catch((err) => console.error(err));
+    },
+
+    // for Payroll Variables Rates
+    saveDataRate() {
+      api.post(PayrollComputation.updateRate, this.form)
+        .then((response) => {
+          this.editModeRate = false;
+          const updatedRates = response.data;
+          let message = "<strong>Successfully Updated</strong><br/><br/>";
+          
+          updatedRates.forEach(item => {
+            message += `${item.label}: ${item.value}<br/>`;
+          });
+
+          console.log('Rates response:', response.data)
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Successfully Updated',
+            html: message,
+          });
+        })
+        .catch((err) => console.error(err));
+    },
+
+
+    // for Additional Compensation & Deductions
+    saveCompenOrDeduc() {
+      if (this.modalType === "earning") {
+        this.earnings.push({ ...this.modalData });
+      } else {
+        this.deductions.push({ ...this.modalData });
+      }
+      api.post(PayrollComputation.updateCompenOrDeduc, {
+        earnings: this.earnings,
+        deductions: this.deductions,
+      })
+      .then((response) => {
+        $("#payrollModal").modal("hide");
+        const data = response.data;
+        let message = "<strong>Successfully Updated</strong><br/><br/>";
+    
+        if (data.earnings && data.earnings.length) {
+          message += "<u>Earnings:</u><br/>";
+          data.earnings.forEach(item => {
+            message += `${item.label}: ${item.value}<br/>`;
+          });
+        }
+        if (data.deductions && data.deductions.length) {
+          message += "<u>Deductions:</u><br/>";
+          data.deductions.forEach(item => {
+            message += `${item.label}: ${item.value}<br/>`;
+          });
+        }
+        console.log('CompenOrDeduc response:', response.data)
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Successfully Updated',
+          html: message,
+        })
+      })
+      
+      .catch((err) => console.error(err));
+    },
+
+
+    // Helper function
+    openModal(type) {
+      this.modalType = type;
+      this.modalData = {
+        label: "",
+        amount: 0,
+      };
+    },
+
     getValue(code) {
       const item = this.components.find(c => c.code === code);
       return item ? item.value : 0;
     },
-    formatRate(value) {
-      return parseFloat(value).toFixed(2) + "x";
+
+    removeEarning(index) {
+      this.earnings.splice(index, 1);
     },
-    formatPercent(value) {
-      return (parseFloat(value) * 100).toFixed(2) + "%";
-    },
-    toggleEdit() {
-      this.editMode = !this.editMode;
+    removeDeduction(index) {
+      this.deductions.splice(index, 1);
     },
 
-
+    getMonthly() {
+      return Number(this.form.monthly) || 0;
+    },
     updateMonthly() {
       const match = this.salaries.find(
         (s) =>
@@ -604,44 +656,19 @@ export default {
       this.form.monthly = match ? match.monthly_salary : 0;
     },
 
-
-    saveData() {
-      // Send updated data to your controller
-      api
-        .post("/payroll/computation/update", this.form)
-        .then(() => {
-          this.editMode = false;
-          // Optionally refetch data if needed
-        })
-        .catch((err) => console.error(err));
+    formatRate(value) {
+      return parseFloat(value).toFixed(2) + "x";
     },
-
-
-    
-
-    openModal(type) {
-      this.modalType = type;
-      this.modalData = {
-        label: "",
-        amount: 0,
-      };
+    formatPercent(value) {
+      return (parseFloat(value) * 100).toFixed(2) + "%";
     },
-
-    savePayroll() {
-      if (this.modalType === "earning") {
-        this.earnings.push({ ...this.modalData });
-      } else {
-        this.deductions.push({ ...this.modalData });
-      }
-      $("#payrollModal").modal("hide");
-    },
-
-    removeEarning(index) {
-      this.earnings.splice(index, 1);
-    },
-
-    removeDeduction(index) {
-      this.deductions.splice(index, 1);
+    formatCurrency(value) {
+      const symbol = this.currencySymbol || '₱';
+      const numeric = parseFloat(value) || 0;
+      return symbol + ' ' + numeric.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
     },
   },
 };

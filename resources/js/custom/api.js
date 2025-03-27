@@ -13,9 +13,12 @@ export default api
 // Dtr Configuration
 export const DtrConfig = {
     fetch: '/dtr/configuration/data',
-    store: '/dtr/configuration/store',
+    store: '/dtr/configuration/store'
 }
 
 export const PayrollComputation = {
-  fetch: '/payroll/computation/data'
+  fetch: '/payroll/computation/data',
+  updatePay: '/payroll/computation/updatePay',
+  updateRate: '/payroll/computation/updateRate',
+  updateCompenOrDeduc: '/payroll/computation/updateCompenOrDeduc'
 }
