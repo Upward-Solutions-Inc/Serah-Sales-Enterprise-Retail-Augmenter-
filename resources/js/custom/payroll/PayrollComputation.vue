@@ -227,7 +227,7 @@
           <div class="form-group" v-for="(item, index) in earnings" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input type="text" class="form-control" :value="item.value" />
+              <input type="number" class="form-control" v-model.number="item.amount" />
               <button v-if="editMode" class="btn btn-sm btn-danger ml-3" @click="removeEarning(index)">✕</button>
             </div>
           </div>
@@ -271,7 +271,7 @@
           <div class="form-group" v-for="(item, index) in deductions" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input type="text" class="form-control" :value="item.value" />
+              <input type="number" class="form-control"  v-model.number="item.amount" />
               <button v-if="deductionEditMode" class="btn btn-sm btn-danger ml-3" @click="removeDeduction(index)">✕</button>
             </div>
           </div>
@@ -431,10 +431,19 @@ export default {
 
       api.get(PayrollComputation.fetchDynamicData)
       .then(response => {
-        this.earnings = response.data.earnings || [];
-        this.deductions = response.data.deductions || [];
+        const amount = response.data;
+        this.earnings = (amount.earnings || []).map(({ label, value }) => ({
+          label,
+          amount: parseFloat(value) || 0
+        }));
+        this.deductions = (amount.deductions || []).map(({ label, value }) => ({
+          label,
+          amount: parseFloat(value) || 0
+        }));
+        console.log('Dynamic Data response:', response.data);
       })
       .catch(err => console.error(err));
+
   },
 
   watch: {
@@ -587,7 +596,6 @@ export default {
         })
         .catch((err) => console.error(err));
     },
-
 
     // for Additional Compensation & Deductions
     saveCompenOrDeduc() {

@@ -172,9 +172,14 @@ class ComputationController extends Controller
 
     public function getDynamicData()
     {
-        $earnings = PayrollComponent::where('group', 'earnings')->get();
-        $deductions = PayrollComponent::where('group', 'deductions')->get();
-
+        $earnings = PayrollComponent::select('label','value')
+            ->where('group', 'earnings')
+            ->get();
+    
+        $deductions = PayrollComponent::select('label','value')
+            ->where('group', 'deductions')
+            ->get();
+    
         return response()->json([
             'earnings' => $earnings,
             'deductions' => $deductions
