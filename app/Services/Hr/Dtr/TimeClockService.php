@@ -60,7 +60,7 @@ class TimeClockService
             'total_work_hours' => 0
         ]);
 
-        // ✅ Broadcast the event
+        // Broadcast the event
         broadcast(new DtrLogUpdated());
 
         return [

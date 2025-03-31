@@ -9,3 +9,4 @@ Route::get('/computation/dynamicData', [ComputationController::class, 'getDynami
 Route::post('/computation/updatePay', [ComputationController::class, 'updatePay'])->name('payroll.computation.updatePay');
 Route::post('/computation/updateRate', [ComputationController::class, 'updateRate'])->name('payroll.computation.updateRate');
 Route::post('/computation/updateCompenOrDeduc', [ComputationController::class, 'updateCompenOrDeduc'])->name('payroll.computation.updateCompenOrDeduc');
+Route::delete('/computation/deleteComponent', [ComputationController::class, 'deleteComponent'])->name('payroll.computation.deleteComponent');

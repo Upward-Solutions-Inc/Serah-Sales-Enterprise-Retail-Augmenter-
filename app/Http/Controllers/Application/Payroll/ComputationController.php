@@ -32,6 +32,22 @@ class ComputationController extends Controller
         ]);
     }
 
+    public function getDynamicData()
+    {
+        $earnings = PayrollComponent::select('label','value')
+            ->where('group', 'earnings')
+            ->get();
+    
+        $deductions = PayrollComponent::select('label','value')
+            ->where('group', 'deductions')
+            ->get();
+    
+        return response()->json([
+            'earnings' => $earnings,
+            'deductions' => $deductions
+        ]);
+    }
+
     public function updatePay(Request $request)
     {
         $data = $request->only([
@@ -130,14 +146,14 @@ class ComputationController extends Controller
     public function updateCompenOrDeduc(Request $request)
     {
         $response = [];
-
+    
         // Process dynamic earnings.
         if ($request->has('earnings') && is_array($request->earnings)) {
             foreach ($request->earnings as $earning) {
                 $rawLabel = trim($earning['label']);
                 $code = strtolower(str_replace(' ', '_', $rawLabel));
                 $label = ucwords(strtolower($rawLabel));
-
+    
                 $component = PayrollComponent::updateOrCreate(
                     ['code' => $code, 'group' => 'earnings'],
                     [
@@ -145,17 +161,19 @@ class ComputationController extends Controller
                         'value' => $earning['amount']
                     ]
                 );
-                $response['earnings'][] = $component;
+                if ($component->wasRecentlyCreated) {
+                    $response['earnings'][] = $component;
+                }
             }
         }
-
+    
         // Process dynamic deductions.
         if ($request->has('deductions') && is_array($request->deductions)) {
             foreach ($request->deductions as $deduction) {
                 $rawLabel = trim($deduction['label']);
                 $code = strtolower(str_replace(' ', '_', $rawLabel));
                 $label = ucwords(strtolower($rawLabel));
-
+    
                 $component = PayrollComponent::updateOrCreate(
                     ['code' => $code, 'group' => 'deductions'],
                     [
@@ -163,27 +181,33 @@ class ComputationController extends Controller
                         'value' => $deduction['amount']
                     ]
                 );
-                $response['deductions'][] = $component;
+                if ($component->wasRecentlyCreated) {
+                    $response['deductions'][] = $component;
+                }
             }
         }
-
+    
         return response()->json($response);
-    }
+    }    
 
-    public function getDynamicData()
+    public function deleteComponent(Request $request)
     {
-        $earnings = PayrollComponent::select('label','value')
-            ->where('group', 'earnings')
-            ->get();
-    
-        $deductions = PayrollComponent::select('label','value')
-            ->where('group', 'deductions')
-            ->get();
-    
-        return response()->json([
-            'earnings' => $earnings,
-            'deductions' => $deductions
+        $request->validate([
+            'code'  => 'required|string',
+            'group' => 'required|string|in:earnings,deductions'
         ]);
-    }
 
+        $component = PayrollComponent::where('code', $request->code)
+                    ->where('group', $request->group)
+                    ->first();
+
+        if (!$component) {
+            return response()->json(['status' => 'error', 'message' => 'Component not found'], 404);
+        }
+
+        $deletedItem = $component->toArray();
+        $component->delete();
+
+        return response()->json($deletedItem);
+    }
 }

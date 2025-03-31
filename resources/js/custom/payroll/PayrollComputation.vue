@@ -55,18 +55,18 @@
           </div>
           <div class="form-group">
             <label>Semi-Monthly</label>
-            <input type="number" class="form-control" :value="semiMonthly" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(semiMonthly)" readonly/>
           </div>
         </div>
 
         <div class="col-lg-4">
           <div class="form-group">
             <label>Daily</label>
-            <input type="number" class="form-control" :value="daily" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(daily)" readonly/>
           </div>
           <div class="form-group">
             <label>Hourly</label>
-            <input type="number" class="form-control" :value="hourly" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(hourly)" readonly/>
           </div>
         </div>
       </div>
@@ -208,9 +208,9 @@
             <div class="dropdown">
               <i class="fas fa-ellipsis-v" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu">
-                <a class="dropdown-item" href="#" @click="editMode = !editMode">
-                  <i :class="editMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
-                  {{ editMode ? "Hide" : "Edit" }}
+                <a class="dropdown-item" href="#" @click="earningsEditMode = !earningsEditMode">
+                  <i :class="earningsEditMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
+                  {{ earningsEditMode ? "Hide" : "Edit" }}
                 </a>
                 <a class="dropdown-item" href="#" @click="openModal('earning')" data-toggle="modal" data-target="#payrollModal">
                   <i class="fas fa-plus mr-2"></i> Add
@@ -221,14 +221,20 @@
           <!-- fixed -->
           <div class="form-group">
             <label>13th Month Pay</label>
-            <input type="number" class="form-control" :value="endYearPay" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(endYearPay)" readonly/>
           </div>
           <!-- dynamic -->
           <div class="form-group" v-for="(item, index) in earnings" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input type="number" class="form-control" v-model.number="item.amount" />
-              <button v-if="editMode" class="btn btn-sm btn-danger ml-3" @click="removeEarning(index)">✕</button>
+              <input type="text" class="form-control" :value="formatCurrency(item.amount)" readonly/>
+              <button 
+                v-if="earningsEditMode" 
+                class="btn btn-sm btn-danger ml-3" 
+                :disabled="deletingItems.includes(computeCode(item.label))"
+                @click="deleteItem(index, 'earnings')">
+                ✕
+              </button>
             </div>
           </div>
         </div>
@@ -253,26 +259,32 @@
           <!-- fixed -->
           <div class="form-group">
             <label>Income Tax</label>
-            <input type="number" class="form-control" :value="incomeTax" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(incomeTax)" readonly/>
           </div>
           <div class="form-group">
             <label>Social Security System</label>
-            <input type="number" class="form-control" :value="sss" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(sss)" readonly/>
           </div>
           <div class="form-group">
             <label>PhilHealth</label>
-            <input type="number" class="form-control" :value="philhealth" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(philhealth)" readonly/>
           </div>
           <div class="form-group">
             <label>Pagibig</label>
-            <input type="number" class="form-control" :value="pagibig" readonly/>
+            <input type="text" class="form-control" :value="formatCurrency(pagibig)" readonly/>
           </div>
           <!-- dynamic -->
           <div class="form-group" v-for="(item, index) in deductions" :key="index">
             <label>{{ item.label }}</label>
             <div class="d-flex align-items-center">
-              <input type="number" class="form-control"  v-model.number="item.amount" />
-              <button v-if="deductionEditMode" class="btn btn-sm btn-danger ml-3" @click="removeDeduction(index)">✕</button>
+              <input type="text" class="form-control"  :value="formatCurrency(item.amount)" readonly/>
+              <button 
+                v-if="deductionEditMode" 
+                class="btn btn-sm btn-danger ml-3" 
+                :disabled="deletingItems.includes(computeCode(item.label))"
+                @click="deleteItem(index, 'deductions')">
+                ✕
+              </button>
             </div>
           </div>
         </div>
@@ -284,15 +296,15 @@
           </div>
           <div class="form-group">
             <label>Gross Pay</label>
-            <input type="number" class="form-control" :value="grossPay" readonly />
+            <input type="text" class="form-control" :value="formatCurrency(grossPay)" readonly />
           </div>
           <div class="form-group">
             <label>Total Deduction</label>
-            <input type="number" class="form-control" :value="totalDeduction" readonly />
+            <input type="text" class="form-control" :value="formatCurrency(totalDeduction)" readonly />
           </div>
           <div class="form-group">
             <label>Net Pay</label>
-            <input type="number" class="form-control font-weight-bold" :value="netPay" readonly />
+            <input type="text" class="form-control font-weight-bold" :value="formatCurrency(netPay)" readonly />
           </div>
         </div>
 
@@ -346,7 +358,7 @@
             <button class="btn btn-secondary mr-3" data-dismiss="modal">
               Cancel
             </button>
-            <button class="btn btn-primary" @click="saveCompenOrDeduc">Save</button>
+            <button class="btn btn-primary" :disabled="isClick" @click="saveCompenOrDeduc">Save</button>
           </div>
         </div>
       </div>
@@ -367,11 +379,14 @@ export default {
       salaries: [],
       earnings: [],
       deductions: [],
+      deletingItems: [],
+
+      isClick: false,
 
       editModePay: false,
       editModeRate: false,
 
-      editMode: false,
+      earningsEditMode: false,
       deductionEditMode: false,
 
       modalType: "",
@@ -428,21 +443,7 @@ export default {
         this.updateMonthly();
       })
       .catch((error) => console.error(error));
-
-      api.get(PayrollComputation.fetchDynamicData)
-      .then(response => {
-        const amount = response.data;
-        this.earnings = (amount.earnings || []).map(({ label, value }) => ({
-          label,
-          amount: parseFloat(value) || 0
-        }));
-        this.deductions = (amount.deductions || []).map(({ label, value }) => ({
-          label,
-          amount: parseFloat(value) || 0
-        }));
-        console.log('Dynamic Data response:', response.data);
-      })
-      .catch(err => console.error(err));
+      this.fetchDynamicData();
 
   },
 
@@ -526,18 +527,23 @@ export default {
 
     // Total Computation
     grossPay() {
-      let total = 0;
+      const monthly = Number(this.getMonthly()) || 0;
+      let earningsTotal = 0;
       for (let item of this.earnings) {
-        total += item.amount;
+        earningsTotal += Number(item.amount) || 0;
       }
-      return total;
+      return monthly + earningsTotal;
     },
     totalDeduction() {
-      let total = 0;
+      let deductionsTotal = 0;
       for (let item of this.deductions) {
-        total += item.amount;
+        deductionsTotal += Number(item.amount) || 0;
       }
-      return total;
+      const incomeTax = Number(this.incomeTax) || 0;
+      const sss = Number(this.sss) || 0;
+      const philhealth = Number(this.philhealth) || 0;
+      const pagibig = Number(this.pagibig) || 0;
+      return deductionsTotal + incomeTax + sss + philhealth + pagibig;
     },
     netPay() {
       return this.grossPay - this.totalDeduction;
@@ -628,6 +634,7 @@ export default {
             message += `${item.label}: ${item.value}<br/>`;
           });
         }
+        this.fetchDynamicData();
         console.log('CompenOrDeduc response:', response.data)
 
         Swal.fire({
@@ -638,6 +645,53 @@ export default {
       })
       
       .catch((err) => console.error(err));
+    },
+
+    deleteItem(index, group) {
+      const list = group === 'earnings' ? this.earnings : this.deductions;
+      const component = list[index];
+      const code = this.computeCode(component.label);
+      if (this.deletingItems.includes(code)) return; // avoid duplicate deletion requests
+      this.deletingItems.push(code);
+      
+      api.delete(PayrollComputation.deleteComponent, {
+        data: { code, group }
+      })
+      .then(response => {
+        list.splice(index, 1);
+        if (group === 'earnings') {
+          this.earningsEditMode = false;
+        } else if (group === 'deductions') {
+          this.deductionEditMode = false;
+        }
+        this.fetchDynamicData();
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          text: `${response.data.label}: ${this.formatCurrency(response.data.value)}`
+        });
+      })
+      .catch(err => console.error(err))
+      .finally(() => {
+        const i = this.deletingItems.indexOf(code);
+        if (i > -1) this.deletingItems.splice(i, 1);
+      });
+    },
+
+    fetchDynamicData() {
+      api.get(PayrollComputation.fetchDynamicData)
+        .then(response => {
+          const amount = response.data;
+          this.earnings = (amount.earnings || []).map(({ label, value }) => ({
+            label,
+            amount: parseFloat(value) || 0
+          }));
+          this.deductions = (amount.deductions || []).map(({ label, value }) => ({
+            label,
+            amount: parseFloat(value) || 0
+          }));
+        })
+        .catch(err => console.error(err));
     },
 
 
@@ -655,11 +709,8 @@ export default {
       return item ? item.value : 0;
     },
 
-    removeEarning(index) {
-      this.earnings.splice(index, 1);
-    },
-    removeDeduction(index) {
-      this.deductions.splice(index, 1);
+    computeCode(label) {
+      return label.trim().toLowerCase().replace(/\s+/g, '_');
     },
 
     getMonthly() {

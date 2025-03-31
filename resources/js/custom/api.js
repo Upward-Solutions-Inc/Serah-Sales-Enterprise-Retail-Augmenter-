@@ -22,4 +22,5 @@ export const PayrollComputation = {
   updateRate: '/payroll/computation/updateRate',
   updateCompenOrDeduc: '/payroll/computation/updateCompenOrDeduc',
   fetchDynamicData: '/payroll/computation/dynamicData',
+  deleteComponent: '/payroll/computation/deleteComponent'
 }
