@@ -6,19 +6,19 @@ services:
     container_name: thenest_app
     restart: unless-stopped
     environment:
-      - MYSQL_HOST=host.docker.internal
+      - MYSQL_HOST=thenest-db
       - MYSQL_USER=root
       - MYSQL_PASSWORD=root
       - MYSQL_DATABASE=u559597593_thenest
     ports:
       - "8000:8000"
     depends_on:
-      - ph-db
-    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+      - thenest-db
+    command: sh -c "php artisan websockets:serve --port=6001 & php artisan serve --host=0.0.0.0 --port=8000"
     networks:
       - thenest_network
     
-  ph-db:
+  thenest-db:
     image: mysql:8.0
     restart: unless-stopped
     ports:
@@ -28,6 +28,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./custom.cnf:/etc/mysql/conf.d/custom.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -43,10 +44,10 @@ services:
     ports:
       - "8080:80"
     environment:
-      PMA_HOST: ph-db  # Corrected value
+      PMA_HOST: thenest-db  # Corrected value
       MYSQL_ROOT_PASSWORD: root
     depends_on:
-      - ph-db
+      - thenest-db
     networks:
       - thenest_network
 

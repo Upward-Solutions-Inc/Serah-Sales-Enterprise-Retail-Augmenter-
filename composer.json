@@ -15,6 +15,7 @@
         "altek/eventually": "^2.0",
         "aws/aws-sdk-php": "^3.231",
         "barryvdh/laravel-dompdf": "^2.0",
+        "beyondcode/laravel-websockets": "^1.14.1",
         "binary-cats/laravel-sku": "^0.5.0",
         "doctrine/dbal": "^3.6",
         "erusev/parsedown": "^1.7",

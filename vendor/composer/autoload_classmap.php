@@ -492,6 +492,7 @@ return array(
     'App\\Models\\Core\\Traits\\Uuid' => $baseDir . '/app/Models/Core/Traits/Uuid.php',
     'App\\Models\\Hr\\Dtr\\DtrConfig' => $baseDir . '/app/Models/Hr/Dtr/DtrConfig.php',
     'App\\Models\\Hr\\Dtr\\DtrLog' => $baseDir . '/app/Models/Hr/Dtr/DtrLog.php',
+    'App\\Models\\Hr\\Payroll\\PayrollComponent' => $baseDir . '/app/Models/Hr/Payroll/PayrollComponent.php',
     'App\\Models\\Hr\\Payroll\\PayrollSalary' => $baseDir . '/app/Models/Hr/Payroll/PayrollSalary.php',
     'App\\Models\\Pos\\Inventory\\AdjustmentVariant' => $baseDir . '/app/Models/Pos/Inventory/AdjustmentVariant.php',
     'App\\Models\\Pos\\Inventory\\Adjustment\\Adjustment' => $baseDir . '/app/Models/Pos/Inventory/Adjustment/Adjustment.php',

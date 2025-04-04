@@ -1,5 +1,11 @@
 FROM php:8.1-cli
 
+# Install nano for in-container editing
+RUN apt-get update && apt-get install -y nano
+
+# Copy your custom my.cnf (custom.cnf should be in the same folder)
+COPY custom.cnf /etc/mysql/conf.d/custom.cnf
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -21,31 +27,21 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /var/www
 
-# Copy only composer files first for caching
-COPY composer.json composer.lock ./
+# Copy environment file
+COPY .env .env
+COPY . .
 
-# Install dependencies (including websockets)
-RUN composer install --no-scripts --no-interaction --optimize-autoloader
+# Install Laravel websockets and project dependencies
+RUN composer require beyondcode/laravel-websockets:"^1.14" \
+    && composer install --no-scripts --no-interaction --optimize-autoloader
 
-# Copy Laravel project files into the container
-COPY . /var/www
+# Set permissions and create storage symlink
+RUN chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache \
+    && php artisan storage:link
 
-# Install Laravel dependencies (without running migrations)
-RUN composer install --no-scripts --no-interaction --optimize-autoloader
+# Expose necessary ports
+EXPOSE 8000 6001
 
-# Ensure storage and bootstrap/cache directories are writable
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Run Laravel + WebSockets with safe storage link
+CMD sh -c "php artisan websockets:serve --port=6001 & php artisan serve --host=0.0.0.0 --port=8000"
 
-RUN rm -rf public/storage
-
-# Create a new storage symlink
-RUN php artisan storage:link
-
-RUN php artisan key:generate
-
-# Generate app key AFTER the container starts
-CMD php artisan serve --host=0.0.0.0 --port=8000
-
-# Expose Laravel port
-EXPOSE 8000

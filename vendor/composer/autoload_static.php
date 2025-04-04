@@ -1352,6 +1352,7 @@ class ComposerStaticInit84f2585ba7c701085b23df810703bc44
         'App\\Models\\Core\\Traits\\Uuid' => __DIR__ . '/../..' . '/app/Models/Core/Traits/Uuid.php',
         'App\\Models\\Hr\\Dtr\\DtrConfig' => __DIR__ . '/../..' . '/app/Models/Hr/Dtr/DtrConfig.php',
         'App\\Models\\Hr\\Dtr\\DtrLog' => __DIR__ . '/../..' . '/app/Models/Hr/Dtr/DtrLog.php',
+        'App\\Models\\Hr\\Payroll\\PayrollComponent' => __DIR__ . '/../..' . '/app/Models/Hr/Payroll/PayrollComponent.php',
         'App\\Models\\Hr\\Payroll\\PayrollSalary' => __DIR__ . '/../..' . '/app/Models/Hr/Payroll/PayrollSalary.php',
         'App\\Models\\Pos\\Inventory\\AdjustmentVariant' => __DIR__ . '/../..' . '/app/Models/Pos/Inventory/AdjustmentVariant.php',
         'App\\Models\\Pos\\Inventory\\Adjustment\\Adjustment' => __DIR__ . '/../..' . '/app/Models/Pos/Inventory/Adjustment/Adjustment.php',
