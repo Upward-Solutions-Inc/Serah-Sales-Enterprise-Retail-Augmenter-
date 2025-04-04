@@ -2,7 +2,7 @@
 
 @section('title', __('Payroll Reports'))
 
-@section('content')
+@section('contents')
     <div id="app">
         <payroll-reports></payroll-reports>
     </div>

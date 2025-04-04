@@ -16,6 +16,11 @@ export const DtrConfig = {
     store: '/dtr/configuration/store'
 }
 
+// Payroll Reports
+export const PayrollReports = {
+  fetchUsers: '/payroll/reports/users'
+}
+
 export const PayrollComputation = {
   fetch: '/payroll/computation/data',
   updatePay: '/payroll/computation/updatePay',
