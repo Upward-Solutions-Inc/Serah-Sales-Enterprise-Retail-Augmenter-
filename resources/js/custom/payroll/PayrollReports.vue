@@ -2,7 +2,7 @@
     <div class="content-wrapper">
         <div class="row">
             <div class="col-sm-3">
-            <h4>Payslip</h4>
+                <h4>Payslip</h4>
             </div>
         </div>
     

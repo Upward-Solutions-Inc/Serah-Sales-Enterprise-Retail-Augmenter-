@@ -96,6 +96,7 @@ Route::get('/php-info-test', [InstallDemoDataController::class, 'phpInfo']);
 //Added Application
 Route::prefix('dtr')->middleware(['auth'])->group(function () {
     require base_path('routes/hr/dtr/time_clock.php');
+    require base_path('routes/hr/dtr/employee_id.php');
     require base_path('routes/hr/dtr/config.php');
 });
 

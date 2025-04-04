@@ -17,6 +17,7 @@
                     'icon' => 'clock',
                     'subMenu' => [
                         ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
+                        ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true],
                         ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true]
                     ],
                     'permission' => true
