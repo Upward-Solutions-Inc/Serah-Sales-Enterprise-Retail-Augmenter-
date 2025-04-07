@@ -52,8 +52,8 @@
                 <tbody>
                     <tr v-for="(payslip, index) in payslips" :key="index" class="text-center">
                         <td>{{ payslip.date }}</td>
-                        <td>{{ payslip.employee }}</td>
                         <td>{{ formatCurrency(payslip.basic_pay) }}</td>
+                        <td>{{ formatCurrency(payslip.overtime_pay) }}</td>  
                         <td>{{ formatCurrency(payslip.allowance) }}</td>
                         <td>{{ formatCurrency(payslip.deductions) }}</td>
                         <td>{{ formatCurrency(payslip.gross) }}</td>
@@ -105,11 +105,11 @@
         currentDateTime: '',
 
         headers: [
-            'Date',
-            'Employee',
+            'Date Range',
             'Basic Pay',
-            'Allowance',
-            'Deductions',
+            'Total Overtime Pay',
+            'Total Allowance',
+            'Total Deductions',
             'Gross Pay',
             'Net Pay',
             'Action'
@@ -118,8 +118,8 @@
         payslips: [
             {
                 date: '2025-03-24',
-                employee: 'John Doe',
                 basic_pay: 500,
+                overtime_pay: 100,
                 allowance: 100,
                 deductions: 50,
                 gross: 600,

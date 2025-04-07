@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Payroll;
+namespace App\Services\Hr\Payroll;
 
 use App\Models\Hr\Payroll\PayrollSalary;
 use App\Models\Hr\Payroll\PayrollComponent;
@@ -48,7 +48,10 @@ class PayrollService
         ]);
 
         foreach ($userIds as $userId) {
-            $salary = PayrollSalary::where('user_id', $userId)->first();
+            $roleId = DB::table('role_user')->where('user_id', $userId)->value('role_id');
+            if (!$roleId) continue;
+
+            $salary = PayrollSalary::where('role_id', $roleId)->first();
             if (!$salary) continue;
 
             $dtrLogs = $logs->get($userId, collect());

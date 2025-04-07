@@ -33,10 +33,10 @@ class ReportsController extends Controller
         $components = PayrollComponent::pluck('value', 'code')->toArray();
 
         DB::transaction(function () use ($userIds, $start, $end, $payrollType, $createdBy, $components) {
-            $payrollService = new PayrollService($components);
+            $payrollService = new PayrollService(null, $components);
             $payrollService->generatePayrollBatch($userIds, $start, $end, $payrollType, $createdBy);
         });
 
-        return response()->json(['message' => 'Payroll generated successfully.']);
+        return response()->json(['success' => true]);
     }
 }

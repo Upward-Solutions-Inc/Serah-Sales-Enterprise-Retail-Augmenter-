@@ -22,6 +22,20 @@
                     </button>
                 </div>
 
+                <!-- Progress Modal -->
+                <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content text-center p-4">
+                        <h5 class="mb-3">Generating Payroll...</h5>
+                        <div class="progress w-100">
+                            <div class="progress-bar" role="progressbar" :style="{ width: progress + '%' }">
+                            {{ progress }}%
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Modal -->
                 <div class="modal fade" id="generatePayrollModal" tabindex="-1" role="dialog" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -72,14 +86,6 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isGenerating" class="mb-3">
-                    <div class="progress">
-                        <div class="progress-bar" role="progressbar" :style="{ width: progress + '%' }">
-                        {{ progress }}%
-                        </div>
-                    </div>
-                </div>
-
 
                 <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary position-relative">
                     <loader 
@@ -91,34 +97,44 @@
                     <table v-else class="table table-striped table-borderless">
                         <thead>
                             <tr>
-                            <th v-for="(label, index) in headers" :key="index" class="datatable-th pt-0 text-center">
+                            <th v-for="(label, index) in headers" :key="index" class="datatable-th pt-0 text-center fixed-col">
                                 <span class="font-size-default">{{ label }}</span>
                             </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(payslip, index) in payslips" :key="index" class="text-center">
-                                <td>{{ payslip.date }}</td>
-                                <td>{{ payslip.employee }}</td>
-                                <td>{{ formatCurrency(payslip.basic_pay) }}</td>
-                                <td>{{ formatCurrency(payslip.allowance) }}</td>
-                                <td>{{ formatCurrency(payslip.deductions) }}</td>
-                                <td>{{ formatCurrency(payslip.gross) }}</td>
-                                <td>{{ formatCurrency(payslip.net) }}</td>
-                                <td>
-                                    <div class="dropdown">
-                                        <i class="fas fa-ellipsis-v" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="#">View</a>
-                                            <a class="dropdown-item" href="#">Print</a>
-                                            <a class="dropdown-item text-danger" href="#">Delete</a>
-                                        </div>
-                                    </div>
-                                </td>
+                            <tr v-for="(report, index) in reports" :key="index" class="text-center">
+                            <td class="fixed-col">{{ report.date_range }}</td>
+                            <td class="fixed-col">{{ report.payroll_type }}</td>
+                            <td class="fixed-col">{{ report.total_employees }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.basic_pay) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.allowance) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.overtime) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.other_earnings) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.other_deductions) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.sss) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.philhealth) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.pagibig) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.tax) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.gross) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.total_deductions) }}</td>
+                            <td class="fixed-col">{{ formatCurrency(report.net) }}</td>
+                            <td class="fixed-col">{{ report.generated_by }}</td>
+                            <td class="fixed-col">
+                                <div class="dropdown">
+                                <i class="fas fa-ellipsis-v" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" @click.prevent="showPayrollDetails(report)">View</a>
+                                    <a class="dropdown-item" href="#">Print</a>
+                                    <a class="dropdown-item text-danger" href="#">Delete</a>
+                                </div>
+                                </div>
+                            </td>
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="payslips.length === 0" class="no-data-found-wrapper text-center p-primary">
+
+                    <div v-if="reports.length === 0" class="no-data-found-wrapper text-center p-primary">
                         <img src="/images/no_data.svg" alt="" class="mb-primary">
                         <p class="mb-0 text-center">Nothing to show here</p>
                         <p class="mb-0 text-center text-secondary font-size-90">
@@ -133,6 +149,7 @@
 </template>
 <script>
 import Loader from '../components/Loader.vue'
+import Swal from "sweetalert2";
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 import api, { PayrollReports } from '../api.js'
@@ -160,25 +177,43 @@ import api, { PayrollReports } from '../api.js'
             },
 
             headers: [
-                'Date',
-                'Employee',
-                'Basic Pay',
-                'Allowance',
-                'Deductions',
-                'Gross Pay',
-                'Net Pay',
+                'Date Range',
+                'Payroll Type',
+                'No. of Employee',
+                'Total Basic Pay',
+                'Total Allowance',
+                'Total Overtime',
+                'Total Other Earnings',
+                'Total Other Deductions',
+                'Total SSS',
+                'Total PhilHealth',
+                'Total Pag-IBIG',
+                'Total Income Tax',
+                'Total Gross Pay',
+                'Total Deductions',
+                'Total Net Pay',
+                'Generated by',
                 'Action'
             ],
 
-            payslips: [
+            reports: [
                 {
-                    date: '2025-03-24',
-                    employee: 'John Doe',
-                    basic_pay: 500,
-                    allowance: 100,
-                    deductions: 50,
-                    gross: 600,
-                    net: 550,
+                    date_range: '2025-03-01 to 2025-03-15',
+                    payroll_type: 'Semi-Monthly',
+                    total_employees: 5,
+                    basic_pay: 25000,
+                    allowance: 5000,
+                    overtime: 1200,
+                    other_earnings: 800,
+                    other_deductions: 500,
+                    sss: 1500,
+                    philhealth: 750,
+                    pagibig: 500,
+                    tax: 2000,
+                    gross: 32000,
+                    total_deductions: 5250,
+                    net: 26750,
+                    generated_by: 'Admin',
                 },
             ]
         }
@@ -232,15 +267,16 @@ import api, { PayrollReports } from '../api.js'
             console.log('Selected Date Range:', this.$refs.rangePicker.value);
             console.log('Selected Users:', this.selectedUsers);
 
+            $('#generatePayrollModal').modal('hide');
+            $('#progressModal').modal('show');
             this.isGenerating = true;
             this.progress = 0;
 
             const total = this.selectedUsers.length;
-            let count = 0;
 
             this.progressInterval = setInterval(() => {
                 if (this.progress < 95) {
-                this.progress += Math.floor((100 / total) * 0.5); // slow ramp
+                this.progress += Math.floor((100 / total) * 0.5);
                 }
             }, 500);
 
@@ -249,18 +285,29 @@ import api, { PayrollReports } from '../api.js'
                 start_date: this.$refs.rangePicker.value.split(' to ')[0],
                 end_date: this.$refs.rangePicker.value.split(' to ')[1],
                 user_ids: this.selectedUsers
-            }).then(() => {
+            }).then((res) => {
+                console.log('API response:', res); 
+                $('#progressModal').modal('hide');
                 clearInterval(this.progressInterval);
                 this.progress = 100;
                 setTimeout(() => {
                     this.isGenerating = false;
-                    this.$toast.success('Payroll generated successfully.');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Payroll generated successfully.'
+                    });
                 }, 600);
             }).catch(error => {
+                $('#progressModal').modal('hide');
                 clearInterval(this.progressInterval);
                 this.isGenerating = false;
                 this.progress = 0;
-                this.$toast.error(error.response?.data?.message || 'Failed to generate payroll.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.response?.data?.message || 'Failed to generate payroll.'
+                });
             });
         },
     },
@@ -277,3 +324,9 @@ import api, { PayrollReports } from '../api.js'
     }
 }
 </script>  
+<style>
+    .fixed-col {
+        min-width: 150px;
+        white-space: nowrap;
+    }
+</style>
