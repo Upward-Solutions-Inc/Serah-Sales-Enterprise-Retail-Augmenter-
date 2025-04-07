@@ -141,4 +141,5 @@ GROSS PAY
 # use -- User.php -- to get the current log user
 
 # RIGHT WAY TO SEED
+> composer dump-autoload
 > php artisan db:seed --class=Database\Seeders\Hr\Payroll\PayrollComponentSeeder
