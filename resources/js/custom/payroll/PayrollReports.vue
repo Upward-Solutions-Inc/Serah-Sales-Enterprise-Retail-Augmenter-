@@ -72,6 +72,13 @@
                         </div>
                     </div>
                 </div>
+                <div v-if="isGenerating" class="mb-3">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" :style="{ width: progress + '%' }">
+                        {{ progress }}%
+                        </div>
+                    </div>
+                </div>
 
 
                 <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary position-relative">
@@ -136,6 +143,9 @@ import api, { PayrollReports } from '../api.js'
     },
     data() {
         return {
+            isGenerating: false,
+            progress: 0,
+            progressInterval: null,
             isLoading: false,
             picker: null,
             currentDateTime: '',
@@ -216,13 +226,42 @@ import api, { PayrollReports } from '../api.js'
             this.errors.type = !this.selectedPayrollType;
             this.errors.date = !this.$refs.rangePicker.value;
             this.errors.users = this.selectedUsers.length === 0;
-
             if (this.errors.type || this.errors.date || this.errors.users) return;
-
 
             console.log('Payroll Type:', this.selectedPayrollType);
             console.log('Selected Date Range:', this.$refs.rangePicker.value);
             console.log('Selected Users:', this.selectedUsers);
+
+            this.isGenerating = true;
+            this.progress = 0;
+
+            const total = this.selectedUsers.length;
+            let count = 0;
+
+            this.progressInterval = setInterval(() => {
+                if (this.progress < 95) {
+                this.progress += Math.floor((100 / total) * 0.5); // slow ramp
+                }
+            }, 500);
+
+            api.post(PayrollReports.generate, {
+                payroll_type: this.selectedPayrollType,
+                start_date: this.$refs.rangePicker.value.split(' to ')[0],
+                end_date: this.$refs.rangePicker.value.split(' to ')[1],
+                user_ids: this.selectedUsers
+            }).then(() => {
+                clearInterval(this.progressInterval);
+                this.progress = 100;
+                setTimeout(() => {
+                    this.isGenerating = false;
+                    this.$toast.success('Payroll generated successfully.');
+                }, 600);
+            }).catch(error => {
+                clearInterval(this.progressInterval);
+                this.isGenerating = false;
+                this.progress = 0;
+                this.$toast.error(error.response?.data?.message || 'Failed to generate payroll.');
+            });
         },
     },
     watch: {

@@ -18,7 +18,8 @@ export const DtrConfig = {
 
 // Payroll Reports
 export const PayrollReports = {
-  fetchUsers: '/payroll/reports/users'
+  fetchUsers: '/payroll/reports/users',
+  generate: '/payroll/reports/generate'
 }
 
 export const PayrollComputation = {
