@@ -19,7 +19,13 @@ return new class extends Migration
             $table->date('date_range_end');
             $table->string('payroll_type');
             $table->unsignedInteger('total_employees')->default(0);
-            $table->decimal('total_compensation', 15, 2)->default(0);
+            $table->decimal('total_basic_pay', 15, 2)->default(0);
+            $table->decimal('total_overtime_pay', 15, 2)->default(0);
+            
+            $table->unsignedInteger('total_earnings')->default(0);
+            $table->unsignedInteger('total_deductions')->default(0);
+
+            $table->decimal('total_allowance', 15, 2)->default(0);
             $table->decimal('total_sss', 15, 2)->default(0);
             $table->decimal('total_philhealth', 15, 2)->default(0);
             $table->decimal('total_pagibig', 15, 2)->default(0);

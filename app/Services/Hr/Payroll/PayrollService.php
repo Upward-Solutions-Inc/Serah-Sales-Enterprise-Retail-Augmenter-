@@ -36,7 +36,10 @@ class PayrollService
             'sss' => 0,
             'philhealth' => 0,
             'pagibig' => 0,
-            'compensation' => 0
+            'compensation' => 0,
+            'basic_pay' => 0,
+            'overtime_pay' => 0,
+            'allowance' => 0,
         ];
 
         $payrollCount = PayrollCount::create([
@@ -65,12 +68,15 @@ class PayrollService
         PayrollPayslip::insert($insertRows);
 
         $payrollCount->update([
-            'total_sss'          => $totals['sss'],
-            'total_philhealth'   => $totals['philhealth'],
-            'total_pagibig'      => $totals['pagibig'],
-            'total_gross'        => $totals['gross'],
-            'total_net'          => $totals['net'],
-            'total_compensation' => $totals['compensation'],
+            'total_sss'           => $totals['sss'],
+            'total_philhealth'    => $totals['philhealth'],
+            'total_pagibig'       => $totals['pagibig'],
+            'total_gross'         => $totals['gross'],
+            'total_net'           => $totals['net'],
+            'total_compensation'  => $totals['compensation'],
+            'total_basic_pay'     => $totals['basic_pay'],
+            'total_overtime_pay'  => $totals['overtime_pay'],
+            'total_allowance'     => $totals['allowance'],
         ]);
     }
 
@@ -100,6 +106,9 @@ class PayrollService
         $totals['gross'] += $result['gross_pay'];
         $totals['net'] += $result['net_pay'];
         $totals['compensation'] += $monthlySalary;
+        $totals['basic_pay'] += $monthlySalary;
+        $totals['overtime_pay'] += $result['overtime_amount'];
+        $totals['allowance'] += 0; // update this if allowance is computed later
     }
 
     public function calculateGrossPay(array $earnings): float
