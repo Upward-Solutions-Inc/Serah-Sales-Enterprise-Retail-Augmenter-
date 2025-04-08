@@ -202,6 +202,7 @@ import api, { PayrollReports } from '../api.js'
         this.isLoading = true
         this.fetchUsers()
         this.fetchReports()
+        this.initEchoListener()
 
         this.picker = flatpickr(this.$refs.rangePicker, {
             mode: 'range',
@@ -236,6 +237,14 @@ import api, { PayrollReports } from '../api.js'
         },
         toggleSelectAll() {
             this.selectedUsers = this.selectAll ? this.users.map(u => u.id) : []
+        },
+
+        initEchoListener() {
+            Echo.channel('payroll-channel')
+                .listen('.payroll.generated', (e) => {
+                    console.log('Payroll broadcast received:', e.message)
+                    this.fetchReports()
+                })
         },
 
         fetchReports() {

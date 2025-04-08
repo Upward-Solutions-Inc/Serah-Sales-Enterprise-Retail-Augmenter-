@@ -3,7 +3,6 @@
 namespace App\Services\Hr\Payroll;
 
 use App\Models\Hr\Payroll\PayrollSalary;
-use App\Models\Hr\Payroll\PayrollComponent;
 use App\Models\Hr\Dtr\DtrLog;
 use App\Models\Hr\Payroll\PayrollPayslip;
 use App\Models\Hr\Payroll\PayrollCount;
@@ -133,6 +132,28 @@ class PayrollService
         return $gross - $deductions;
     }
 
+    public function calculateIncomeTax(float $monthlySalary): float
+    {
+        $annualSalary = $monthlySalary * 12;
+        $annualTax = 0;
+
+        if ($annualSalary <= 250000) {
+            $annualTax = 0;
+        } elseif ($annualSalary <= 400000) {
+            $annualTax = ($annualSalary - 250000) * 0.15;
+        } elseif ($annualSalary <= 800000) {
+            $annualTax = 22500 + ($annualSalary - 400000) * 0.20;
+        } elseif ($annualSalary <= 2000000) {
+            $annualTax = 102500 + ($annualSalary - 800000) * 0.25;
+        } elseif ($annualSalary <= 8000000) {
+            $annualTax = 402500 + ($annualSalary - 2000000) * 0.30;
+        } else {
+            $annualTax = 2202500 + ($annualSalary - 8000000) * 0.35;
+        }
+
+        return round($annualTax / 12, 2);
+    }
+
     public function calculateOvertimeFromDtrLogs(): float
     {
         $totalOvertimeMinutes = 0;
@@ -143,7 +164,8 @@ class PayrollService
         }
         $overtimeHours = $totalOvertimeMinutes / 60;
         $hourlyRate = $this->salary->monthly_salary / (22 * 8);
-        return $overtimeHours * $hourlyRate;
+        $rate = (float) ($this->components['ot_regular'] ?? 1.25);
+        return $overtimeHours * $hourlyRate * $rate;
     }
 
     public function calculateNightDiffFromDtrLogs(): float
@@ -156,16 +178,18 @@ class PayrollService
         }
         $nightHours = $nightDiffMinutes / 60;
         $hourlyRate = $this->salary->monthly_salary / (22 * 8);
-        return $nightHours * $hourlyRate * 1.1; // 10% night diff premium
+        $rate = (float) ($this->components['nightpay'] ?? 1.1);
+        return $nightHours * $hourlyRate * $rate;
     }
 
     public function computePayroll(array $data): array
     {
         $monthlySalary = (float) $this->salary->monthly_salary;
 
-        $sssRate        = isset($this->components['sss']) ? (float) $this->components['sss'] : 0.045;
-        $philhealthRate = isset($this->components['philhealth']) ? (float) $this->components['philhealth'] : 0.025;
-        $pagibigRate    = isset($this->components['pagibig']) ? (float) $this->components['pagibig'] : 0.02;
+        $incomeTax = $this->calculateIncomeTax($monthlySalary);
+        $sssRate        = (float) ($this->components['sss'] ?? 0.045);
+        $philhealthRate = (float) ($this->components['philhealth'] ?? 0.025);
+        $pagibigRate    = (float) ($this->components['pagibig'] ?? 0.01);
 
         $sss        = $monthlySalary * $sssRate;
         $philhealth = $monthlySalary * $philhealthRate;
@@ -175,7 +199,7 @@ class PayrollService
         $nightDiffAmount     = $this->calculateNightDiffFromDtrLogs();
 
         $grossEarnings = $this->calculateGrossPay($data['earnings'] ?? []) + $overtimeAmount + $nightDiffAmount;
-        $totalDeductions = $this->calculateDeductions($data['deductions'] ?? []) + $sss + $philhealth + $pagibig;
+        $totalDeductions = $this->calculateDeductions($data['deductions'] ?? []) + $incomeTax + $sss + $philhealth + $pagibig;
         $netPay = $this->calculateNetPay($grossEarnings, $totalDeductions);
 
         return [
@@ -183,6 +207,7 @@ class PayrollService
             'overtime_amount'    => number_format($overtimeAmount, 2, '.', ''),
             'night_differential' => number_format($nightDiffAmount, 2, '.', ''),
             'gross_pay'          => number_format($grossEarnings, 2, '.', ''),
+            'income_tax' => number_format($incomeTax, 2, '.', ''),
             'sss'                => number_format($sss, 2, '.', ''),
             'philhealth'         => number_format($philhealth, 2, '.', ''),
             'pagibig'            => number_format($pagibig, 2, '.', ''),

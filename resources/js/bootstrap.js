@@ -7,6 +7,8 @@ import Swal from 'sweetalert2';
 import $ from 'jquery';
 import 'popper.js'; // Required for BS4
 import 'bootstrap';
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support
@@ -17,6 +19,7 @@ import 'bootstrap';
 window.$ = window.jQuery = $;
 window.Swal = Swal;
 window._ = _; // Lodash
+window.Pusher = Pusher;
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -37,3 +40,13 @@ if (document.querySelector('meta[name="csrf-token"]')) {
  * allows your team to easily build robust real-time web applications.
  */
 
+
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: process.env.MIX_PUSHER_APP_KEY,
+    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+    wsHost: window.location.hostname,
+    wsPort: 6001,
+    forceTLS: false,
+    disableStats: true,
+});
