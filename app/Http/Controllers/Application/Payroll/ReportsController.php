@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Core\Auth\User;
 use App\Services\Hr\Payroll\PayrollService;
+use App\Models\Hr\Payroll\PayrollCount;
 use App\Models\Hr\Payroll\PayrollComponent;
 use Illuminate\Support\Facades\DB;
 
@@ -14,6 +15,41 @@ class ReportsController extends Controller
     public function index()
     {
         return view('custom.payroll.reports');
+    }
+
+    public function data()
+    {
+        $item = PayrollCount::with(['creator', 'payslips'])
+            ->latest('date_range_end')
+            ->first();
+
+        if (!$item) {
+            return response()->json([]);
+        }
+
+        $report = [
+            'date_range'           => $item->date_range_start . ' to ' . $item->date_range_end,
+            'payroll_type'         => $item->payroll_type,
+            'total_employees'      => $item->total_employees,
+            'total_basic_pay'      => $item->total_basic_pay,
+            'total_allowance'      => $item->total_allowance,
+            'total_overtime'       => $item->total_overtime_pay,
+            'total_other_earnings' => $item->payslips->sum(fn($p) => collect($p->earnings)->sum('amount')),
+            'total_other_deductions' => $item->payslips->sum(fn($p) => collect($p->deductions)->sum('amount')),
+            'total_sss'            => $item->total_sss,
+            'total_philhealth'     => $item->total_philhealth,
+            'total_pagibig'        => $item->total_pagibig,
+            'total_income_tax'     => $item->payslips->sum('income_tax'),
+            'total_gross'          => $item->total_gross,
+            'total_deductions'     => $item->payslips->sum(fn($p) =>
+                $p->sss + $p->philhealth + $p->pagibig + $p->income_tax + collect($p->deductions)->sum('amount')
+            ),
+            'total_net'            => $item->total_net,
+            'generated_by'         => $item->creator->name ?? 'N/A',
+            'id'                   => $item->id,
+        ];
+
+        return response()->json([$report]);
     }
 
     public function getUsers()
@@ -39,4 +75,5 @@ class ReportsController extends Controller
 
         return response()->json(['success' => true]);
     }
+
 }

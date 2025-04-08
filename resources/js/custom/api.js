@@ -16,8 +16,14 @@ export const DtrConfig = {
     store: '/dtr/configuration/store'
 }
 
+// Payroll Payslip
+export const PayrollPayslip = {
+  fetchUserPayslips: '/payroll/payslip/employeePayslips',
+}
+
 // Payroll Reports
 export const PayrollReports = {
+  fetchData: '/payroll/reports/data',
   fetchUsers: '/payroll/reports/users',
   generate: '/payroll/reports/generate'
 }

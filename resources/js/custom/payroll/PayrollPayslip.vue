@@ -88,6 +88,7 @@
   
   <script>
   import Loader from '../components/Loader.vue'
+  import api, { PayrollPayslip } from '../api.js'
   export default {
     name: 'PayrollPayslip',
     components: {
@@ -101,8 +102,8 @@
     data() {
       return {
         isLoading: false,
-
         currentDateTime: '',
+        payslips: [],
 
         headers: [
             'Date Range',
@@ -114,22 +115,11 @@
             'Net Pay',
             'Action'
         ],
-
-        payslips: [
-            {
-                date: '2025-03-24',
-                basic_pay: 500,
-                overtime_pay: 100,
-                allowance: 100,
-                deductions: 50,
-                gross: 600,
-                net: 550,
-            },
-        ]
       }
     },
     mounted() {
       this.isLoading = true
+      this.fetchPayslips()
 
       setTimeout(() => {
         this.updateTime()
@@ -153,6 +143,23 @@
         hour12: true
         }
         this.currentDateTime = now.toLocaleString('en-US', options)
+      },
+
+      fetchPayslips() {
+        this.isLoading = true
+        api.get(PayrollPayslip.fetchUserPayslips).then(res => {
+          this.payslips = res.data.map(p => ({
+            date: p.date_range,
+            basic_pay: p.basic_pay,
+            overtime_pay: p.overtime_pay,
+            allowance: p.allowance,
+            deductions: parseFloat(p.sss) + parseFloat(p.pagibig) + parseFloat(p.philhealth) + parseFloat(p.income_tax) + (p.deductions ? p.deductions.reduce((sum, d) => sum + parseFloat(d.amount), 0) : 0),
+            gross: p.gross,
+            net: p.net,
+          }))
+        }).finally(() => {
+          this.isLoading = false
+        })
       }
     }
   }
