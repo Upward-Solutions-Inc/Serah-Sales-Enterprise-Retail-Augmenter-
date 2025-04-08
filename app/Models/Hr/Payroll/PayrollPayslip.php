@@ -11,7 +11,11 @@ class PayrollPayslip extends Model
     protected $fillable = [
         'user_id',
         'payroll_count_id',
+        'basic_pay',
+        'overtime_pay',
+        'night_differential',
         'allowance',
+        'income_tax',
         'sss',
         'pagibig',
         'philhealth',

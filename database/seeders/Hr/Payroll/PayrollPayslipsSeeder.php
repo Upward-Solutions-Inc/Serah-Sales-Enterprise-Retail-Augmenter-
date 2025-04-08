@@ -20,7 +20,11 @@ class PayrollPayslipsSeeder extends Seeder
             [
                 'user_id' => 1,
                 'payroll_count_id' => 1,
+                'basic_pay' => 9000,
+                'overtime_pay' => 500,
+                'night_differential' => 500,
                 'allowance' => 1000,
+                'income_tax' => 1000,
                 'sss' => 500,
                 'pagibig' => 200,
                 'philhealth' => 300,

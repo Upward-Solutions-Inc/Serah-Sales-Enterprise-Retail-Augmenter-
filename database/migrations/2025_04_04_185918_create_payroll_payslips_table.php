@@ -17,8 +17,14 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('payroll_count_id');
-        
+            
+            $table->decimal('basic_pay', 15, 2)->default(0);
+            $table->decimal('overtime_pay', 15, 2)->default(0);
+            $table->decimal('night_differential', 15, 2)->default(0);
+
             $table->decimal('allowance', 15, 2)->default(0);
+
+            $table->decimal('income_tax', 15, 2)->default(0);
             $table->decimal('sss', 15, 2)->default(0);
             $table->decimal('pagibig', 15, 2)->default(0);
             $table->decimal('philhealth', 15, 2)->default(0);

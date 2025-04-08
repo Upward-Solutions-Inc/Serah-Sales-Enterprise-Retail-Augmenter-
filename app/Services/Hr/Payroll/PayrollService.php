@@ -39,6 +39,7 @@ class PayrollService
             'compensation' => 0,
             'basic_pay' => 0,
             'overtime_pay' => 0,
+            'night_differential' => 0,
             'allowance' => 0,
         ];
 
@@ -68,33 +69,38 @@ class PayrollService
         PayrollPayslip::insert($insertRows);
 
         $payrollCount->update([
-            'total_sss'           => $totals['sss'],
-            'total_philhealth'    => $totals['philhealth'],
-            'total_pagibig'       => $totals['pagibig'],
-            'total_gross'         => $totals['gross'],
-            'total_net'           => $totals['net'],
-            'total_compensation'  => $totals['compensation'],
-            'total_basic_pay'     => $totals['basic_pay'],
-            'total_overtime_pay'  => $totals['overtime_pay'],
-            'total_allowance'     => $totals['allowance'],
+            'total_sss'               => $totals['sss'],
+            'total_philhealth'        => $totals['philhealth'],
+            'total_pagibig'           => $totals['pagibig'],
+            'total_gross'             => $totals['gross'],
+            'total_net'               => $totals['net'],
+            'total_compensation'      => $totals['compensation'],
+            'total_basic_pay'         => $totals['basic_pay'],
+            'total_overtime_pay'      => $totals['overtime_pay'],
+            'total_night_differential'=> $totals['night_differential'],
+            'total_allowance'         => $totals['allowance'],
         ]);
     }
 
     protected function buildPayslipRow($userId, $countId, $result): array
     {
         return [
-            'user_id'          => $userId,
-            'payroll_count_id' => $countId,
-            'allowance'        => 0,
-            'sss'              => $result['sss'],
-            'philhealth'       => $result['philhealth'],
-            'pagibig'          => $result['pagibig'],
-            'earnings'         => json_encode([]),
-            'deductions'       => json_encode([]),
-            'gross'            => $result['gross_pay'],
-            'net'              => $result['net_pay'],
-            'created_at'       => now(),
-            'updated_at'       => now(),
+            'user_id'             => $userId,
+            'payroll_count_id'    => $countId,
+            'basic_pay'           => $result['monthly_salary'],
+            'overtime_pay'        => $result['overtime_amount'],
+            'night_differential'  => $result['night_differential'],
+            'allowance'           => 0,
+            'income_tax'          => $result['income_tax'] ?? 0,
+            'sss'                 => $result['sss'],
+            'philhealth'          => $result['philhealth'],
+            'pagibig'             => $result['pagibig'],
+            'earnings'            => json_encode([]),
+            'deductions'          => json_encode([]),
+            'gross'               => $result['gross_pay'],
+            'net'                 => $result['net_pay'],
+            'created_at'          => now(),
+            'updated_at'          => now(),
         ];
     }
 
@@ -108,7 +114,8 @@ class PayrollService
         $totals['compensation'] += $monthlySalary;
         $totals['basic_pay'] += $monthlySalary;
         $totals['overtime_pay'] += $result['overtime_amount'];
-        $totals['allowance'] += 0; // update this if allowance is computed later
+        $totals['night_differential'] += $result['night_differential'];
+        $totals['allowance'] += 0;
     }
 
     public function calculateGrossPay(array $earnings): float
@@ -139,6 +146,19 @@ class PayrollService
         return $overtimeHours * $hourlyRate;
     }
 
+    public function calculateNightDiffFromDtrLogs(): float
+    {
+        $nightDiffMinutes = 0;
+        if ($this->dtrLogs) {
+            foreach ($this->dtrLogs as $log) {
+                $nightDiffMinutes += $log->night_diff_minutes ?? 0;
+            }
+        }
+        $nightHours = $nightDiffMinutes / 60;
+        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
+        return $nightHours * $hourlyRate * 1.1; // 10% night diff premium
+    }
+
     public function computePayroll(array $data): array
     {
         $monthlySalary = (float) $this->salary->monthly_salary;
@@ -151,20 +171,23 @@ class PayrollService
         $philhealth = $monthlySalary * $philhealthRate;
         $pagibig    = $monthlySalary < 1500 ? 100 : $monthlySalary * $pagibigRate;
 
-        $overtimeAmount = $this->calculateOvertimeFromDtrLogs();
-        $grossEarnings = $this->calculateGrossPay($data['earnings'] ?? []) + $overtimeAmount;
+        $overtimeAmount      = $this->calculateOvertimeFromDtrLogs();
+        $nightDiffAmount     = $this->calculateNightDiffFromDtrLogs();
+
+        $grossEarnings = $this->calculateGrossPay($data['earnings'] ?? []) + $overtimeAmount + $nightDiffAmount;
         $totalDeductions = $this->calculateDeductions($data['deductions'] ?? []) + $sss + $philhealth + $pagibig;
         $netPay = $this->calculateNetPay($grossEarnings, $totalDeductions);
 
         return [
-            'monthly_salary'  => number_format($monthlySalary, 2, '.', ''),
-            'overtime_amount' => number_format($overtimeAmount, 2, '.', ''),
-            'gross_pay'       => number_format($grossEarnings, 2, '.', ''),
-            'sss'             => number_format($sss, 2, '.', ''),
-            'philhealth'      => number_format($philhealth, 2, '.', ''),
-            'pagibig'         => number_format($pagibig, 2, '.', ''),
-            'total_deduction' => number_format($totalDeductions, 2, '.', ''),
-            'net_pay'         => number_format($netPay, 2, '.', ''),
+            'monthly_salary'     => number_format($monthlySalary, 2, '.', ''),
+            'overtime_amount'    => number_format($overtimeAmount, 2, '.', ''),
+            'night_differential' => number_format($nightDiffAmount, 2, '.', ''),
+            'gross_pay'          => number_format($grossEarnings, 2, '.', ''),
+            'sss'                => number_format($sss, 2, '.', ''),
+            'philhealth'         => number_format($philhealth, 2, '.', ''),
+            'pagibig'            => number_format($pagibig, 2, '.', ''),
+            'total_deduction'    => number_format($totalDeductions, 2, '.', ''),
+            'net_pay'            => number_format($netPay, 2, '.', ''),
         ];
     }
 }
