@@ -6368,6 +6368,11 @@
   "resolved" "https://registry.npmjs.org/klona/-/klona-2.0.5.tgz"
   "version" "2.0.5"
 
+"laravel-echo@^2.0.2":
+  "integrity" "sha512-Ciai6hA7r35MFqNRb8G034cvm9WiveSTFQQKRGJhWtZGbng7C8BBa5QvqDxk/Mw5GeJ+q19jrEwQhf7r1b1lcg=="
+  "resolved" "https://registry.npmjs.org/laravel-echo/-/laravel-echo-2.0.2.tgz"
+  "version" "2.0.2"
+
 "laravel-mix-merge-manifest@^0.1.2":
   "integrity" "sha512-U6FnfIkxMiOA/49JXSxv8OoW5SjHFTVkJCDq66gL0qt639nwy5aJBsttCyhuAa64xgd3oswGM5o3gpgBF00isQ=="
   "resolved" "https://registry.npmjs.org/laravel-mix-merge-manifest/-/laravel-mix-merge-manifest-0.1.2.tgz"

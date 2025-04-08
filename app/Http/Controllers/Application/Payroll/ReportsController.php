@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Application\Payroll;
 
 use App\Http\Controllers\Controller;
+use App\Events\PayrollGenerated;
 use Illuminate\Http\Request;
 use App\Models\Core\Auth\User;
 use App\Services\Hr\Payroll\PayrollService;
@@ -69,15 +70,23 @@ class ReportsController extends Controller
         $payrollType = $request->input('payroll_type');
         $createdBy   = auth()->id();
 
-        $components = PayrollComponent::pluck('value', 'code')->toArray();
+        $rates = PayrollComponent::where('group', 'rates')->pluck('value', 'code')->toArray();
+        $earnings = PayrollComponent::where('group', 'earnings')->get()->map(fn($e) => [
+            'component_id' => $e->id,
+            'amount' => (float) $e->value
+        ])->toArray();
 
-        DB::transaction(function () use ($userIds, $start, $end, $payrollType, $createdBy, $components) {
-            $payrollService = new PayrollService(null, $components);
-            $payrollService->generatePayrollBatch($userIds, $start, $end, $payrollType, $createdBy);
+        $deductions = PayrollComponent::where('group', 'deductions')->get()->map(fn($d) => [
+            'component_id' => $d->id,
+            'amount' => (float) $d->value
+        ])->toArray();
+
+        DB::transaction(function () use ($userIds, $start, $end, $payrollType, $createdBy, $rates, $earnings, $deductions) {
+            $payrollService = new PayrollService(null, $rates);
+            $payrollService->generatePayrollBatch($userIds, $start, $end, $payrollType, $createdBy, $earnings, $deductions);
         });
 
         broadcast(new PayrollGenerated('payroll_ready'))->toOthers();
-        
         return response()->json(['success' => true]);
     }
 

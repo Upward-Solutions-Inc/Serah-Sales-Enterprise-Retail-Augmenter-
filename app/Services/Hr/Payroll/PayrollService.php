@@ -21,13 +21,13 @@ class PayrollService
         $this->dtrLogs = $dtrLogs;
     }
 
-    public function generatePayrollBatch(array $userIds, $start, $end, $payrollType, $createdBy): void
+    public function generatePayrollBatch(array $userIds, $start, $end, $payrollType, $createdBy, array $earnings, array $deductions): void
     {
         $logs = DtrLog::whereIn('user_id', $userIds)
             ->whereBetween('date', [$start, $end])
             ->get()
             ->groupBy('user_id');
-
+    
         $insertRows = [];
         $totals = [
             'gross' => 0,
@@ -41,7 +41,7 @@ class PayrollService
             'night_differential' => 0,
             'allowance' => 0,
         ];
-
+    
         $payrollCount = PayrollCount::create([
             'date_range_start' => $start,
             'date_range_end'   => $end,
@@ -49,37 +49,41 @@ class PayrollService
             'total_employees'  => count($userIds),
             'created_by'       => $createdBy,
         ]);
-
+    
         foreach ($userIds as $userId) {
             $roleId = DB::table('role_user')->where('user_id', $userId)->value('role_id');
             if (!$roleId) continue;
-
+    
             $salary = PayrollSalary::where('role_id', $roleId)->first();
             if (!$salary) continue;
-
+    
             $dtrLogs = $logs->get($userId, collect());
+    
             $payroll = new self($salary, $this->components, $dtrLogs);
-            $result = $payroll->computePayroll(['earnings' => [], 'deductions' => []]);
-
+            $result = $payroll->computePayroll([
+                'earnings' => $earnings,
+                'deductions' => $deductions,
+            ]);
+    
             $insertRows[] = $this->buildPayslipRow($userId, $payrollCount->id, $result);
-            $this->accumulateTotals($totals, $result, $salary->monthly_salary);
+            $this->accumulateTotals($totals, $result, $result['monthly_salary']);
         }
-
+    
         PayrollPayslip::insert($insertRows);
-
+    
         $payrollCount->update([
-            'total_sss'               => $totals['sss'],
-            'total_philhealth'        => $totals['philhealth'],
-            'total_pagibig'           => $totals['pagibig'],
-            'total_gross'             => $totals['gross'],
-            'total_net'               => $totals['net'],
-            'total_compensation'      => $totals['compensation'],
-            'total_basic_pay'         => $totals['basic_pay'],
-            'total_overtime_pay'      => $totals['overtime_pay'],
-            'total_night_differential'=> $totals['night_differential'],
-            'total_allowance'         => $totals['allowance'],
+            'total_sss'                => $totals['sss'],
+            'total_philhealth'         => $totals['philhealth'],
+            'total_pagibig'            => $totals['pagibig'],
+            'total_gross'              => $totals['gross'],
+            'total_net'                => $totals['net'],
+            'total_compensation'       => $totals['compensation'],
+            'total_basic_pay'          => $totals['basic_pay'],
+            'total_overtime_pay'       => $totals['overtime_pay'],
+            'total_night_differential' => $totals['night_differential'],
+            'total_allowance'          => $totals['allowance'],
         ]);
-    }
+    }    
 
     protected function buildPayslipRow($userId, $countId, $result): array
     {
@@ -94,8 +98,8 @@ class PayrollService
             'sss'                 => $result['sss'],
             'philhealth'          => $result['philhealth'],
             'pagibig'             => $result['pagibig'],
-            'earnings'            => json_encode([]),
-            'deductions'          => json_encode([]),
+            'earnings'            => json_encode($result['raw_earnings'] ?? []),
+            'deductions'          => json_encode($result['raw_deductions'] ?? []),
             'gross'               => $result['gross_pay'],
             'net'                 => $result['net_pay'],
             'created_at'          => now(),
@@ -111,7 +115,7 @@ class PayrollService
         $totals['gross'] += $result['gross_pay'];
         $totals['net'] += $result['net_pay'];
         $totals['compensation'] += $monthlySalary;
-        $totals['basic_pay'] += $monthlySalary;
+        $totals['basic_pay'] += (float) $monthlySalary;
         $totals['overtime_pay'] += $result['overtime_amount'];
         $totals['night_differential'] += $result['night_differential'];
         $totals['allowance'] += 0;
@@ -119,18 +123,34 @@ class PayrollService
 
     public function calculateGrossPay(array $earnings): float
     {
-        return array_sum($earnings);
+        return array_sum(array_column($earnings, 'amount'));
     }
-
+    
     public function calculateDeductions(array $deductions): float
     {
-        return array_sum($deductions);
+        return array_sum(array_column($deductions, 'amount'));
     }
 
     public function calculateNetPay(float $gross, float $deductions): float
     {
         return $gross - $deductions;
     }
+
+    public function calculateBasicPayFromDtrLogs(): float
+    {
+        $totalWorkHours = 0;
+        $totalOvertimeHours = 0;
+    
+        foreach ($this->dtrLogs ?? [] as $log) {
+            $totalWorkHours += (float) ($log->total_work_hours ?? 0);
+            $totalOvertimeHours += ((int) ($log->overtime_minutes ?? 0)) / 60;
+        }
+    
+        $regularHours = max(0, $totalWorkHours - $totalOvertimeHours);
+        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
+    
+        return $regularHours * $hourlyRate;
+    }   
 
     public function calculateIncomeTax(float $monthlySalary): float
     {
@@ -184,7 +204,7 @@ class PayrollService
 
     public function computePayroll(array $data): array
     {
-        $monthlySalary = (float) $this->salary->monthly_salary;
+        $monthlySalary = $this->calculateBasicPayFromDtrLogs();
 
         $incomeTax = $this->calculateIncomeTax($monthlySalary);
         $sssRate        = (float) ($this->components['sss'] ?? 0.045);
@@ -195,10 +215,11 @@ class PayrollService
         $philhealth = $monthlySalary * $philhealthRate;
         $pagibig    = $monthlySalary < 1500 ? 100 : $monthlySalary * $pagibigRate;
 
+        $otherEarnings    = $this->calculateGrossPay($data['earnings'] ?? []);
         $overtimeAmount      = $this->calculateOvertimeFromDtrLogs();
         $nightDiffAmount     = $this->calculateNightDiffFromDtrLogs();
-
-        $grossEarnings = $this->calculateGrossPay($data['earnings'] ?? []) + $overtimeAmount + $nightDiffAmount;
+;
+        $grossEarnings = $monthlySalary + $overtimeAmount + $nightDiffAmount + $otherEarnings;
         $totalDeductions = $this->calculateDeductions($data['deductions'] ?? []) + $incomeTax + $sss + $philhealth + $pagibig;
         $netPay = $this->calculateNetPay($grossEarnings, $totalDeductions);
 
@@ -206,8 +227,10 @@ class PayrollService
             'monthly_salary'     => number_format($monthlySalary, 2, '.', ''),
             'overtime_amount'    => number_format($overtimeAmount, 2, '.', ''),
             'night_differential' => number_format($nightDiffAmount, 2, '.', ''),
+            'raw_earnings'       => $data['earnings'],
+            'raw_deductions'     => $data['deductions'],
             'gross_pay'          => number_format($grossEarnings, 2, '.', ''),
-            'income_tax' => number_format($incomeTax, 2, '.', ''),
+            'income_tax'         => number_format($incomeTax, 2, '.', ''),
             'sss'                => number_format($sss, 2, '.', ''),
             'philhealth'         => number_format($philhealth, 2, '.', ''),
             'pagibig'            => number_format($pagibig, 2, '.', ''),
