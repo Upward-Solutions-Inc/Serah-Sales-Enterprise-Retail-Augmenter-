@@ -10,6 +10,13 @@ const api = axios.create({
 
 export default api
 
+export const timeClock = {
+  status: '/dtr/status',
+  clockIn: '/dtr/clock-in',
+  clockOut: '/dtr/clock-out',
+  logs: '/dtr/logs'
+}
+
 // Dtr Configuration
 export const DtrConfig = {
     fetch: '/dtr/configuration/data',
