@@ -16,6 +16,11 @@ export const DtrConfig = {
     store: '/dtr/configuration/store'
 }
 
+// Employee Id
+export const EmployeeId = {
+  generateQr: '/dtr/employee_id/generateUserQrFromData'
+}
+
 // Payroll Payslip
 export const PayrollPayslip = {
   fetchUserPayslips: '/payroll/payslip/employeePayslips',

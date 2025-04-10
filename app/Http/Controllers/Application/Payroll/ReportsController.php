@@ -20,9 +20,14 @@ class ReportsController extends Controller
 
     public function getUsers()
     {
-        $users = User::select('id', 'first_name', 'last_name')->get();
+        $users = User::select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'roles.name as role', 'branch_or_warehouses.name as branch')
+            ->leftJoin('role_user', 'users.id', '=', 'role_user.user_id')
+            ->leftJoin('roles', 'role_user.role_id', '=', 'roles.id')
+            ->leftJoin('branch_or_warehouses', 'users.branch_or_warehouse_id', '=', 'branch_or_warehouses.id')
+            ->get();
+    
         return response()->json($users);
-    }
+    }    
 
     public function data()
     {

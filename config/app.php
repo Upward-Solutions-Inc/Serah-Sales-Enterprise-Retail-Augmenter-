@@ -263,5 +263,6 @@ return [
         'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
 
+        'QrCode' => \SimpleSoftwareIO\QrCode\Facades\QrCode::class,
     ],
 ];
