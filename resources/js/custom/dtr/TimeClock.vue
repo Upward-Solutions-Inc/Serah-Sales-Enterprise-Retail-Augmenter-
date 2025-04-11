@@ -102,7 +102,7 @@
   </template>
   
   <script>
-  import api, { timeClock } from '../api.js'
+  import api, { TimeClock } from '../api.js'
   import { Html5QrcodeScanner } from "html5-qrcode"
   import * as faceapi from 'face-api.js'
   import Swal from 'sweetalert2'
@@ -140,19 +140,19 @@
     },
     methods: {
       fetchStatus() {
-        api.get(timeClock.status).then(res => {
+        api.get(TimeClock.status).then(res => {
           this.isClockedIn = res.data.clocked_in
           this.user = res.data.user
         })
       },
       fetchLogs() {
-        api.get(timeClock.logs).then(res => {
+        api.get(TimeClock.logs).then(res => {
           this.logs = res.data
         })
       },
       handleClock() {
         this.loading = true
-        const url = this.isClockedIn ? timeClock.clockOut : timeClock.clockIn
+        const url = this.isClockedIn ? TimeClock.clockOut : TimeClock.clockIn
         api.post(url).then(res => {
           Swal.fire({
             icon: res.data.status === 'success' ? 'success' : 'error',
@@ -213,8 +213,16 @@
         })
         this.scannerInstance.render(this.onQrSuccess, () => {})
       },
+      
       onQrSuccess(decodedText) {
         console.log("QR Scanned:", decodedText)
+        try {
+          this.scannedUserId = JSON.parse(decodedText) // ✅ Convert string to object
+        } catch (e) {
+          console.error("Invalid QR data format", e)
+          return
+        }
+
         if (this.scannerInstance) {
           this.scannerInstance.clear().then(() => {
             document.getElementById('qr-scanner').innerHTML = ''
@@ -223,6 +231,7 @@
         this.showFacePopup = true
         this.initFaceCapture()
       },
+
       async initFaceCapture() {
         await faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector')
         const video = document.getElementById('video')
@@ -260,6 +269,18 @@
         video.srcObject = null
         console.log('Captured face image:', imgData)
         this.showFacePopup = false
+
+              
+        console.log('Captured face image:', imgData.slice(0, 100) + '...') // log first 100 chars
+        console.log('Uploading face for user ID:', this.scannedUserId)
+
+        api.post(TimeClock.uploadFace, {
+            image: imgData,
+            // user_id: this.scannedUserId.id 
+        })
+            .then(res => console.log('Face saved:', res.data.path))
+            .catch(err => console.error('Upload error:', err))
+
         this.scannerInstance = null
         this.initQrScanner()
       }

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Application\DTR;
 
 use App\Http\Controllers\Controller;
 use App\Services\Hr\Dtr\TimeClockService;
+use App\Models\Core\Auth\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TimeClockController extends Controller
 {   
@@ -65,5 +67,66 @@ class TimeClockController extends Controller
         $logs = \App\Models\Hr\Dtr\DtrLog::with('user')->orderBy('created_at', 'desc')->get();
         return response()->json($logs);
     }
+
+
+    public function uploadFace(Request $request)
+    {
+        $data = $request->input('image');
+        $image = str_replace('data:image/jpeg;base64,', '', $data);
+        $image = str_replace(' ', '+', $image);
+        $imageName = 'face_' . now()->timestamp . '.jpg';
+
+        $folderPath = "faces";
+
+        Storage::disk('public')->put("{$folderPath}/{$imageName}", base64_decode($image));
+
+        return response()->json([
+            'status' => 'success',
+            'path' => "storage/{$folderPath}/{$imageName}"
+        ]);
+    }
+
+    
+
+    // To be FIX
+    // public function uploadFace(Request $request)
+    // {
+    //     dd('hit');
+    //     file_put_contents(storage_path('logs/debug.txt'), json_encode($request->all()));
+        
+    //     $userId = intval($request->input('user_id'));
+    //     $data = $request->input('image');
+    
+    //     $this->verifyUser($userId); // ensure user exists
+    
+    //     $image = str_replace('data:image/jpeg;base64,', '', $data);
+    //     $image = str_replace(' ', '+', $image);
+    //     $imageName = 'face_' . now()->timestamp . '.jpg';
+    
+    //     $folderPath = "faces/{$userId}";
+    
+    //     if (!Storage::disk('public')->exists($folderPath)) {
+    //         Storage::disk('public')->makeDirectory($folderPath);
+    //     }
+    
+    //     Storage::disk('public')->put("{$folderPath}/{$imageName}", base64_decode($image));
+    
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'path' => "storage/{$folderPath}/{$imageName}"
+    //     ]);
+    // }
+
+    // private function verifyUser($id)
+    // {
+    //     $user = User::find($id);
+    //     if (!$user) {
+    //         abort(response()->json([
+    //             'status' => 'error',
+    //             'message' => 'User is not a registered employee.'
+    //         ], 404));
+    //     }
+    //     return $user;
+    // }
     
 }
