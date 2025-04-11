@@ -15,7 +15,7 @@
             <p class="text-muted small mt-2">Scan to Clock In/Out</p>
           </div>
   
-          <div class="card text-center shadow pt-4 mb-4">
+          <!-- <div class="card text-center shadow pt-4 mb-4">
             <h6 class="card-title">Employee Profile</h6>
             <div class="d-flex justify-content-center">
               <img
@@ -35,7 +35,9 @@
             <div class="card-footer bg-transparent small text-muted">
               Today: <span>{{ currentTime }}</span>
             </div>
-          </div>
+          </div> -->
+
+          
         </div>
   
         <!-- Face Capture -->
@@ -267,19 +269,18 @@
         const imgData = canvas.toDataURL('image/jpeg')
         stream.getTracks().forEach(track => track.stop())
         video.srcObject = null
-        console.log('Captured face image:', imgData)
         this.showFacePopup = false
 
-              
-        console.log('Captured face image:', imgData.slice(0, 100) + '...') // log first 100 chars
-        console.log('Uploading face for user ID:', this.scannedUserId)
-
         api.post(TimeClock.uploadFace, {
-            image: imgData,
-            // user_id: this.scannedUserId.id 
+          image: imgData,
+          user_id: this.scannedUserId
+        }).then(res => {
+          console.log('Face saved:', res.data.path)
+          this.handleClock(this.scannedUserId) // 🔥 auto clock after face success
+        }).catch(err => {
+          console.error('Upload error:', err)
+          Swal.fire({ icon: 'error', title: 'Face Upload Failed' })
         })
-            .then(res => console.log('Face saved:', res.data.path))
-            .catch(err => console.error('Upload error:', err))
 
         this.scannerInstance = null
         this.initQrScanner()

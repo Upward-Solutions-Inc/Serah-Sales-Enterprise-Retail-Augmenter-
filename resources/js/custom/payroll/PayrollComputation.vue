@@ -26,7 +26,7 @@
 
         <div class="col-lg-4">
           <div class="form-group">
-            <label>Desgination</label>
+            <label>Designation</label>
             <select class="form-control" v-model="form.role_id">
                 <option v-for="role in roles" :key="role.id" :value="role.id" class="form-control">
                     {{ role.name }}
@@ -204,7 +204,7 @@
         <!-- Addtional Compensation -->
         <div class="col-md-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5><i>Addtional Compensation</i></h5>
+            <h5><i>Additional Compensation</i></h5>
             <div class="dropdown">
               <i class="fas fa-ellipsis-v" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu">

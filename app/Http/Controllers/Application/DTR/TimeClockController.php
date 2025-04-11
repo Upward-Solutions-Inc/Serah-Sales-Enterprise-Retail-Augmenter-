@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Application\DTR;
 use App\Http\Controllers\Controller;
 use App\Services\Hr\Dtr\TimeClockService;
 use App\Models\Core\Auth\User;
+use App\Models\Hr\Dtr\DtrLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -21,10 +22,14 @@ class TimeClockController extends Controller
 
     public function index()
     {   
-        // $user = auth()->user();
-        // dd($user);
-        $logs = \App\Models\Hr\Dtr\DtrLog::with('user')->orderBy('created_at', 'desc')->get();
+        $logs = DtrLog::with('user')->orderBy('created_at', 'desc')->get();
         return view('custom.dtr.time_clock', compact('logs'));
+    }
+
+    public function getLogs()
+    {
+        $logs = DtrLog::with('user')->orderBy('created_at', 'desc')->get();
+        return response()->json($logs);
     }
 
     public function clockIn(Request $request)
@@ -49,7 +54,7 @@ class TimeClockController extends Controller
     
             $currentDate = now()->format('Y-m-d');
     
-            $logExists = \App\Models\Hr\Dtr\DtrLog::where('user_id', $user->id)
+            $logExists = DtrLog::where('user_id', $user->id)
                 ->whereNull('clock_out')
                 ->exists();
     
@@ -61,13 +66,6 @@ class TimeClockController extends Controller
             return response()->json(['error' => 'Something went wrong! Check logs.'], 500);
         }
     }
-
-    public function getLogs()
-    {
-        $logs = \App\Models\Hr\Dtr\DtrLog::with('user')->orderBy('created_at', 'desc')->get();
-        return response()->json($logs);
-    }
-
 
     public function uploadFace(Request $request)
     {

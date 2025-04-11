@@ -1,4 +1,11 @@
 /*!
+	 * The buffer module from node.js, for the browser.
+	 *
+	 * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+	 * @license  MIT
+	 */
+
+/*!
   Copyright (c) 2016 Jed Watson.
   Licensed under the MIT License (MIT), see
   http://jedwatson.github.io/classnames
@@ -16,6 +23,14 @@
  * https://www.chartjs.org
  * (c) 2020 Chart.js Contributors
  * Released under the MIT License
+ */
+
+/*!
+ * Pusher JavaScript Library v4.4.0
+ * https://pusher.com/
+ *
+ * Copyright 2017, Pusher
+ * Released under the MIT licence.
  */
 
 /*!
