@@ -7,6 +7,7 @@ Route::get('/time-clock', [TimeClockController::class, 'index'])->name('dtr.time
 Route::get('/status', [TimeClockController::class, 'clockStatus'])->name('dtr.status');
 Route::get('/logs', [TimeClockController::class, 'getLogs'])->name('dtr.logs');
 
-Route::post('/clock-in', [TimeClockController::class, 'clockIn'])->name('dtr.clock_in');
+Route::post('/clock', [TimeClockController::class, 'clock'])->name('dtr.clock');
+Route::post('/clock-in', [TimeClockController::class, 'clock'])->name('dtr.clock_in');
 Route::post('/clock-out', [TimeClockController::class, 'clockOut'])->name('dtr.clock_out');
 Route::post('/time_clock/uploadFace', [TimeClockController::class, 'uploadFace'])->name('dtr.time_clock.uploadFace');

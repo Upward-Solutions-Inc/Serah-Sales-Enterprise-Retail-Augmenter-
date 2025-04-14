@@ -11,9 +11,8 @@ use Carbon\Carbon;
 
 class TimeClockService
 {
-    public function clockIn()
+    public function clockIn($user)
     {
-        $user = Auth::user();
         $currentDate = now()->format('Y-m-d');
         $currentTime = now()->format('H:i:s');
 
@@ -72,10 +71,8 @@ class TimeClockService
         ];
     }
 
-    public function clockOut()
+    public function clockOut($user)
     {
-        $user = Auth::user();
-        // $currentDate = now()->format('Y-m-d');
         $currentTime = now()->format('H:i:s');
 
         // Find the latest clock-in record for the user

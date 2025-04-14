@@ -21,110 +21,67 @@ class TimeClockController extends Controller
     }
 
     public function index()
-    {   
-        $logs = DtrLog::with('user')->orderBy('created_at', 'desc')->get();
-        return view('custom.dtr.time_clock', compact('logs'));
+    {
+        return view('custom.dtr.time_clock');
     }
 
     public function getLogs()
     {
-        $logs = DtrLog::with('user')->orderBy('created_at', 'desc')->get();
-        return response()->json($logs);
+        return DtrLog::with('user')
+            ->orderBy('updated_at', 'desc')
+            ->limit(20)
+            ->get();
     }
 
-    public function clockIn(Request $request)
-    {
-        $response = $this->timeClockService->clockIn();
+    public function clock(Request $request)
+    {   
+        \Log::info('CLOCK METHOD HIT ✅', ['uid' => $request->user_id]);
+        $user = $this->verifyUser($request->input('user_id'));
+
+        $dates = [now()->format('Y-m-d'), now()->subDay()->format('Y-m-d')];
+
+        $hasOpenLog = DtrLog::where('user_id', $user->id)
+            ->whereNull('clock_out')
+            ->whereIn('date', $dates)
+            ->exists();
+
+        $response = $hasOpenLog
+            ? $this->timeClockService->clockOut($user)
+            : $this->timeClockService->clockIn($user);
+
         return response()->json($response);
     }
 
-    public function clockOut(Request $request)
+    private function verifyUser($id)
     {
-        $response = $this->timeClockService->clockOut();
-        return response()->json($response);
-    }
-
-    public function clockStatus()
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json(['error' => 'User not authenticated'], 401);
-            }
-    
-            $currentDate = now()->format('Y-m-d');
-    
-            $logExists = DtrLog::where('user_id', $user->id)
-                ->whereNull('clock_out')
-                ->exists();
-    
-            return response()->json([
-                'clocked_in' => $logExists
-            ], 200);
-        } catch (\Exception $e) {
-            \Log::error("Clock status error: " . $e->getMessage());
-            return response()->json(['error' => 'Something went wrong! Check logs.'], 500);
+        $user = User::find($id);
+        if (!$user) {
+            abort(response()->json([
+                'status' => 'error',
+                'message' => 'User is not a registered employee.'
+            ], 404));
         }
+        return $user;
     }
 
     public function uploadFace(Request $request)
     {
-        $data = $request->input('image');
-        $image = str_replace('data:image/jpeg;base64,', '', $data);
+        $imageBase64 = $request->input('image');
+        $userId = $request->input('user_id');
+    
+        $image = str_replace('data:image/jpeg;base64,', '', $imageBase64);
         $image = str_replace(' ', '+', $image);
         $imageName = 'face_' . now()->timestamp . '.jpg';
-
-        $folderPath = "faces";
-
+    
+        $folderPath = "faces/{$userId}";
+    
+        // Ensure the directory exists (Laravel will auto-create it)
         Storage::disk('public')->put("{$folderPath}/{$imageName}", base64_decode($image));
-
+    
         return response()->json([
             'status' => 'success',
             'path' => "storage/{$folderPath}/{$imageName}"
         ]);
-    }
-
-    
-
-    // To be FIX
-    // public function uploadFace(Request $request)
-    // {
-    //     dd('hit');
-    //     file_put_contents(storage_path('logs/debug.txt'), json_encode($request->all()));
-        
-    //     $userId = intval($request->input('user_id'));
-    //     $data = $request->input('image');
-    
-    //     $this->verifyUser($userId); // ensure user exists
-    
-    //     $image = str_replace('data:image/jpeg;base64,', '', $data);
-    //     $image = str_replace(' ', '+', $image);
-    //     $imageName = 'face_' . now()->timestamp . '.jpg';
-    
-    //     $folderPath = "faces/{$userId}";
-    
-    //     if (!Storage::disk('public')->exists($folderPath)) {
-    //         Storage::disk('public')->makeDirectory($folderPath);
-    //     }
-    
-    //     Storage::disk('public')->put("{$folderPath}/{$imageName}", base64_decode($image));
-    
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'path' => "storage/{$folderPath}/{$imageName}"
-    //     ]);
-    // }
-
-    // private function verifyUser($id)
-    // {
-    //     $user = User::find($id);
-    //     if (!$user) {
-    //         abort(response()->json([
-    //             'status' => 'error',
-    //             'message' => 'User is not a registered employee.'
-    //         ], 404));
-    //     }
-    //     return $user;
-    // }
+    }    
     
 }

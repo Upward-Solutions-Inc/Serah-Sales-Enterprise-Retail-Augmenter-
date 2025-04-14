@@ -12,7 +12,8 @@ export default api
 
 // Dtr Time Clock
 export const TimeClock = {
-  status: '/dtr/status',
+  // clock: '/dtr/clock',
+  // status: '/dtr/status',
   clockIn: '/dtr/clock-in',
   clockOut: '/dtr/clock-out',
   logs: '/dtr/logs',

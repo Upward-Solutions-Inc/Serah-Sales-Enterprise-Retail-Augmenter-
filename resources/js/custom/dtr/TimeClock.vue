@@ -7,41 +7,19 @@
       </div>
   
       <div class="row no-gutter">
-        <!-- specific-test-user -->
+
         <div class="col-12 col-md-4 col-lg-3 mt-4">
+          <!-- specific-test-user -->
           <div class="card text-center shadow p-3">
             <h6 class="card-title">QR Scanner</h6>
             <div id="qr-scanner" style="width: 100%;"></div>
             <p class="text-muted small mt-2">Scan to Clock In/Out</p>
           </div>
-  
-          <!-- <div class="card text-center shadow pt-4 mb-4">
-            <h6 class="card-title">Employee Profile</h6>
-            <div class="d-flex justify-content-center">
-              <img
-                :src="user?.profile || '/images/avatar.png'"
-                class="rounded-circle"
-                style="width: 80px; height: 80px; object-fit: cover;"
-              />
-            </div>
-            <div class="card-body">
-              <h6 class="mb-1">{{ user?.name }}</h6>
-              <p class="text-muted small">({{ user?.role || 'Employee' }})</p>
-              <button :class="btnClass" class="btn w-100" @click="handleClock">
-                <span>{{ btnText }}</span>
-                <span class="spinner-border spinner-border-sm ml-2" v-if="loading"></span>
-              </button>
-            </div>
-            <div class="card-footer bg-transparent small text-muted">
-              Today: <span>{{ currentTime }}</span>
-            </div>
-          </div> -->
-
           
         </div>
   
         <!-- Face Capture -->
-        <div v-if="showFacePopup" class="face-popup">
+        <div v-if="showFacePopup" class="face-popup">  
           <button class="close-btn" @click="closeFacePopup">&times;</button>
           <div class="video-wrapper">
             <video id="video" autoplay muted playsinline></video>
@@ -105,6 +83,7 @@
   
   <script>
   import api, { TimeClock } from '../api.js'
+  import axios from 'axios'
   import { Html5QrcodeScanner } from "html5-qrcode"
   import * as faceapi from 'face-api.js'
   import Swal from 'sweetalert2'
@@ -116,6 +95,7 @@
         captureTriggered: false,
         showFacePopup: false,
         user: null,
+        scannedUserId: null,
         logs: [],
         currentTime: '',
         isClockedIn: false,
@@ -141,12 +121,6 @@
       }
     },
     methods: {
-      fetchStatus() {
-        api.get(TimeClock.status).then(res => {
-          this.isClockedIn = res.data.clocked_in
-          this.user = res.data.user
-        })
-      },
       fetchLogs() {
         api.get(TimeClock.logs).then(res => {
           this.logs = res.data
@@ -154,21 +128,25 @@
       },
       handleClock() {
         this.loading = true
-        const url = this.isClockedIn ? TimeClock.clockOut : TimeClock.clockIn
-        api.post(url).then(res => {
-          Swal.fire({
-            icon: res.data.status === 'success' ? 'success' : 'error',
-            title: res.data.message,
-            timer: 2500,
-            showConfirmButton: false
-          })
-          this.fetchStatus()
-          this.fetchLogs()
-        }).catch(() => {
-          Swal.fire({ icon: 'error', title: 'Clock Action Failed' })
-        }).finally(() => {
-          this.loading = false
+        console.log('Submitting to /dtr/clock', this.scannedUserId)
+        axios.post('/dtr/clock', {
+          user_id: this.scannedUserId
         })
+          .then(res => {
+            Swal.fire({
+              icon: res.data.status === 'success' ? 'success' : 'error',
+              title: res.data.message,
+              timer: 2000,
+              showConfirmButton: false
+            })
+            this.fetchLogs()
+          })
+          .catch(() => {
+            Swal.fire({ icon: 'error', title: 'Clock Action Failed' })
+          })
+          .finally(() => {
+            this.loading = false
+          })
       },
       startClock() {
         setInterval(() => {
@@ -219,12 +197,32 @@
       onQrSuccess(decodedText) {
         console.log("QR Scanned:", decodedText)
         try {
-          this.scannedUserId = JSON.parse(decodedText) // ✅ Convert string to object
+          const data = JSON.parse(decodedText)
+
+          if (!data.id) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid QR Code',
+              text: 'This QR does not contain a valid user ID.',
+              timer: 2500,
+              showConfirmButton: false
+            })
+
+            if (this.scannerInstance) {
+              this.scannerInstance.clear().then(() => {
+                document.getElementById('qr-scanner').innerHTML = ''
+                this.initQrScanner() // ✅ restart scanner
+              })
+            }
+            return
+          }
+          this.scannedUserId = data.id
+          console.log('Scanned ID:', this.scannedUserId) 
+
         } catch (e) {
           console.error("Invalid QR data format", e)
           return
         }
-
         if (this.scannerInstance) {
           this.scannerInstance.clear().then(() => {
             document.getElementById('qr-scanner').innerHTML = ''
@@ -276,7 +274,7 @@
           user_id: this.scannedUserId
         }).then(res => {
           console.log('Face saved:', res.data.path)
-          this.handleClock(this.scannedUserId) // 🔥 auto clock after face success
+          this.handleClock()
         }).catch(err => {
           console.error('Upload error:', err)
           Swal.fire({ icon: 'error', title: 'Face Upload Failed' })
@@ -287,7 +285,6 @@
       }
     },
     mounted() {
-      this.fetchStatus()
       this.fetchLogs()
       this.startClock()
       this.initQrScanner()
