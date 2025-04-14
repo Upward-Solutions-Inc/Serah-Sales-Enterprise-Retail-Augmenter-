@@ -21,21 +21,18 @@ class TimeClockController extends Controller
     }
 
     public function index()
-    {
+    {   
         return view('custom.dtr.time_clock');
     }
 
     public function getLogs()
     {
-        return DtrLog::with('user')
-            ->orderBy('updated_at', 'desc')
-            ->limit(20)
-            ->get();
+        $logs = DtrLog::with('user')->orderBy('updated_at', 'desc')->get();
+        return response()->json($logs);
     }
 
     public function clock(Request $request)
     {   
-        \Log::info('CLOCK METHOD HIT ✅', ['uid' => $request->user_id]);
         $user = $this->verifyUser($request->input('user_id'));
 
         $dates = [now()->format('Y-m-d'), now()->subDay()->format('Y-m-d')];

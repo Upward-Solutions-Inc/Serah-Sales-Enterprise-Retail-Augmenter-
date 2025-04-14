@@ -8,16 +8,6 @@
   
       <div class="row no-gutter">
 
-        <div class="col-12 col-md-4 col-lg-3 mt-4">
-          <!-- specific-test-user -->
-          <div class="card text-center shadow p-3">
-            <h6 class="card-title">QR Scanner</h6>
-            <div id="qr-scanner" style="width: 100%;"></div>
-            <p class="text-muted small mt-2">Scan to Clock In/Out</p>
-          </div>
-          
-        </div>
-  
         <!-- Face Capture -->
         <div v-if="showFacePopup" class="face-popup">  
           <button class="close-btn" @click="closeFacePopup">&times;</button>
@@ -26,6 +16,17 @@
             <div class="face-overlay"><p class="hint">Align your face</p></div>
           </div>
           <p class="instruction">Please align your face inside the oval.</p>
+        </div>
+
+        <div class="col-12 col-md-4 col-lg-3 mt-5">
+          <div class="card text-center shadow mt-4 p-3">
+            <h6 class="card-title">QR Scanner</h6>
+            <div id="qr-scanner" style="width: 100%;"></div>
+            <p class="text-muted small mt-2">Scan to Clock In/Out</p>
+            <div class="card-footer bg-transparent small text-muted">
+              Today:&nbsp;{{ currentDateTime }}
+            </div>
+          </div>
         </div>
   
         <div class="col-lg-9 mt-2">
@@ -92,12 +93,12 @@
     name: 'TimeClock',
     data() {
       return {
+        currentDateTime: '',
         captureTriggered: false,
         showFacePopup: false,
         user: null,
         scannedUserId: null,
         logs: [],
-        currentTime: '',
         isClockedIn: false,
         loading: false,
         currentPage: 1,
@@ -121,6 +122,19 @@
       }
     },
     methods: {
+      updateTime() {
+        const now = new Date()
+        const options = {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+        }
+        this.currentDateTime = now.toLocaleString('en-US', options)
+      },
       fetchLogs() {
         api.get(TimeClock.logs).then(res => {
           this.logs = res.data
@@ -149,12 +163,8 @@
           })
       },
       startClock() {
-        setInterval(() => {
-          this.currentTime = new Date().toLocaleString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric',
-            hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
-          })
-        }, 1000)
+        this.updateTime()
+        setInterval(this.updateTime, 1000)
       },
       formatTime(time) {
         if (!time || time === '00:00:00') return '-'
@@ -179,6 +189,7 @@
       },
       closeFacePopup() {
         this.showFacePopup = false
+        this.initQrScanner()
         const video = document.getElementById('video')
         if (video?.srcObject) {
           video.srcObject.getTracks().forEach(track => track.stop())
