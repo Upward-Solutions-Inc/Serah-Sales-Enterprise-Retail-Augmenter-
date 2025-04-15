@@ -212,7 +212,7 @@ class PayrollService
         $pagibigRate    = (float) ($this->components['pagibig'] ?? 0.01);
 
         $sss        = $monthlySalary * $sssRate;
-        $philhealth = $monthlySalary * $philhealthRate;
+        $philhealth = $monthlySalary < 10000 ? 250 : $monthlySalary * $philhealthRate;
         $pagibig    = $monthlySalary < 1500 ? 100 : $monthlySalary * $pagibigRate;
 
         $otherEarnings    = $this->calculateGrossPay($data['earnings'] ?? []);
