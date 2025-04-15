@@ -46,7 +46,7 @@
                   <div class="dropdown">
                     <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
                     <div class="dropdown-menu">
-                      <a class="dropdown-item" href="#" @click="generateQr(user)">Print</a>
+                      <a class="dropdown-item" href="#" @click="generateQr(user)">View</a>
                     </div>
                   </div>
                 </td>
@@ -157,7 +157,7 @@ export default {
       isLoading: true,
       users: [],
       currentPage: 1,
-      perPage: 2,
+      perPage: 10,
       qrSvg: null,
       pngDataUrl: null,
       selectedUser: {},

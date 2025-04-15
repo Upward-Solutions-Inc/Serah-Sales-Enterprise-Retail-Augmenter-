@@ -303,9 +303,13 @@ import api, { PayrollReports } from '../api.js'
         initEchoListener() {
             Echo.channel('payroll-channel')
                 .listen('.payroll.generated', (e) => {
-                    console.log('Payroll broadcast received:', e.message)
-                    this.fetchReports()
-                })
+                    console.log('Payroll broadcast received:', e.message);
+                    this.fetchReports();
+                    $('#progressModal').modal('hide');
+                    clearInterval(this.progressInterval);
+                    this.isGenerating = false;
+                    this.progress = 100;
+                });
         },
 
         changePage(page) {
@@ -350,10 +354,6 @@ import api, { PayrollReports } from '../api.js'
             this.errors.users = this.selectedUsers.length === 0;
             if (this.errors.type || this.errors.date || this.errors.users) return;
 
-            // console.log('Payroll Type:', this.selectedPayrollType);
-            // console.log('Selected Date Range:', this.$refs.rangePicker.value);
-            // console.log('Selected Users:', this.selectedUsers);
-
             $('#generatePayrollModal').modal('hide');
             $('#progressModal').modal('show');
             this.isGenerating = true;
@@ -363,34 +363,35 @@ import api, { PayrollReports } from '../api.js'
 
             this.progressInterval = setInterval(() => {
                 if (this.progress < 95) {
-                this.progress += Math.floor((100 / total) * 0.5);
+                    this.progress += Math.floor((100 / total) * 0.5);
                 }
             }, 500);
 
             const [start, end] = this.$refs.rangePicker.value.split(' to ');
+
             api.post(PayrollReports.generate, {
                 payroll_type: this.selectedPayrollType,
                 start_date: start,
                 end_date: end,
                 user_ids: this.selectedUsers
             }).then((res) => {
-                console.log('API response:', res); 
-                $('#progressModal').modal('hide');
-                clearInterval(this.progressInterval);
                 this.progress = 100;
+                clearInterval(this.progressInterval);
+                this.isGenerating = false;
+
                 setTimeout(() => {
-                    this.isGenerating = false;
+                    $('#progressModal').modal('hide');
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
                         text: 'Payroll generated successfully.'
                     });
-                }, 600);
+                }, 500);
             }).catch(error => {
-                $('#progressModal').modal('hide');
                 clearInterval(this.progressInterval);
                 this.isGenerating = false;
                 this.progress = 0;
+                $('#progressModal').modal('hide');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
