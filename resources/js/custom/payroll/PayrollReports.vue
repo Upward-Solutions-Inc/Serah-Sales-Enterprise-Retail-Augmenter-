@@ -140,7 +140,7 @@
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="#" @click.prevent="showPayrollDetails(report)">View</a>
                                     <a class="dropdown-item" href="#">Print</a>
-                                    <a class="dropdown-item text-danger" href="#">Delete</a>
+                                    <a class="dropdown-item text-danger" href="#" @click.prevent="deleteReport(report)">Delete</a>
                                 </div>
                                 </div>
                             </td>
@@ -319,6 +319,7 @@ import api, { PayrollReports } from '../api.js'
             api.get(PayrollReports.fetchData)
                 .then(res => {
                     this.reports = res.data.map(r => ({
+                        id: r.id,
                         date_range: r.date_range,
                         payroll_type: r.payroll_type,
                         total_employees: r.total_employees,
@@ -349,9 +350,9 @@ import api, { PayrollReports } from '../api.js'
             this.errors.users = this.selectedUsers.length === 0;
             if (this.errors.type || this.errors.date || this.errors.users) return;
 
-            console.log('Payroll Type:', this.selectedPayrollType);
-            console.log('Selected Date Range:', this.$refs.rangePicker.value);
-            console.log('Selected Users:', this.selectedUsers);
+            // console.log('Payroll Type:', this.selectedPayrollType);
+            // console.log('Selected Date Range:', this.$refs.rangePicker.value);
+            // console.log('Selected Users:', this.selectedUsers);
 
             $('#generatePayrollModal').modal('hide');
             $('#progressModal').modal('show');
@@ -397,6 +398,30 @@ import api, { PayrollReports } from '../api.js'
                 });
             });
         },
+
+        deleteReport(report) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will delete the payroll report and all linked payslips.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    api.post(PayrollReports.delete, { id: report.id })
+                        .then(() => {
+                            this.fetchReports();
+                            Swal.fire('Deleted!', 'The payroll report has been removed.', 'success');
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Failed to delete payroll report.', 'error');
+                        });
+                }
+            });
+        }
+
+
     }
 }
 </script>  

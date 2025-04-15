@@ -66,7 +66,6 @@
                                 <div class="dropdown-menu">
                                   <a class="dropdown-item" href="#">View</a>
                                   <a class="dropdown-item" href="#">Print</a>
-                                  <a class="dropdown-item text-danger" href="#">Delete</a>
                                 </div>
                             </div>
                         </td>

@@ -40,7 +40,8 @@ export const PayrollPayslip = {
 export const PayrollReports = {
   fetchData: '/payroll/reports/data',
   fetchUsers: '/payroll/reports/users',
-  generate: '/payroll/reports/generate'
+  generate: '/payroll/reports/generate',
+  delete: '/payroll/reports/delete',
 }
 
 export const PayrollComputation = {

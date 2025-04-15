@@ -66,7 +66,6 @@ class ReportsController extends Controller
         return response()->json($reports);
     }
     
-
     public function generate(Request $request)
     {
         $userIds     = $request->input('user_ids');
@@ -95,4 +94,15 @@ class ReportsController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function delete(Request $request)
+    {
+        $id = $request->id;
+
+        DB::transaction(function () use ($id) {
+            DB::table('payroll_payslips')->where('payroll_count_id', $id)->delete();
+            DB::table('payroll_counts')->where('id', $id)->delete();
+        });
+
+        return response()->json(['success' => true]);
+    }
 }
