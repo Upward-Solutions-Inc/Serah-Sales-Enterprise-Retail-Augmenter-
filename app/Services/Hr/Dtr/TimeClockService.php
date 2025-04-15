@@ -147,11 +147,13 @@ class TimeClockService
 
 
         // Calculate Total Hours
-        if ($shiftStartTime->greaterThan($clockInTime) && $clockInTime->hour < 12) {
-            $shiftStartTime = $shiftStartTime->subDay();
-        }
+        // if ($shiftStartTime->greaterThan($clockInTime) && $clockInTime->hour < 12) {
+        //     $shiftStartTime = $shiftStartTime->subDay();
+        // }
 
-        $actualStartTime = $clockInTime->greaterThanOrEqualTo($shiftStartTime) ? $clockInTime : $shiftStartTime;
+        $actualStartTime = $clockInTime->lessThanOrEqualTo($shiftStartTime) 
+            ? $shiftStartTime 
+            : $clockInTime;
 
         if ($clockOutTime->lessThan($actualStartTime)) {
             $clockOutTime->addDay();
