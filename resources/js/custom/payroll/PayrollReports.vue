@@ -13,7 +13,9 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="my-2 d-flex justify-content-between">
                         <div class="d-flex align-items-center">
-                        <p class="text-muted mb-0">Showing 0 to 0 items of 0</p>
+                            <p class="text-muted mb-0">
+                                Showing {{ startItem }} to {{ endItem }} of {{ reports.length }} items
+                            </p>
                         </div>
                     </div>
 
@@ -24,17 +26,28 @@
 
                 <!-- Progress Modal -->
                 <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content text-center p-4">
-                        <h5 class="mb-3">Generating Payroll...</h5>
-                        <div class="progress w-100">
-                            <div class="progress-bar" role="progressbar" :style="{ width: progress + '%' }">
-                            {{ progress }}%
+                    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                        <div class="modal-content p-4 text-center">
+                            <div class="mb-3">
+                                <div class="spinner-border text-primary mb-2" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <h6 class="font-weight-bold">Generating Payroll...</h6>
                             </div>
-                        </div>
+                            <div class="progress" style="height: 20px;">
+                                <div 
+                                    class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                    role="progressbar"
+                                    :style="{ width: progress + '%' }"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100">
+                                    {{ progress }}%
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- Modal -->
                 <div class="modal fade" id="generatePayrollModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -81,12 +94,13 @@
                         </div>
                         <div class="modal-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" @click="generatePayroll">Confirm</button>
+                            <button type="button" class="btn btn-primary" @click="generatePayroll" :disabled="isGenerating">Confirm</button>
                         </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- table -->
                 <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary position-relative">
                     <loader 
                     class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center"
@@ -103,7 +117,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(report, index) in reports" :key="index" class="text-center">
+                            <tr v-for="(report, index) in paginatedReports" :key="index" class="text-center">
                             <td class="fixed-col">{{ report.date_range }}</td>
                             <td class="fixed-col">{{ report.payroll_type }}</td>
                             <td class="fixed-col">{{ report.total_employees }}</td>
@@ -143,6 +157,25 @@
                         <p class="mb-0 text-center text-secondary font-size-90">Thank you</p>
                     </div>
                 </div>
+                
+                <!-- pagination -->
+                <nav v-if="totalPages > 1" class="mt-3">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                            <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
+                        </li>
+                        <li class="page-item" 
+                            v-for="page in totalPages" 
+                            :key="page" 
+                            :class="{ active: currentPage === page }">
+                            <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                        </li>
+                        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                            <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+
             </div>
         </div>
     </div>
@@ -171,6 +204,8 @@ import api, { PayrollReports } from '../api.js'
             selectedUsers: [],
             reports: [],
             selectAll: false,
+            currentPage: 1,
+            perPage: 10,
             errors: {
                 type: false,
                 date: false,
@@ -223,6 +258,32 @@ import api, { PayrollReports } from '../api.js'
 
         this.isLoading = false
     },
+    watch: {
+        selectedUsers(val) {
+            this.selectAll = val.length === this.users.length
+        },
+        selectedPayrollType(val) {
+            if (val) this.errors.type = false;
+        },
+        'selectedUsers.length'(val) {
+            if (val > 0) this.errors.users = false;
+        }
+    },
+    computed: {
+        paginatedReports() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.reports.slice(start, start + this.perPage);
+        },
+        totalPages() {
+            return Math.ceil(this.reports.length / this.perPage);
+        },
+        startItem() {
+        return this.reports.length === 0 ? 0 : (this.perPage * (this.currentPage - 1)) + 1;
+        },
+        endItem() {
+            return Math.min(this.startItem + this.paginatedReports.length - 1, this.reports.length);
+        }
+    },
     methods: {
         clearDate() {
             this.picker.clear();
@@ -245,6 +306,12 @@ import api, { PayrollReports } from '../api.js'
                     console.log('Payroll broadcast received:', e.message)
                     this.fetchReports()
                 })
+        },
+
+        changePage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+            }
         },
 
         fetchReports() {
@@ -299,10 +366,11 @@ import api, { PayrollReports } from '../api.js'
                 }
             }, 500);
 
+            const [start, end] = this.$refs.rangePicker.value.split(' to ');
             api.post(PayrollReports.generate, {
                 payroll_type: this.selectedPayrollType,
-                start_date: this.$refs.rangePicker.value.split(' to ')[0],
-                end_date: this.$refs.rangePicker.value.split(' to ')[1],
+                start_date: start,
+                end_date: end,
                 user_ids: this.selectedUsers
             }).then((res) => {
                 console.log('API response:', res); 
@@ -329,17 +397,6 @@ import api, { PayrollReports } from '../api.js'
                 });
             });
         },
-    },
-    watch: {
-        selectedUsers(val) {
-            this.selectAll = val.length === this.users.length
-        },
-        selectedPayrollType(val) {
-            if (val) this.errors.type = false;
-        },
-        'selectedUsers.length'(val) {
-            if (val > 0) this.errors.users = false;
-        }
     }
 }
 </script>  

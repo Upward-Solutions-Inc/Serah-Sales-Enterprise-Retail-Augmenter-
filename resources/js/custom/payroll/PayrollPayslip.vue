@@ -31,7 +31,9 @@
           <div class="datatable">
             <div class="my-2 d-flex justify-content-between">
               <div class="d-flex align-items-center">
-                <p class="text-muted mb-0">Showing 0 to 0 items of 0</p>
+                <p class="text-muted mb-0">
+                  Showing {{ startItem }} to {{ endItem }} of {{ payslips.length }} items
+                </p>
               </div>
             </div>
             <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary position-relative">
@@ -50,7 +52,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(payslip, index) in payslips" :key="index" class="text-center">
+                    <tr v-for="(payslip, index) in paginatedPayslips" :key="index" class="text-center">
                         <td>{{ payslip.date }}</td>
                         <td>{{ formatCurrency(payslip.basic_pay) }}</td>
                         <td>{{ formatCurrency(payslip.overtime_pay) }}</td>  
@@ -80,6 +82,21 @@
                 <p class="mb-0 text-center text-secondary font-size-90">Thank you</p>
               </div>
             </div>
+
+            <nav v-if="totalPages > 1" class="mt-3">
+              <ul class="pagination justify-content-end">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
+                </li>
+                <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
+
           </div>
         </div>
       </div>
@@ -103,6 +120,8 @@
       return {
         isLoading: false,
         currentDateTime: '',
+        currentPage: 1,
+        perPage: 10,
         payslips: [],
 
         headers: [
@@ -120,15 +139,30 @@
     mounted() {
       this.isLoading = true
       this.fetchPayslips()
-
-      setTimeout(() => {
-        this.updateTime()
-        this.isLoading = false
-      }, 2000)
+      this.updateTime();
+    },
+    computed: {
+      paginatedPayslips() {
+        const start = (this.currentPage - 1) * this.perPage;
+        return this.payslips.slice(start, start + this.perPage);
+      },
+      totalPages() {
+        return Math.ceil(this.payslips.length / this.perPage);
+      },
+      startItem() {
+        return this.payslips.length === 0 ? 0 : (this.perPage * (this.currentPage - 1)) + 1;
+      },
+      endItem() {
+        return Math.min(this.startItem + this.paginatedPayslips.length - 1, this.payslips.length);
+      }
     },
     methods: {
       formatCurrency(value) {
         return `₱ ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+      },
+
+      changePage(page) {
+        if (page >= 1 && page <= this.totalPages) this.currentPage = page;
       },
 
       updateTime() {

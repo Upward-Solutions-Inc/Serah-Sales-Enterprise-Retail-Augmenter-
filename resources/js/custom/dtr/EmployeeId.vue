@@ -11,7 +11,7 @@
         <div class="my-2 d-flex justify-content-between">
           <div class="d-flex align-items-center">
             <p class="text-muted mb-0">
-              Showing {{ pagination.start }} to {{ pagination.end }} items of {{ users.length }}
+              Showing {{ startItem }} to {{ endItem }} of {{ users.length }} items
             </p>
           </div>
         </div>
@@ -62,26 +62,26 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="mt-3">
-          <nav>
-            <ul class="pagination pagination-sm mb-0">
-              <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="goToPage(currentPage - 1)">Prev</a>
-              </li>
-              <li
-                class="page-item"
-                v-for="n in Array.from({ length: totalPages }, (_, i) => i + 1)"
-                :key="n"
-                :class="{ active: currentPage === n }"
-              >
-                <a class="page-link" href="#" @click.prevent="goToPage(n)">{{ n }}</a>
-              </li>
-              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="goToPage(currentPage + 1)">Next</a>
-              </li>
-            </ul>
-          </nav>
-        </div>
+        <nav v-if="totalPages > 1" class="mt-2">
+          <ul class="pagination justify-content-end">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
+            </li>
+            <li
+              class="page-item"
+              v-for="page in visiblePages"
+              :key="page"
+              :class="{ active: currentPage === page }"
+            >
+              <a class="page-link" href="#" @click.prevent="changePage(page)">
+                {{ page }}
+              </a>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+              <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+            </li>
+          </ul>
+        </nav>
 
         <!-- Mobile Cards -->
         <div class="d-md-none">
@@ -157,7 +157,7 @@ export default {
       isLoading: true,
       users: [],
       currentPage: 1,
-      perPage: 10,
+      perPage: 2,
       qrSvg: null,
       pngDataUrl: null,
       selectedUser: {},
@@ -173,7 +173,22 @@ export default {
       return this.users.slice(start, end)
     },
     totalPages() {
-      return Math.ceil(this.users.length / this.perPage)
+      return Math.ceil(this.users.length / this.perPage);
+    },
+    startItem() {
+      return this.users.length === 0 ? 0 : (this.perPage * (this.currentPage - 1)) + 1;
+    },
+    endItem() {
+      return Math.min(this.startItem + this.paginatedUsers.length - 1, this.users.length);
+    },
+    visiblePages() {
+      const range = 2;
+      let start = Math.max(this.currentPage - range, 1);
+      let end = Math.min(this.currentPage + range, this.totalPages);
+
+      const pages = [];
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
     }
   },
   watch: {
@@ -199,9 +214,10 @@ export default {
           this.isLoading = false
         })
     },
-    goToPage(page) {
-      if (page < 1 || page > this.totalPages) return
-      this.currentPage = page
+    changePage(page) {
+        if (page >= 1 && page <= this.totalPages) {
+            this.currentPage = page;
+        }
     },
     generateQr(user) {
       this.qrSvg = null
@@ -309,15 +325,4 @@ export default {
   margin: 10px 0;
 }
 
-
-.table td, .table th {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-.pagination {
-  justify-content: flex-end !important;
-}
 </style>

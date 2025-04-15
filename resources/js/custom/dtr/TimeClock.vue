@@ -33,12 +33,8 @@
           <div class="datatable">
             <div class="my-2 d-flex justify-content-between">
               <p class="text-muted mb-0">
-                Showing {{ paginatedLogs.length }} of {{ logs.length }} records
+                Showing {{ startItem }} to {{ endItem }} of {{ logs.length }} records
               </p>
-              <div>
-                <button class="btn btn-sm btn-light" @click="prevPage" :disabled="currentPage === 1">Prev</button>
-                <button class="btn btn-sm btn-light" @click="nextPage" :disabled="endIndex >= logs.length">Next</button>
-              </div>
             </div>
   
             <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary">
@@ -75,6 +71,28 @@
                 </tbody>
               </table>
             </div>
+
+            <nav v-if="totalPages > 1" class="mt-2">
+              <ul class="pagination justify-content-end">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
+                </li>
+                <li
+                  class="page-item"
+                  v-for="page in visiblePages"
+                  :key="page"
+                  :class="{ active: currentPage === page }"
+                >
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">
+                    {{ page }}
+                  </a>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
+
           </div>
         </div>
   
@@ -117,11 +135,30 @@
         const end = this.currentPage * this.perPage
         return this.logs.slice(start, end)
       },
-      endIndex() {
-        return this.currentPage * this.perPage
+
+      startItem() {
+        return this.logs.length === 0 ? 0 : (this.perPage * (this.currentPage - 1)) + 1;
+      },
+      endItem() {
+        return Math.min(this.startItem + this.paginatedLogs.length - 1, this.logs.length);
+      },
+      totalPages() {
+        return Math.ceil(this.logs.length / this.perPage);
+      },
+      visiblePages() {
+        const range = 2
+        let start = Math.max(this.currentPage - range, 1)
+        let end = Math.min(this.currentPage + range, this.totalPages)
+
+        const pages = []
+        for (let i = start; i <= end; i++) pages.push(i)
+        return pages
       }
     },
     methods: {
+      changePage(page) {
+        if (page >= 1 && page <= this.totalPages) this.currentPage = page;
+      },
       updateTime() {
         const now = new Date()
         const options = {
@@ -180,12 +217,6 @@
         let h = Math.floor(hours)
         let m = Math.round((hours - h) * 60)
         return `${h} h ${m} min`
-      },
-      nextPage() {
-        if (this.endIndex < this.logs.length) this.currentPage++
-      },
-      prevPage() {
-        if (this.currentPage > 1) this.currentPage--
       },
       closeFacePopup() {
         this.showFacePopup = false
