@@ -179,7 +179,7 @@
       },
       handleClock() {
         this.loading = true
-        console.log('Submitting to /dtr/clock', this.scannedUserId)
+        // console.log('Submitting to /dtr/clock', this.scannedUserId)
         axios.post('/dtr/clock', {
           user_id: this.scannedUserId
         })
@@ -237,7 +237,7 @@
       },
       
       onQrSuccess(decodedText) {
-        console.log("QR Scanned:", decodedText)
+        // console.log("QR Scanned:", decodedText)
         try {
           const data = JSON.parse(decodedText)
 
@@ -259,7 +259,7 @@
             return
           }
           this.scannedUserId = data.id
-          console.log('Scanned ID:', this.scannedUserId) 
+          // console.log('Scanned ID:', this.scannedUserId) 
 
         } catch (e) {
           console.error("Invalid QR data format", e)
@@ -315,7 +315,7 @@
           image: imgData,
           user_id: this.scannedUserId
         }).then(res => {
-          console.log('Face saved:', res.data.path)
+          // console.log('Face saved:', res.data.path)
           this.handleClock()
         }).catch(err => {
           console.error('Upload error:', err)

@@ -11,15 +11,30 @@
         @section('side-bar')
             @php
                 $sidebarMenu = json_decode(json_encode($permissions), true);
+
+                $dtrSubMenu = [
+                    ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
+                ];
+
+                if (Auth::user()->roles->first()->pivot->role_id == 1) {
+                    $dtrSubMenu[] = ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true];
+                    $dtrSubMenu[] = ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true];
+                }
+
+                $payrollSubMenu = [
+                    ['name' => 'Payslip', 'url' => route('payroll.payslip'), 'permission' => true],
+                ];
+
+                if (Auth::user()->roles->first()->pivot->role_id == 1) {
+                    $payrollSubMenu[] = ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true];
+                    $payrollSubMenu[] = ['name' => 'Computation', 'url' => route('payroll.computation'), 'permission' => true];
+                }
+
                 $sidebarMenu[] = [
                     'name' => 'Daily Time Record',
                     'id' => 'dtr_system',
                     'icon' => 'clock',
-                    'subMenu' => [
-                        ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
-                        ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true],
-                        ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true]
-                    ],
+                    'subMenu' => $dtrSubMenu,
                     'permission' => true
                 ];
 
@@ -27,14 +42,11 @@
                     'name' => 'Payroll',
                     'id' => 'payroll_system',
                     'icon' => 'dollar-sign',
-                    'subMenu' => [
-                        ['name' => 'Payslip', 'url' => route('payroll.payslip'), 'permission' => true],
-                        ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true],
-                        ['name' => 'Computation', 'url' => route('payroll.computation'), 'permission' => true]
-                    ],
+                    'subMenu' => $payrollSubMenu,
                     'permission' => true
                 ];
             @endphp
+
             <sidebar :data="{{ json_encode($sidebarMenu)  }}"
                      logo-src="{{ $logo }}"
                      logo-icon-src="{{ $logo_icon }}"

@@ -150,7 +150,35 @@ class PayrollService
         $hourlyRate = $this->salary->monthly_salary / (22 * 8);
     
         return $regularHours * $hourlyRate;
-    }   
+    }
+
+    public function calculateNightDiffFromDtrLogs(): float
+    {
+        $nightDiffMinutes = 0;
+        if ($this->dtrLogs) {
+            foreach ($this->dtrLogs as $log) {
+                $nightDiffMinutes += $log->night_diff_minutes ?? 0;
+            }
+        }
+        $nightHours = $nightDiffMinutes / 60;
+        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
+        $rate = (float) ($this->components['nightpay'] ?? 1.1);
+        return $nightHours * $hourlyRate * $rate;
+    }
+
+    public function calculateOvertimeFromDtrLogs(): float
+    {
+        $totalOvertimeMinutes = 0;
+        if ($this->dtrLogs) {
+            foreach ($this->dtrLogs as $log) {
+                $totalOvertimeMinutes += $log->overtime_minutes;
+            }
+        }
+        $overtimeHours = $totalOvertimeMinutes / 60;
+        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
+        $rate = (float) ($this->components['ot_regular'] ?? 1.25);
+        return $overtimeHours * $hourlyRate * $rate;
+    }
 
     public function calculateIncomeTax(float $monthlySalary): float
     {
@@ -174,34 +202,6 @@ class PayrollService
         return round($annualTax / 12, 2);
     }
 
-    public function calculateOvertimeFromDtrLogs(): float
-    {
-        $totalOvertimeMinutes = 0;
-        if ($this->dtrLogs) {
-            foreach ($this->dtrLogs as $log) {
-                $totalOvertimeMinutes += $log->overtime_minutes;
-            }
-        }
-        $overtimeHours = $totalOvertimeMinutes / 60;
-        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
-        $rate = (float) ($this->components['ot_regular'] ?? 1.25);
-        return $overtimeHours * $hourlyRate * $rate;
-    }
-
-    public function calculateNightDiffFromDtrLogs(): float
-    {
-        $nightDiffMinutes = 0;
-        if ($this->dtrLogs) {
-            foreach ($this->dtrLogs as $log) {
-                $nightDiffMinutes += $log->night_diff_minutes ?? 0;
-            }
-        }
-        $nightHours = $nightDiffMinutes / 60;
-        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
-        $rate = (float) ($this->components['nightpay'] ?? 1.1);
-        return $nightHours * $hourlyRate * $rate;
-    }
-
     public function computePayroll(array $data): array
     {
         $monthlySalary = $this->calculateBasicPayFromDtrLogs();
@@ -218,7 +218,7 @@ class PayrollService
         $otherEarnings    = $this->calculateGrossPay($data['earnings'] ?? []);
         $overtimeAmount      = $this->calculateOvertimeFromDtrLogs();
         $nightDiffAmount     = $this->calculateNightDiffFromDtrLogs();
-;
+
         $grossEarnings = $monthlySalary + $overtimeAmount + $nightDiffAmount + $otherEarnings;
         $totalDeductions = $this->calculateDeductions($data['deductions'] ?? []) + $incomeTax + $sss + $philhealth + $pagibig;
         $netPay = $this->calculateNetPay($grossEarnings, $totalDeductions);

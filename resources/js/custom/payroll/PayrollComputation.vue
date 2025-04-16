@@ -567,7 +567,7 @@ export default {
         const designation = payroll.role ? payroll.role.name : 'N/A';
         const branch = payroll.branch ? payroll.branch.name : 'N/A';
         const salary = this.formatCurrency(payroll.monthly_salary);
-        console.log('Payroll response:', response.data)
+        // console.log('Payroll response:', response.data)
         
         Swal.fire({
           icon: 'success',
@@ -592,7 +592,7 @@ export default {
             message += `${item.label}: ${item.value}<br/>`;
           });
 
-          console.log('Rates response:', response.data)
+          // console.log('Rates response:', response.data)
           
           Swal.fire({
             icon: 'success',
@@ -635,8 +635,6 @@ export default {
           });
         }
         this.fetchDynamicData();
-        console.log('CompenOrDeduc response:', response.data)
-
         Swal.fire({
           icon: 'success',
           title: 'Successfully Updated',
