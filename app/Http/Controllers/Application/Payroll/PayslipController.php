@@ -27,6 +27,7 @@ class PayslipController extends Controller
     
                 return [
                     'date_range'       => $p->payrollCount->date_range_start . ' to ' . $p->payrollCount->date_range_end,
+                    'payroll_type'     => $p->payrollCount->payroll_type,
                     'basic_pay'        => (float) $p->basic_pay,
                     'overtime_pay'     => (float) $p->overtime_pay,
                     'allowance'        => (float) $p->allowance + collect($earnings)->sum(fn($e) => (float) $e['amount']),

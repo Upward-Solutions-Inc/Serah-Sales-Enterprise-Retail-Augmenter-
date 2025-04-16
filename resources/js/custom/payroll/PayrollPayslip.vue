@@ -54,6 +54,7 @@
                 <tbody>
                     <tr v-for="(payslip, index) in paginatedPayslips" :key="index" class="text-center">
                         <td>{{ payslip.date }}</td>
+                        <td>{{ payslip.payroll_type }}</td>
                         <td>{{ formatCurrency(payslip.basic_pay) }}</td>
                         <td>{{ formatCurrency(payslip.overtime_pay) }}</td>  
                         <td>{{ formatCurrency(payslip.allowance) }}</td>
@@ -113,7 +114,8 @@
     props: {
       name: String,
       role: String,
-      profilePicture: String
+      profilePicture: String,
+      userId: Number
     },
     data() {
       return {
@@ -125,6 +127,7 @@
 
         headers: [
             'Date Range',
+            'Payroll Type',
             'Basic Pay',
             'Total Overtime Pay',
             'Total Allowance',
@@ -137,8 +140,9 @@
     },
     mounted() {
       this.isLoading = true
-      this.fetchPayslips()
+      this.fetchPayslips();
       this.updateTime();
+      this.listenToPayslipBroadcast();
     },
     computed: {
       paginatedPayslips() {
@@ -156,6 +160,12 @@
       }
     },
     methods: {
+      listenToPayslipBroadcast() {
+          Echo.channel(`payslip-channel.${this.userId}`)
+              .listen('.payslip.generated', () => {
+                  this.fetchPayslips();
+              });
+      },
       formatCurrency(value) {
         return `₱ ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
       },
@@ -184,6 +194,7 @@
           this.payslips = res.data.map(p => ({
             date: p.date_range,
             basic_pay: p.basic_pay,
+            payroll_type: p.payroll_type,
             overtime_pay: p.overtime_pay,
             allowance: p.allowance,
             deductions: parseFloat(p.sss) + parseFloat(p.pagibig) + parseFloat(p.philhealth) + parseFloat(p.income_tax) + (p.deductions ? p.deductions.reduce((sum, d) => sum + parseFloat(d.amount), 0) : 0),
