@@ -389,6 +389,7 @@ export default {
       earningsEditMode: false,
       deductionEditMode: false,
 
+      originalForm: {},
       modalType: "",
       modalData: {
         label: "",
@@ -441,6 +442,7 @@ export default {
         this.form.role_id = savedRoleId ? parseInt(savedRoleId) : (this.roles[0]?.id || null);
         this.form.branch_id = savedBranchId ? parseInt(savedBranchId) : (this.branches[0]?.id || null);
         this.updateMonthly();
+        this.originalForm = JSON.parse(JSON.stringify(this.form));
       })
       .catch((error) => console.error(error));
       this.fetchDynamicData();
@@ -552,9 +554,15 @@ export default {
 
   methods: {
     toggleEditPay() {
+      if (this.editModePay) {
+        this.form = JSON.parse(JSON.stringify(this.originalForm));
+      }
       this.editModePay = !this.editModePay;
     },
     toggleEditRate() {
+      if (this.editModeRate) {
+        this.form = JSON.parse(JSON.stringify(this.originalForm));
+      }
       this.editModeRate = !this.editModeRate;
     },
 
@@ -576,6 +584,7 @@ export default {
                  <strong>Branch:</strong> ${branch}<br/>
                  <strong>Salary:</strong> ${salary}`,
         });
+        this.originalForm = JSON.parse(JSON.stringify(this.form));
       })
       .catch((err) => console.error(err));
     },
@@ -599,6 +608,7 @@ export default {
             title: 'Successfully Updated',
             html: message,
           });
+          this.originalForm = JSON.parse(JSON.stringify(this.form));
         })
         .catch((err) => console.error(err));
     },
