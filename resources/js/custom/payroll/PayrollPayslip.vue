@@ -43,7 +43,7 @@
                 :visible="isLoading" 
                 v-if="isLoading" 
               />
-              <table v-else class="table table-striped table-borderles d-none d-md-table">
+              <table v-else class="table table-striped table-borderless d-none d-md-table">
                 <thead>
                   <tr>
                     <th v-for="(label, index) in headers" :key="index" class="datatable-th pt-0 text-center">
@@ -65,8 +65,7 @@
                             <div class="dropdown">
                                 <i class="fas fa-ellipsis-v" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
                                 <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="#">View</a>
-                                  <a class="dropdown-item" href="#">Print</a>
+                                  <a class="dropdown-item" href="#" @click.prevent="printPayslip(payslip)">Print</a>
                                 </div>
                             </div>
                         </td>
@@ -86,8 +85,7 @@
                   <div><strong>Gross Pay:</strong> {{ formatCurrency(p.gross) }}</div>
                   <div><strong>Net Pay:</strong> {{ formatCurrency(p.net) }}</div>
                   <div class="text-right mt-2">
-                    <button class="btn btn-sm btn-outline-primary">View</button>
-                    <button class="btn btn-sm btn-outline-secondary ml-2">Print</button>
+                    <button class="btn btn-sm btn-outline-secondary ml-2" @click.prevent="printPayslip(p)">Print</button>
                   </div>
                 </div>
                 <div v-else class="text-center py-4">
@@ -121,6 +119,10 @@
               </ul>
             </nav>
 
+            <div ref="printArea" style="display: none;">
+              <PayslipTemplate :company="printData.company" :employee="printData.employee" :payslip="printData.payslip" />
+            </div>
+
           </div>
         </div>
       </div>
@@ -129,11 +131,13 @@
   
   <script>
   import Loader from '../components/Loader.vue'
+  import PayslipTemplate from '../components/PayslipTemplate.vue'
   import api, { PayrollPayslip } from '../api.js'
   export default {
     name: 'PayrollPayslip',
     components: {
-        Loader
+        Loader,
+        PayslipTemplate
     },
     props: {
       name: String,
@@ -160,6 +164,16 @@
             'Net Pay',
             'Action'
         ],
+
+        printData: {
+          company: { name: 'Noble Corp', number: 'NA', address: 'NA' },
+          employee: { name: 'NA', status: 'NA', award: 'NA', classification: 'NA' },
+          payslip: {
+            hourly_rate: 0, annual_salary: 0, start_date: 'NA', end_date: 'NA', pay_date: 'NA',
+            annual_leave: 'NA', sick_leave: 'NA',
+            entitlements: [], deductions: [], bank: 'NA', account: 'NA'
+          }
+        }
       }
     },
     mounted() {
@@ -228,6 +242,94 @@
         }).finally(() => {
           this.isLoading = false
         })
+      },
+
+      printPayslip(payslip) {
+        this.printData.employee = {
+          name: this.name,
+          classification: this.role,
+          branch: payslip.branch || 'NA', // if available
+          payroll_type: payslip.payroll_type || 'NA'
+        };
+
+        this.printData.payslip = {
+          ...this.printData.payslip,
+          start_date: payslip.date_start || 'NA',
+          end_date: payslip.date_end || 'NA',
+          pay_date: payslip.pay_date || 'NA',
+          entitlements: [
+            { description: 'Basic Pay', total: payslip.basic_pay },
+            { description: 'Overtime Pay', total: payslip.overtime_pay },
+            { description: 'Allowance', total: payslip.allowance }
+          ],
+          deductions: [
+            { description: 'Total Deductions', total: payslip.deductions }
+          ]
+        };
+
+
+        this.$nextTick(() => {
+          const printContents = this.$refs.printArea.innerHTML;
+          const style = `
+            <style>
+              body { font-family: Arial, sans-serif; padding: 30px; }
+              .text-center { text-align: center; }
+              .text-right { text-align: right; }
+              .font-small { font-size: 13px; }
+              .font-weight-bold { font-weight: bold; }
+
+              .section-title {
+                font-weight: bold;
+                border-bottom: 1px solid #000;
+                margin-top: 20px;
+                margin-bottom: 8px;
+                padding-bottom: 4px;
+              }
+
+              .payslip-info {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+                font-size: 14px;
+                line-height: 1.6;
+              }
+
+              .payslip-info > div {
+                width: 48%;
+              }
+
+              .payslip-header {
+                margin-bottom: 20px;
+              }
+
+              .line-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 14px;
+                padding: 3px 0;
+              }
+
+              .signature {
+                margin-top: 50px;
+                display: flex;
+                justify-content: space-between;
+                font-size: 14px;
+              }
+
+              .signature div {
+                width: 48%;
+                text-align: center;
+              }
+            </style>
+          `;
+
+          const win = window.open('', '', 'width=1000,height=600');
+          win.document.write(`<html><head><title>Payslip</title>${style}</head><body>${printContents}</body></html>`);
+          win.document.close();
+          win.focus();
+          win.print();
+          win.close();
+        });
       }
     }
   }
