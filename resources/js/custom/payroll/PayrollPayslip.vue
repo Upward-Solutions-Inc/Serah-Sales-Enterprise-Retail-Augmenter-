@@ -43,7 +43,7 @@
                 :visible="isLoading" 
                 v-if="isLoading" 
               />
-              <table v-else class="table table-striped table-borderless">
+              <table v-else class="table table-striped table-borderles d-none d-md-table">
                 <thead>
                   <tr>
                     <th v-for="(label, index) in headers" :key="index" class="datatable-th pt-0 text-center">
@@ -73,6 +73,30 @@
                     </tr>
                 </tbody>
               </table>
+
+              <!-- Mobile Card View -->
+              <div class="d-md-none mt-3">
+                <div v-if="paginatedPayslips.length" v-for="(p, index) in paginatedPayslips" :key="index" class="card mb-2 p-3 shadow-sm">
+                  <div><strong>Date Range:</strong> {{ p.date }}</div>
+                  <div><strong>Payroll Type:</strong> {{ p.payroll_type }}</div>
+                  <div><strong>Basic Pay:</strong> {{ formatCurrency(p.basic_pay) }}</div>
+                  <div><strong>Overtime Pay:</strong> {{ formatCurrency(p.overtime_pay) }}</div>
+                  <div><strong>Allowance:</strong> {{ formatCurrency(p.allowance) }}</div>
+                  <div><strong>Deductions:</strong> {{ formatCurrency(p.deductions) }}</div>
+                  <div><strong>Gross Pay:</strong> {{ formatCurrency(p.gross) }}</div>
+                  <div><strong>Net Pay:</strong> {{ formatCurrency(p.net) }}</div>
+                  <div class="text-right mt-2">
+                    <button class="btn btn-sm btn-outline-primary">View</button>
+                    <button class="btn btn-sm btn-outline-secondary ml-2">Print</button>
+                  </div>
+                </div>
+                <div v-else class="text-center py-4">
+                  <img src="/images/no_data.svg" alt="no data" class="mb-2" />
+                  <p class="mb-0">Nothing to show here</p>
+                </div>
+              </div>
+
+
               <div v-if="payslips.length === 0" class="no-data-found-wrapper text-center p-primary">
                 <img src="/images/no_data.svg" alt="" class="mb-primary">
                 <p class="mb-0 text-center">Nothing to show here</p>
@@ -207,4 +231,10 @@
       }
     }
   }
-  </script>  
+  </script> 
+  <style>
+    .card div {
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+  </style> 

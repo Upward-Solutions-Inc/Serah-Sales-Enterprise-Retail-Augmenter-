@@ -38,7 +38,7 @@
             </div>
   
             <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary">
-              <table class="table table-striped table-borderless text-center">
+              <table class="table table-striped table-borderless text-center table-sm d-none d-md-table">
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -70,6 +70,25 @@
                   </tr>
                 </tbody>
               </table>
+
+              <!-- Mobile Card View -->
+              <div class="d-md-none">
+                <div v-if="paginatedLogs.length" v-for="log in paginatedLogs" :key="log.id" class="card mb-2 p-3 shadow-sm">
+                  <div><strong>Date:</strong> {{ formatDate(log.date) }}</div>
+                  <div><strong>Employee:</strong> {{ log.user.first_name }} {{ log.user.last_name }}</div>
+                  <div><strong>Shift:</strong> {{ log.shift }}</div>
+                  <div><strong>Clock In:</strong> {{ formatTime(log.clock_in) }}</div>
+                  <div><strong>Clock Out:</strong> {{ formatTime(log.clock_out) }}</div>
+                  <div><strong>Late:</strong> {{ log.late_minutes }} min</div>
+                  <div><strong>Overtime:</strong> {{ log.overtime_minutes }} min</div>
+                  <div><strong>Total Hours:</strong> {{ formatWorkHours(log.total_work_hours) }}</div>
+                </div>
+                <div v-else class="text-center py-4">
+                  <img src="/images/no_data.svg" alt="no data" class="mb-2" />
+                  <p class="mb-0">Nothing to show here</p>
+                </div>
+              </div>
+
             </div>
 
             <nav v-if="totalPages > 1" class="mt-2">
@@ -405,5 +424,9 @@
     color: white;
     cursor: pointer;
     z-index: 1060;
+  }
+  .card div {
+    font-size: 14px;
+    margin-bottom: 3px;
   }
   </style>  
