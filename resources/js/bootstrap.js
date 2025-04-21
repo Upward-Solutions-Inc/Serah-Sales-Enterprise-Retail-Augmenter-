@@ -40,7 +40,15 @@ if (document.querySelector('meta[name="csrf-token"]')) {
  * allows your team to easily build robust real-time web applications.
  */
 
+//  *** prod ***//
+// window.Echo = new Echo({
+//     broadcaster: 'pusher',
+//     key: 'e8afa73de63ee3d9a0f0',
+//     cluster: 'mt1',
+//     forceTLS: true
+// });
 
+// *** local ***//
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: process.env.MIX_PUSHER_APP_KEY,
