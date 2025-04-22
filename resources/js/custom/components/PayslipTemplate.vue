@@ -1,21 +1,24 @@
  <template>
-  <div class="payslip-header payslip-wrapper">
-    <h3 class="text-center">Payslip</h3>
-    <div class="text-center font-small">{{ company.name }}</div>
-    <div class="text-center font-small mb-4">{{ company.address }}</div>
+  <div class="payslip-wrapper">
 
+    <!-- payslip-info -->
+    <div class="payslip-header text-center">
+      <img :src="company.logo" alt="Company Logo" class="logo" v-if="company.logo" />
+      <h4>{{ company.name }}</h4>
+    </div>
+
+    <!-- employee-info -->
     <div class="payslip-info">
       <div>
         <div><strong>Employee Name</strong> : {{ employee.name }}</div>
-        <div><strong>Payroll Type</strong> : {{ employee.payroll_type }}</div>
+        <div><strong>Designation</strong> : {{ employee.classification }}</div>
         <div><strong>Branch</strong> : {{ employee.branch }}</div>
       </div>
       <div>
-        <div><strong>Designation</strong> : {{ employee.classification }}</div>
-        <div><strong>Pay Period</strong> : {{ payslip.start_date }} - {{ payslip.end_date }}</div>
-        <div><strong>Pay Date</strong> : {{ payslip.pay_date }}</div>
+        <div><strong>Payroll Type</strong> : {{ employee.payroll_type }}</div>
+        <div><strong>Pay Period</strong> : {{ payslip.date_range }}</div>
+        <div><strong>Generated Date</strong> : {{ payslip.pay_date }}</div>
       </div>
-
     </div>
 
     <!-- Earnings -->
@@ -41,14 +44,14 @@
     </div>
 
     <!-- Net Pay -->
-    <div class="line-row font-weight-bold" style="margin-top: 20px;">
+    <div class="section-title">Totals</div>
+    <div class="line-row font-weight-bold">
       <div class="left">Net Pay</div>
       <div class="right">{{ formatCurrency(netPay) }}</div>
     </div>
-    <div class="text-right font-small">{{ netPayText }}</div>
 
     <!-- Signature -->
-    <div class="signature">
+    <div class="signature" style="margin-top: 20px;">
       <div>
         _________________________<br />Employer Signature
       </div>
@@ -73,16 +76,13 @@ export default {
   },
   computed: {
     totalEntitlements() {
-      return this.payslip.entitlements.reduce((sum, e) => sum + Number(e.total), 0);
+      return this.payslip.entitlements.reduce((sum, e) => sum + (parseFloat(e.total) || 0), 0);
     },
     totalDeductions() {
-      return this.payslip.deductions.reduce((sum, d) => sum + Number(d.total), 0);
+      return this.payslip.deductions.reduce((sum, d) => sum + (parseFloat(d.total) || 0), 0);
     },
     netPay() {
       return this.totalEntitlements - this.totalDeductions;
-    },
-    netPayText() {
-      return `${this.netPay.toLocaleString()} pesos`;
     }
   },
   methods: {

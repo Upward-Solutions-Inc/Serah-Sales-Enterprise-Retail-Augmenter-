@@ -56,16 +56,17 @@
                         <td>{{ payslip.date }}</td>
                         <td>{{ payslip.payroll_type }}</td>
                         <td>{{ formatCurrency(payslip.basic_pay) }}</td>
-                        <td>{{ formatCurrency(payslip.overtime_pay) }}</td>  
-                        <td>{{ formatCurrency(payslip.allowance) }}</td>
-                        <td>{{ formatCurrency(payslip.deductions) }}</td>
+                        <td>{{ formatCurrency(payslip.overtime_pay) }}</td>
+                        <td>{{ formatCurrency(payslip.night_diff) }}</td> 
+                        <td>{{ formatCurrency(totalAllowance(payslip)) }}</td>
+                        <td>{{ formatCurrency(totalDeductions(payslip)) }}</td>
                         <td>{{ formatCurrency(payslip.gross) }}</td>
                         <td>{{ formatCurrency(payslip.net) }}</td>
                         <td>
                             <div class="dropdown">
                                 <i class="fas fa-ellipsis-v" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
                                 <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="#" @click.prevent="printPayslip(payslip)">Print</a>
+                                  <a class="dropdown-item" href="#" @click.prevent="printPayslip(payslip)">View</a>
                                 </div>
                             </div>
                         </td>
@@ -80,12 +81,13 @@
                   <div><strong>Payroll Type:</strong> {{ p.payroll_type }}</div>
                   <div><strong>Basic Pay:</strong> {{ formatCurrency(p.basic_pay) }}</div>
                   <div><strong>Overtime Pay:</strong> {{ formatCurrency(p.overtime_pay) }}</div>
-                  <div><strong>Allowance:</strong> {{ formatCurrency(p.allowance) }}</div>
-                  <div><strong>Deductions:</strong> {{ formatCurrency(p.deductions) }}</div>
+                  <div><strong>Night Differential:</strong> {{ formatCurrency(p.night_diff) }}</div>
+                  <div><strong>Total Allowance:</strong> {{ formatCurrency(totalAllowance(p)) }}</div>
+                  <div><strong>Total Deductions:</strong> {{ formatCurrency(p.deductions) }}</div>
                   <div><strong>Gross Pay:</strong> {{ formatCurrency(p.gross) }}</div>
                   <div><strong>Net Pay:</strong> {{ formatCurrency(p.net) }}</div>
                   <div class="text-right mt-2">
-                    <button class="btn btn-sm btn-outline-secondary ml-2" @click.prevent="printPayslip(p)">Print</button>
+                    <button class="btn btn-sm btn-outline-secondary ml-2" @click.prevent="printPayslip(p)">View</button>
                   </div>
                 </div>
                 <div v-else class="text-center py-4">
@@ -157,7 +159,8 @@
             'Date Range',
             'Payroll Type',
             'Basic Pay',
-            'Total Overtime Pay',
+            'Overtime Pay',
+            'Night Differential',
             'Total Allowance',
             'Total Deductions',
             'Gross Pay',
@@ -166,7 +169,7 @@
         ],
 
         printData: {
-          company: { name: 'Noble Corp', number: 'NA', address: 'NA' },
+          company: { name: 'NA Corp', number: 'NA', address: 'NA' },
           employee: { name: 'NA', status: 'NA', award: 'NA', classification: 'NA' },
           payslip: {
             hourly_rate: 0, annual_salary: 0, start_date: 'NA', end_date: 'NA', pay_date: 'NA',
@@ -226,16 +229,49 @@
         this.currentDateTime = now.toLocaleString('en-US', options)
       },
 
+      totalDeductions(payslip) {
+        const base = [
+          payslip.income_tax || 0,
+          payslip.sss || 0,
+          payslip.pagibig || 0,
+          payslip.philhealth || 0
+        ];
+        const extras = (payslip.deductions || []).reduce((sum, d) => sum + (parseFloat(d.total) || 0), 0);
+        return base.reduce((a, b) => a + b, 0) + extras;
+      },
+
+      totalAllowance(payslip) {
+        const base = payslip.allowance || 0;
+        const extra = (payslip.earnings || []).reduce((sum, e) => sum + (parseFloat(e.total) || 0), 0);
+        return base + extra;
+      },
+      
       fetchPayslips() {
         this.isLoading = true
         api.get(PayrollPayslip.fetchUserPayslips).then(res => {
-          this.payslips = res.data.map(p => ({
+          this.companyName = res.data.company.name;
+          this.companyLogo = res.data.company.logo;
+          this.payslips = res.data.payslips.map(p => ({
             date: p.date_range,
+            date_range: p.date_range,
+            date_start: p.date_start,
+            date_end: p.date_end,
+            pay_date: p.pay_date,
+            branch: p.branch,
+
             basic_pay: p.basic_pay,
             payroll_type: p.payroll_type,
             overtime_pay: p.overtime_pay,
-            allowance: p.allowance,
-            deductions: parseFloat(p.sss) + parseFloat(p.pagibig) + parseFloat(p.philhealth) + parseFloat(p.income_tax) + (p.deductions ? p.deductions.reduce((sum, d) => sum + parseFloat(d.amount), 0) : 0),
+            allowance: p.total_allowance,
+
+            night_diff: p.night_diff,
+            sss: p.sss,
+            pagibig: p.pagibig,
+            philhealth: p.philhealth,
+            income_tax: p.income_tax,
+
+            earnings: p.earnings,
+            deductions: p.deductions,
             gross: p.gross,
             net: p.net,
           }))
@@ -245,28 +281,49 @@
       },
 
       printPayslip(payslip) {
+        this.printData.company = {
+          name: this.companyName || 'NA',
+          logo: this.companyLogo ? `${window.location.origin}${this.companyLogo}` : null
+        };
         this.printData.employee = {
           name: this.name,
           classification: this.role,
-          branch: payslip.branch || 'NA', // if available
+          branch: payslip.branch || 'NA',
           payroll_type: payslip.payroll_type || 'NA'
         };
 
+        const earnings = Array.isArray(payslip.earnings) ? payslip.earnings : [];
+        const deductions = Array.isArray(payslip.deductions) ? payslip.deductions : [];
+        const formattedRange = payslip.date_range || 'NA';
         this.printData.payslip = {
           ...this.printData.payslip,
+          date_range: formattedRange,
           start_date: payslip.date_start || 'NA',
           end_date: payslip.date_end || 'NA',
           pay_date: payslip.pay_date || 'NA',
+          hourly_rate: payslip.hourly_rate || 0,
+          annual_salary: payslip.annual_salary || 0,
+          night_diff: payslip.night_diff || 0,
+          sss: payslip.sss || 0,
+          pagibig: payslip.pagibig || 0,
+          philhealth: payslip.philhealth || 0,
+          income_tax: payslip.income_tax || 0,
+          annual_leave: payslip.annual_leave || 'NA',
+          sick_leave: payslip.sick_leave || 'NA',
           entitlements: [
             { description: 'Basic Pay', total: payslip.basic_pay },
             { description: 'Overtime Pay', total: payslip.overtime_pay },
-            { description: 'Allowance', total: payslip.allowance }
+            { description: 'Night Differential', total: payslip.night_diff },
+            ...earnings
           ],
           deductions: [
-            { description: 'Total Deductions', total: payslip.deductions }
+          { description: 'Income Tax', total: payslip.income_tax },
+            { description: 'SSS', total: payslip.sss },
+            { description: 'Pagibig', total: payslip.pagibig },
+            { description: 'Philhealth', total: payslip.philhealth },
+            ...deductions
           ]
         };
-
 
         this.$nextTick(() => {
           const printContents = this.$refs.printArea.innerHTML;
@@ -277,6 +334,19 @@
               .text-right { text-align: right; }
               .font-small { font-size: 13px; }
               .font-weight-bold { font-weight: bold; }
+
+              .payslip-header {
+                text-align: center;
+                margin-bottom: 35px;
+              }
+              h3 {
+                margin: 5px 0 !important;
+              }
+              .payslip-header img {
+                width: 100px;
+                height: auto;
+                margin-bottom: 10px;
+              }
 
               .section-title {
                 font-weight: bold;
@@ -289,17 +359,14 @@
               .payslip-info {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 20px;
+                gap: 200px;
+                margin-bottom: 16px;
                 font-size: 14px;
-                line-height: 1.6;
+                line-height: 1.4;
               }
-
               .payslip-info > div {
                 width: 48%;
-              }
-
-              .payslip-header {
-                margin-bottom: 20px;
+                line-height: 1.4;
               }
 
               .line-row {
@@ -307,6 +374,11 @@
                 justify-content: space-between;
                 font-size: 14px;
                 padding: 3px 0;
+              }
+
+              .line-row.font-weight-bold {
+                background-color: #f2f2f2 !important;
+                border-radius: 4px;
               }
 
               .signature {

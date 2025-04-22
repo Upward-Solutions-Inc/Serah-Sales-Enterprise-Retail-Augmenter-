@@ -63,6 +63,6 @@ class User extends BaseUser implements HasLocalePreference
 
     public function branchOrWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(BranchOrWarehouse::class);
+        return $this->belongsTo(BranchOrWarehouse::class, 'branch_or_warehouse_id');
     }
 }
