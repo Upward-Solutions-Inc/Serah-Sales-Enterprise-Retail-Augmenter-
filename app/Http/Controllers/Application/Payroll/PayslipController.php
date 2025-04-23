@@ -48,9 +48,6 @@ class PayslipController extends Controller
                 $start = \Carbon\Carbon::parse($p->payrollCount->date_range_start);
                 $end = \Carbon\Carbon::parse($p->payrollCount->date_range_end);
                 $formatted_range = $start->format('F j') . '-' . $end->format('j, Y');
-
-                $nightDiff = (float) $p->basic_pay * 0.10;
-                $actualBasic = (float) $p->basic_pay - $nightDiff;
     
                 return [
                     'date_range'        => $formatted_range,
@@ -60,12 +57,12 @@ class PayslipController extends Controller
                     'payroll_type'      => $p->payrollCount->payroll_type,
                     'branch'            => optional($user->branchOrWarehouse)->name ?? 'NA',
     
-                    'basic_pay'         => $actualBasic,
+                    'basic_pay'         => (float) $p->basic_pay,
                     'overtime_pay'      => (float) $p->overtime_pay,
                     'allowance'         => (float) $p->allowance,
                     'night_diff'        => (float) $p->night_differential,
 
-                    'night_diff'        => $nightDiff,
+                    'night_diff'        => (float) $p->night_differential,
                     'income_tax'        => (float) $p->income_tax,
                     'sss'               => (float) $p->sss,
                     'pagibig'           => (float) $p->pagibig,

@@ -51,7 +51,7 @@
     </div>
 
     <!-- Signature -->
-    <div class="signature" style="margin-top: 20px;">
+    <div class="signature" style="margin-top: 40px;">
       <div>
         _________________________<br />Employer Signature
       </div>

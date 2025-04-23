@@ -95,7 +95,7 @@ class PayrollService
         return [
             'user_id'             => $userId,
             'payroll_count_id'    => $countId,
-            'basic_pay'           => $result['monthly_salary'],
+            'basic_pay'           => $result['basic_pay'],
             'overtime_pay'        => $result['overtime_amount'],
             'night_differential'  => $result['night_differential'],
             'allowance'           => 0,
@@ -147,16 +147,14 @@ class PayrollService
         $hourlyRate = $this->salary->monthly_salary / (22 * 8);
     
         foreach ($this->dtrLogs ?? [] as $log) {
-            if (strtolower($log->shift) !== 'night') {
-                $workHours = (float) ($log->total_work_hours ?? 0);
-                $overtime = ((int) ($log->overtime_minutes ?? 0)) / 60;
-                $regularHours = max(0, $workHours - $overtime);
-                $pay += $regularHours * $hourlyRate;
-            }
+            $workHours = (float) ($log->total_work_hours ?? 0);
+            $overtime = ((int) ($log->overtime_minutes ?? 0)) / 60;
+            $regularHours = max(0, $workHours - $overtime);
+            $pay += $regularHours * $hourlyRate; // include day + night regular hours
         }
     
         return $pay;
-    }    
+    }     
 
     public function calculateNightDiffFromDtrLogs(): float
     {
@@ -169,7 +167,7 @@ class PayrollService
                 $workHours = (float) ($log->total_work_hours ?? 0);
                 $overtime = ((int) ($log->overtime_minutes ?? 0)) / 60;
                 $regularHours = max(0, $workHours - $overtime);
-                $pay += $regularHours * $hourlyRate * $nightRate;
+                $pay += $regularHours * $hourlyRate * ($nightRate - 1);
             }
         }
     
@@ -235,6 +233,7 @@ class PayrollService
         $netPay = $this->calculateNetPay($grossEarnings, $totalDeductions);
     
         return [
+            'basic_pay'          => number_format($basicPay, 2, '.', ''),
             'monthly_salary'     => number_format($monthlySalary, 2, '.', ''),
             'overtime_amount'    => number_format($overtimeAmount, 2, '.', ''),
             'night_differential' => number_format($nightPay, 2, '.', ''),
