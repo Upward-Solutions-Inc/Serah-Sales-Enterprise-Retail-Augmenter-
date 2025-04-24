@@ -8,3 +8,4 @@ Route::get('/reports/data', [ReportsController::class, 'data'])->name('payroll.r
 Route::get('/reports/users', [ReportsController::class, 'getUsers'])->name('payroll.reports.users');
 Route::post('/reports/generate', [ReportsController::class, 'generate'])->name('payroll.reports.generate');
 Route::post('/reports/delete', [ReportsController::class, 'delete'])->name('payroll.reports.delete');
+Route::get('/reports/view-json/{id}', [ReportsController::class, 'viewPayslipsJson'])->name('payroll.reports.view');

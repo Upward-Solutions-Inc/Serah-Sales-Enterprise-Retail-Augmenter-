@@ -42,6 +42,7 @@ export const PayrollReports = {
   fetchUsers: '/payroll/reports/users',
   generate: '/payroll/reports/generate',
   delete: '/payroll/reports/delete',
+  viewPayslips: (id) => `/payroll/reports/view-json/${id}`
 }
 
 export const PayrollComputation = {

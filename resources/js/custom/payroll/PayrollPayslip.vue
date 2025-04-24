@@ -394,7 +394,6 @@
               }
             </style>
           `;
-
           const win = window.open('', '', 'width=1000,height=600');
           win.document.write(`<html><head><title>Payslip</title>${style}</head><body>${printContents}</body></html>`);
           win.document.close();

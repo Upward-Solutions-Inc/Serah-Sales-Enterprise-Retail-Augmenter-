@@ -120,7 +120,7 @@ class PayrollService
         $totals['gross'] += $result['gross_pay'];
         $totals['net'] += $result['net_pay'];
         $totals['compensation'] += $monthlySalary;
-        $totals['basic_pay'] += (float) $monthlySalary;
+        $totals['basic_pay'] += $result['basic_pay'];
         $totals['overtime_pay'] += $result['overtime_amount'];
         $totals['night_differential'] += $result['night_differential'];
         $totals['allowance'] += 0;
