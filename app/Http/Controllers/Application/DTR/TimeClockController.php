@@ -34,12 +34,11 @@ class TimeClockController extends Controller
     public function clock(Request $request)
     {   
         $user = $this->verifyUser($request->input('user_id'));
-
-        $dates = [now()->format('Y-m-d'), now()->subDay()->format('Y-m-d')];
+        $dates = [now()->subDay()->startOfDay(), now()->endOfDay()];
 
         $hasOpenLog = DtrLog::where('user_id', $user->id)
             ->whereNull('clock_out')
-            ->whereIn('date', $dates)
+            ->whereBetween('clock_in', $dates)
             ->exists();
 
         $response = $hasOpenLog

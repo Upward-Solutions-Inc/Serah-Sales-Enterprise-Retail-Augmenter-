@@ -26,7 +26,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-
+        $schedule->command('auto:clockout')->dailyAt('00:01');
+        $schedule->command('auto:clockout')->dailyAt('12:01');
     }
 
     /**

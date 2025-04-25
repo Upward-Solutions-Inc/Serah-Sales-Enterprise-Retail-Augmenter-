@@ -222,12 +222,14 @@
         this.updateTime()
         setInterval(this.updateTime, 1000)
       },
-      formatTime(time) {
-        if (!time || time === '00:00:00') return '-'
-        let [hour, minute] = time.split(':')
-        let ampm = hour >= 12 ? 'PM' : 'AM'
-        hour = hour % 12 || 12
-        return `${hour}:${minute} ${ampm}`
+      formatTime(datetime) {
+        if (!datetime) return '-'
+        const date = new Date(datetime)
+        const hour = date.getHours()
+        const minute = date.getMinutes().toString().padStart(2, '0')
+        const ampm = hour >= 12 ? 'PM' : 'AM'
+        const formattedHour = hour % 12 || 12
+        return `${formattedHour}:${minute} ${ampm}`
       },
       formatDate(date) {
         return new Date(date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
