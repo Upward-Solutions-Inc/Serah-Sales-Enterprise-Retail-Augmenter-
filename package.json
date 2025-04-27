@@ -96,6 +96,7 @@
         "feather-icons": "^4.26.0",
         "fecha": "^4.1.0",
         "flatpickr": "^4.6.13",
+        "html2canvas": "^1.4.1",
         "html5-qrcode": "^2.3.8",
         "laravel-echo": "^2.0.2",
         "moment": "^2.29.4",

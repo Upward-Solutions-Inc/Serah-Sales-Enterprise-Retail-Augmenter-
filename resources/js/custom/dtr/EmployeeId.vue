@@ -113,24 +113,42 @@
 
                 <div class="flip-card mx-auto">
                   <div class="flip-card-inner">
-                    <div class="flip-card-front text-center p-3">
-                      <h5 class="mb-2">THE NEST CORP</h5>
-                      <img :src="selectedUser.image || 'https://www.svgrepo.com/show/452030/avatar-default.svg'" class="id-photo" />
-                      <h6 class="mt-2">{{ selectedUser.first_name }} {{ selectedUser.last_name }}</h6>
-                      <p>ID: {{ selectedUser.id || 'N/A' }}</p>
-                      <p>Role: {{ selectedUser.role || 'N/A' }}</p>
-                      <p>Branch: {{ selectedUser.branch || 'N/A' }}</p>
-                    </div>
-                    <div class="flip-card-back d-flex flex-column justify-content-center align-items-center p-3">
-                      <div v-if="pngDataUrl">
-                        <img :src="pngDataUrl" style="width: 250px;" />
+
+                      <div class="flip-card-front text-center p-3"  ref="idCardExportFront">
+                        <h5 class="mb-2">THE NEST</h5>
+                        <img :src="selectedUser.image || 'https://www.svgrepo.com/show/452030/avatar-default.svg'" class="id-photo" />
+                        <h6 class="mt-2">{{ selectedUser.first_name }} {{ selectedUser.last_name }}</h6>
+                        <p>ID: {{ selectedUser.id || 'N/A' }}</p>
+                        <p>Role: {{ selectedUser.role || 'N/A' }}</p>
+                        <p>Branch: {{ selectedUser.branch || 'N/A' }}</p>
                       </div>
-                      <p class="mt-3 mb-1 font-italic small">Please scan to log time</p>
-                      <hr style="width: 80%; border-top: 1px dashed #000;" />
-                      <p class="small mb-0">Employee Signature</p>
-                    </div>
+
+                      <div class="flip-card-back d-flex flex-column justify-content-center align-items-center p-3" ref="idCardExportBack">
+                        <div v-if="pngDataUrl">
+                          <img :src="pngDataUrl" style="width: 250px;" />
+                        </div>
+                          <p class="mb-1 font-italic small">Please scan to log time</p>
+                          <hr style="width: 80%; border-top: 1px dashed #000;" />
+
+                        <div class="mt-2 text-left w-100 px-3">
+                          <div class="underline-wrap">
+                            <p class="small mb-1">Employee Signature:</p>
+                            <span></span>
+                          </div>
+                          <div class="underline-wrap">
+                            <p class="small mb-1">Emergency Contact:</p>
+                            <span></span>
+                          </div>
+                          <div class="underline-wrap">
+                            <p class="small mb-1">Address:</p>
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+
                   </div>
                 </div>
+
               </div>
               <div class="modal-footer justify-content-center border-0 pt-0">
                 <button class="btn btn-secondary btn-sm mr-2" data-dismiss="modal" @click="qrSvg = null">Close</button>
@@ -148,6 +166,7 @@
 <script>
 import Loader from '../components/Loader.vue'
 import api, { PayrollReports, EmployeeId } from '../api.js'
+import html2canvas from 'html2canvas'
 
 export default {
   name: 'EmployeeId',
@@ -257,10 +276,38 @@ export default {
       img.src = url
     },
     downloadQr() {
-      const link = document.createElement('a')
-      link.href = this.pngDataUrl
-      link.download = 'user-qr.png'
-      link.click()
+      const frontEl = this.$refs.idCardExportFront;
+      const backEl = this.$refs.idCardExportBack;
+      if (!frontEl || !backEl) return;
+
+      const renderImage = (el) => html2canvas(el, { scale: 2 });
+
+      const waitUntilReady = () => {
+        if (!this.pngDataUrl) return setTimeout(waitUntilReady, 100);
+
+        // TEMP remove rotation before capture
+        const originalTransform = backEl.style.transform;
+        backEl.style.transform = 'none';
+
+        Promise.all([renderImage(frontEl), renderImage(backEl)]).then(([frontCanvas, backCanvas]) => {
+          // Restore rotation
+          backEl.style.transform = originalTransform;
+
+          const frontLink = document.createElement('a');
+          frontLink.href = frontCanvas.toDataURL('image/png');
+          frontLink.download = 'employee-id-front.png';
+          frontLink.click();
+
+          setTimeout(() => {
+            const backLink = document.createElement('a');
+            backLink.href = backCanvas.toDataURL('image/png');
+            backLink.download = 'employee-id-back.png';
+            backLink.click();
+          }, 500);
+        });
+      };
+
+      waitUntilReady();
     }
   },
   mounted() {
@@ -324,5 +371,15 @@ export default {
   border: 2px solid #0056b3;
   margin: 10px 0;
 }
+.underline-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
 
+.underline-wrap span {
+  flex-grow: 1;
+  border-bottom: 1px solid #000;
+  height: 1px;
+}
 </style>
