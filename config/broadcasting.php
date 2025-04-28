@@ -34,7 +34,7 @@ return [
             'secret' => env('PUSHER_APP_SECRET', 'local'),
             'app_id' => env('PUSHER_APP_ID', 'local'),
             'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
+                'cluster' => env('PUSHER_APP_CLUSTER', 'ap1'),
                 'useTLS' => false, // Disable TLS for local WebSockets
                 'encrypted' => false,
                 'host' => env('PUSHER_HOST', '127.0.0.1'),
