@@ -13,7 +13,9 @@
           <button class="close-btn" @click="closeFacePopup">&times;</button>
           <div class="video-wrapper">
             <video id="video" autoplay muted playsinline></video>
-            <div class="face-overlay"><p class="hint">Align your face</p></div>
+            <div class="face-overlay">
+              <Loader v-if="cameraInitializing" class="face-loader" />
+              <p class="hint">Align your face</p></div>
           </div>
           <p class="instruction">Please align your face inside the oval.</p>
         </div>
@@ -120,6 +122,7 @@
   </template>
   
   <script>
+  import Loader from '../components/Loader.vue'
   import api, { TimeClock } from '../api.js'
   import axios from 'axios'
   import { Html5QrcodeScanner } from "html5-qrcode"
@@ -128,9 +131,11 @@
   
   export default {
     name: 'TimeClock',
+    components: { Loader },
     data() {
       return {
         currentDateTime: '',
+        cameraInitializing: false,
         captureTriggered: false,
         showFacePopup: false,
         user: null,
@@ -296,12 +301,14 @@
       },
 
       async initFaceCapture() {
+        this.cameraInitializing = true
         await faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector')
         const video = document.getElementById('video')
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
         video.srcObject = stream
         video.onloadedmetadata = () => {
           video.play()
+          this.cameraInitializing = false
           this.detectFace(video, stream)
         }
       },
@@ -407,6 +414,12 @@
   .face-overlay.detected::before {
     border-color: #28a745 !important;
   }
+  .face-loader {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    z-index: 2;
+  }
   .hint {
     position: absolute;
     top: 10px;
@@ -430,5 +443,16 @@
   .card div {
     font-size: 14px;
     margin-bottom: 3px;
+  }
+  .camera-loader-wrapper {
+    width: 480px;
+    height: 540px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border-radius: 12px;
+    position: relative;
+    z-index: 1;
   }
   </style>  

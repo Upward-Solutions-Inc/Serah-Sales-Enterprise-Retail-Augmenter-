@@ -92,7 +92,7 @@
             <div><strong>Role:</strong> {{ user.role || 'N/A' }}</div>
             <div><strong>Branch:</strong> {{ user.branch || 'N/A' }}</div>
             <div class="text-right mt-2">
-              <button class="btn btn-sm btn-primary" @click="generateQr(user)">Print</button>
+              <button class="btn btn-sm btn-primary" @click="generateQr(user)">View</button>
             </div>
           </div>
         </div>
