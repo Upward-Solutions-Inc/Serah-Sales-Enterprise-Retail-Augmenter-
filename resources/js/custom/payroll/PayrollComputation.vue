@@ -210,7 +210,7 @@
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu">
                 <a class="dropdown-item" href="#" @click="earningsEditMode = !earningsEditMode">
                   <i :class="earningsEditMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
-                  {{ earningsEditMode ? "Hide" : "Edit" }}
+                  {{ earningsEditMode ? "Hide" : "View" }}
                 </a>
                 <a class="dropdown-item" href="#" @click="openModal('earning')" data-toggle="modal" data-target="#payrollModal">
                   <i class="fas fa-plus mr-2"></i> Add
@@ -232,7 +232,9 @@
                 v-if="earningsEditMode" 
                 class="btn btn-sm btn-danger ml-3" 
                 :disabled="deletingItems.includes(computeCode(item.label))"
-                @click="deleteItem(index, 'earnings')">
+                @click="deleteItem(index, 'earnings')"
+                title="Delete item"
+                data-toggle="tooltip">
                 ✕
               </button>
             </div>
@@ -248,7 +250,7 @@
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="deductionDropdown">
                 <a class="dropdown-item" href="#" @click="deductionEditMode = !deductionEditMode">
                   <i :class="deductionEditMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
-                  {{ deductionEditMode ? 'Hide' : 'Edit' }}
+                  {{ deductionEditMode ? 'Hide' : 'View' }}
                 </a>
                 <a class="dropdown-item" href="#" @click="openModal('deduction')" data-toggle="modal" data-target="#payrollModal">
                   <i class="fas fa-plus mr-2"></i> Add
@@ -282,7 +284,9 @@
                 v-if="deductionEditMode" 
                 class="btn btn-sm btn-danger ml-3" 
                 :disabled="deletingItems.includes(computeCode(item.label))"
-                @click="deleteItem(index, 'deductions')">
+                @click="deleteItem(index, 'deductions')"
+                title="Delete item"
+                data-toggle="tooltip">
                 ✕
               </button>
             </div>
@@ -343,6 +347,7 @@
                 class="form-control"
                 v-model="modalData.label"
               />
+              <small class="text-danger" v-if="modalError">{{ modalError }}</small>
             </div>
             <div class="form-group">
               <label>Amount</label>
@@ -388,7 +393,8 @@ export default {
 
       earningsEditMode: false,
       deductionEditMode: false,
-
+      
+      modalError: '',
       originalForm: {},
       modalType: "",
       modalData: {
@@ -457,6 +463,9 @@ export default {
     'form.branch_id'(newVal) {
       localStorage.setItem("branch_id", newVal || 0);
       this.updateMonthly();
+    },
+    'modalData.label'(val) {
+      if (val) this.modalError = '';
     }
   },
 
@@ -552,7 +561,17 @@ export default {
     },
   },
 
+  mounted() {
+    this.fetchDynamicData();
+    this.enableTooltips();
+  },
+
   methods: {
+    enableTooltips() {
+      this.$nextTick(() => {
+        $('[data-toggle="tooltip"]').tooltip();
+      });
+    },
     toggleEditPay() {
       if (this.editModePay) {
         this.form = JSON.parse(JSON.stringify(this.originalForm));
@@ -615,6 +634,14 @@ export default {
 
     // for Additional Compensation & Deductions
     saveCompenOrDeduc() {
+      if (!this.modalData.label) {
+        this.modalError = 'Field is empty or invalid!';
+        return;
+      }
+      
+      this.modalError = '';
+      this.isClick = true;
+
       if (this.modalType === "earning") {
         this.earnings.push({ ...this.modalData });
       } else {
@@ -652,40 +679,54 @@ export default {
         })
       })
       
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => { this.isClick = false; });
     },
 
     deleteItem(index, group) {
       const list = group === 'earnings' ? this.earnings : this.deductions;
       const component = list[index];
       const code = this.computeCode(component.label);
-      if (this.deletingItems.includes(code)) return; // avoid duplicate deletion requests
-      this.deletingItems.push(code);
-      
-      api.delete(PayrollComputation.deleteComponent, {
-        data: { code, group }
-      })
-      .then(response => {
-        list.splice(index, 1);
-        if (group === 'earnings') {
-          this.earningsEditMode = false;
-        } else if (group === 'deductions') {
-          this.deductionEditMode = false;
+
+      if (this.deletingItems.includes(code)) return;
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: `Delete "${component.label}" from ${group}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.deletingItems.push(code);
+
+          api.delete(PayrollComputation.deleteComponent, {
+            data: { code, group }
+          })
+            .then(response => {
+              list.splice(index, 1);
+              if (group === 'earnings') this.earningsEditMode = false;
+              else this.deductionEditMode = false;
+
+              this.fetchDynamicData();
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted',
+                text: `${response.data.label}: ${this.formatCurrency(response.data.value)}`
+              });
+            })
+            .catch(err => console.error(err))
+            .finally(() => {
+              const i = this.deletingItems.indexOf(code);
+              if (i > -1) this.deletingItems.splice(i, 1);
+            });
         }
-        this.fetchDynamicData();
-        Swal.fire({
-          icon: 'success',
-          title: 'Deleted',
-          text: `${response.data.label}: ${this.formatCurrency(response.data.value)}`
-        });
-      })
-      .catch(err => console.error(err))
-      .finally(() => {
-        const i = this.deletingItems.indexOf(code);
-        if (i > -1) this.deletingItems.splice(i, 1);
       });
     },
-
+    
     fetchDynamicData() {
       api.get(PayrollComputation.fetchDynamicData)
         .then(response => {

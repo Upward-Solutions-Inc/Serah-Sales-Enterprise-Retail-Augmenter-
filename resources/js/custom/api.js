@@ -20,6 +20,11 @@ export const TimeClock = {
   uploadFace: '/dtr/time_clock/uploadFace'
 }
 
+// Dtr Attendance
+export const Attendance = {
+  fetch: '/dtr/attendance/logs',
+}
+
 // Dtr Configuration
 export const DtrConfig = {
     fetch: '/dtr/configuration/data',

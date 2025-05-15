@@ -66,7 +66,7 @@
                             <div class="dropdown">
                                 <i class="fas fa-ellipsis-v" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
                                 <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="#" @click.prevent="printPayslip(payslip)">View</a>
+                                  <a class="dropdown-item" href="#" @click.prevent="printPayslip(payslip)">Print</a>
                                 </div>
                             </div>
                         </td>
@@ -83,11 +83,11 @@
                   <div><strong>Overtime Pay:</strong> {{ formatCurrency(p.overtime_pay) }}</div>
                   <div><strong>Night Differential:</strong> {{ formatCurrency(p.night_diff) }}</div>
                   <div><strong>Total Allowance:</strong> {{ formatCurrency(totalAllowance(p)) }}</div>
-                  <div><strong>Total Deductions:</strong> {{ formatCurrency(p.deductions) }}</div>
+                  <div><strong>Total Deductions:</strong> {{ formatCurrency(totalDeductions(p)) }}</div>
                   <div><strong>Gross Pay:</strong> {{ formatCurrency(p.gross) }}</div>
                   <div><strong>Net Pay:</strong> {{ formatCurrency(p.net) }}</div>
                   <div class="text-right mt-2">
-                    <button class="btn btn-sm btn-outline-secondary ml-2" @click.prevent="printPayslip(p)">View</button>
+                    <button class="btn btn-sm btn-outline-secondary ml-2" @click.prevent="printPayslip(p)">Print</button>
                   </div>
                 </div>
                 <div v-else class="text-center py-4">
@@ -236,7 +236,10 @@
           payslip.pagibig || 0,
           payslip.philhealth || 0
         ];
-        const extras = (payslip.deductions || []).reduce((sum, d) => sum + (parseFloat(d.total) || 0), 0);
+        const extras = (payslip.deductions || []).reduce((sum, d) => {
+          const val = parseFloat(d.total)
+          return sum + (isNaN(val) ? 0 : val)
+        }, 0);
         return base.reduce((a, b) => a + b, 0) + extras;
       },
 

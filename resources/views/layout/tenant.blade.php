@@ -14,6 +14,7 @@
 
                 $dtrSubMenu = [
                     ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
+                    ['name' => 'Attendance', 'url' => route('dtr.attendance'), 'permission' => true],
                 ];
 
                 if (Auth::user()->roles->first()->pivot->role_id == 1) {

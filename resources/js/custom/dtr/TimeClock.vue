@@ -33,10 +33,26 @@
   
         <div class="col-lg-9 mt-2">
           <div class="datatable">
+
             <div class="my-2 d-flex justify-content-between">
               <p class="text-muted mb-0">
                 Showing {{ startItem }} to {{ endItem }} of {{ logs.length }} records
               </p>
+
+              <div class="d-flex align-items-center">
+                <input v-model="searchName" type="text" placeholder="Search name" class="form-control mr-2" style="max-width: 200px;" />
+
+                <input ref="datePicker" class="form-control mr-2" placeholder="Select date range" style="max-width: 200px;" />
+
+                <select v-model="selectedShift" class="form-control mr-2" style="max-width: 160px;">
+                  <option value="">All Shifts</option>
+                  <option>Morning</option>
+                  <option>Afternoon</option>
+                  <option>Night</option>
+                </select>
+
+                <button class="btn btn-lg btn-outline-secondary mb-2 ml-2" @click="clearFilters">Clear</button>
+              </div>
             </div>
   
             <div class="table-responsive custom-scrollbar table-view-responsive shadow pt-primary">
@@ -64,12 +80,6 @@
                     <td>{{ log.overtime_minutes }} min</td>
                     <td>{{ formatWorkHours(log.total_work_hours) }}</td>
                   </tr>
-                  <tr v-if="paginatedLogs.length === 0">
-                    <td colspan="8">
-                      <img src="/images/no_data.svg" alt="" class="mb-primary">
-                      <p class="mb-0">Nothing to show here</p>
-                    </td>
-                  </tr>
                 </tbody>
               </table>
 
@@ -89,6 +99,15 @@
                   <img src="/images/no_data.svg" alt="no data" class="mb-2" />
                   <p class="mb-0">Nothing to show here</p>
                 </div>
+              </div>
+
+              <div v-if="paginatedLogs.length === 0" class="no-data-found-wrapper text-center p-primary">
+                  <img src="/images/no_data.svg" alt="" class="mb-primary">
+                  <p class="mb-0 text-center">Nothing to show here</p>
+                  <p class="mb-0 text-center text-secondary font-size-90">
+                      Please add a new entity or manage the data table to see the content here
+                  </p>
+                  <p class="mb-0 text-center text-secondary font-size-90">Thank you</p>
               </div>
 
             </div>
@@ -128,12 +147,17 @@
   import { Html5QrcodeScanner } from "html5-qrcode"
   import * as faceapi from 'face-api.js'
   import Swal from 'sweetalert2'
+  import flatpickr from 'flatpickr'
+  import 'flatpickr/dist/flatpickr.css'
   
   export default {
     name: 'TimeClock',
     components: { Loader },
     data() {
       return {
+        selectedDateRange: null,
+        selectedShift: '',
+        searchName: '',
         currentDateTime: '',
         cameraInitializing: false,
         captureTriggered: false,
@@ -154,12 +178,6 @@
       btnClass() {
         return this.isClockedIn ? 'btn-danger' : 'btn-success'
       },
-      paginatedLogs() {
-        const start = (this.currentPage - 1) * this.perPage
-        const end = this.currentPage * this.perPage
-        return this.logs.slice(start, end)
-      },
-
       startItem() {
         return this.logs.length === 0 ? 0 : (this.perPage * (this.currentPage - 1)) + 1;
       },
@@ -177,9 +195,38 @@
         const pages = []
         for (let i = start; i <= end; i++) pages.push(i)
         return pages
+      },
+      filteredLogs() {
+        return this.logs.filter(log => {
+          const dateMatch = this.selectedDateRange && this.selectedDateRange.start && this.selectedDateRange.end
+            ? new Date(log.date) >= new Date(this.selectedDateRange.start) &&
+              new Date(log.date) <= new Date(this.selectedDateRange.end)
+            : true;
+
+          const shiftMatch = this.selectedShift ? log.shift === this.selectedShift : true;
+
+          const nameMatch = this.searchName
+            ? `${log.user.first_name} ${log.user.last_name}`.toLowerCase().includes(this.searchName.toLowerCase())
+            : true;
+
+          return dateMatch && shiftMatch && nameMatch;
+        });
+      },
+      paginatedLogs() {
+        const start = (this.currentPage - 1) * this.perPage;
+        return this.filteredLogs.slice(start, start + this.perPage);
       }
     },
     methods: {
+      clearFilters() {
+        this.selectedDateRange = null
+        this.selectedShift = ''
+        this.searchName = ''
+        this.currentPage = 1
+        if (this.$refs.datePicker && this.$refs.datePicker._flatpickr) {
+          this.$refs.datePicker._flatpickr.clear()
+        }
+      },
       changePage(page) {
         if (page >= 1 && page <= this.totalPages) this.currentPage = page;
       },
@@ -358,6 +405,14 @@
       this.fetchLogs()
       this.startClock()
       this.initQrScanner()
+
+      flatpickr(this.$refs.datePicker, {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        onChange: ([start, end]) => {
+          this.selectedDateRange = { start, end }
+        }
+      })
     }
   }
   </script>

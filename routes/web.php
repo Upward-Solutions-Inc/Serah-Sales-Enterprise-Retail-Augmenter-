@@ -101,6 +101,7 @@ Route::prefix('dtr')->group(function () {
 Route::prefix('dtr')->middleware(['auth'])->group(function () {
     require base_path('routes/hr/dtr/employee_id.php');
     require base_path('routes/hr/dtr/config.php');
+    require base_path('routes/hr/dtr/attendance.php');
 });
 
 Route::prefix('payroll')->middleware(['auth'])->group(function () {

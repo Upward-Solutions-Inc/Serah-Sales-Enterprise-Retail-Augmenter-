@@ -1,5 +1,6 @@
 import Vue from 'vue'
-import TimeClock from './dtr/TimeClock.vue' 
+import TimeClock from './dtr/TimeClock.vue'
+import Attendance from './dtr/Attendance.vue'
 import DtrConfiguration from './dtr/DtrConfiguration.vue'
 import EmployeeId from './dtr/EmployeeId.vue'
 
@@ -9,6 +10,7 @@ import PayrollComputation from './payroll/PayrollComputation.vue'
 
 
 Vue.component('time-clock', TimeClock)
+Vue.component('attendance', Attendance)
 Vue.component('dtr-configuration', DtrConfiguration)
 Vue.component('employee-id', EmployeeId);
 

@@ -152,7 +152,10 @@
               </div>
               <div class="modal-footer justify-content-center border-0 pt-0">
                 <button class="btn btn-secondary btn-sm mr-2" data-dismiss="modal" @click="qrSvg = null">Close</button>
-                <button class="btn btn-primary btn-sm" @click="downloadQr">Download</button>
+                <button class="btn btn-primary btn-sm d-flex align-items-center justify-content-center px-3" :disabled="isLoading" @click="downloadQr">
+                  <Loader v-if="isLoading" class="mr-1" style="width: 18px; height: 18px;" />
+                  <span v-else>Download</span>
+                </button>
               </div>
             </div>
           </div>
@@ -276,39 +279,55 @@ export default {
       img.src = url
     },
     downloadQr() {
+      if (this.isLoading) return;
+      this.isLoading = true;
+
       const frontEl = this.$refs.idCardExportFront;
       const backEl = this.$refs.idCardExportBack;
-      if (!frontEl || !backEl) return;
+      if (!frontEl || !backEl) {
+        this.isLoading = false;
+        return;
+      }
 
       const renderImage = (el) => html2canvas(el, { scale: 2 });
 
-      const waitUntilReady = () => {
-        if (!this.pngDataUrl) return setTimeout(waitUntilReady, 100);
+      const waitUntilReady = (retries = 10) => {
+        if (!this.pngDataUrl) {
+          if (retries <= 0) {
+            this.isLoading = false;
+            return;
+          }
+          return setTimeout(() => waitUntilReady(retries - 1), 100);
+        }
 
-        // TEMP remove rotation before capture
         const originalTransform = backEl.style.transform;
         backEl.style.transform = 'none';
 
-        Promise.all([renderImage(frontEl), renderImage(backEl)]).then(([frontCanvas, backCanvas]) => {
-          // Restore rotation
-          backEl.style.transform = originalTransform;
+        Promise.all([renderImage(frontEl), renderImage(backEl)])
+          .then(([frontCanvas, backCanvas]) => {
+            backEl.style.transform = originalTransform;
 
-          const frontLink = document.createElement('a');
-          frontLink.href = frontCanvas.toDataURL('image/png');
-          frontLink.download = 'employee-id-front.png';
-          frontLink.click();
+            const frontLink = document.createElement('a');
+            frontLink.href = frontCanvas.toDataURL('image/png');
+            frontLink.download = 'employee-id-front.png';
+            frontLink.click();
 
-          setTimeout(() => {
-            const backLink = document.createElement('a');
-            backLink.href = backCanvas.toDataURL('image/png');
-            backLink.download = 'employee-id-back.png';
-            backLink.click();
-          }, 500);
-        });
+            setTimeout(() => {
+              const backLink = document.createElement('a');
+              backLink.href = backCanvas.toDataURL('image/png');
+              backLink.download = 'employee-id-back.png';
+              backLink.click();
+              this.isLoading = false;
+            }, 500);
+          })
+          .catch(() => {
+            this.isLoading = false;
+          });
       };
 
       waitUntilReady();
     }
+
   },
   mounted() {
     this.fetchUsers()

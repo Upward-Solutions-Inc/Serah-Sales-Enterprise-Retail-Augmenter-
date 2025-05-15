@@ -3,6 +3,7 @@
 namespace App\Services\Hr\Dtr;
 
 use App\Events\DtrLogUpdated;
+use App\Events\AttendanceLogUpdated;
 use App\Models\Hr\Dtr\DtrConfig;
 use App\Models\Hr\Dtr\DtrLog;
 use Carbon\Carbon;
@@ -54,6 +55,7 @@ class TimeClockService
         ]);
 
         broadcast(new DtrLogUpdated());
+        broadcast(new AttendanceLogUpdated($user->id));
 
         return [
             'status' => 'success',
@@ -150,6 +152,7 @@ class TimeClockService
         ]);
     
         broadcast(new DtrLogUpdated());
+        broadcast(new AttendanceLogUpdated($user->id));
     
         return [
             'status' => 'success',
