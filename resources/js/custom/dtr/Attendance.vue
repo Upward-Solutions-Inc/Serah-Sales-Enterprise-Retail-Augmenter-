@@ -36,7 +36,9 @@
 
               <div class="d-flex align-items-center">
                 <input
-                  type="date"
+                  ref="datePicker"
+                  type="text"
+                  placeholder="Select Date"
                   class="form-control mr-3"
                   v-model="searchDate"
                   style="max-width: 180px; min-width: 160px; max-height: 48px; min-height: 48px;"
@@ -114,7 +116,7 @@
             </div>
   
             <!-- Pagination -->
-            <nav v-if="totalPages > 1" class="mt-2">
+            <nav class="mt-2">
               <ul class="pagination justify-content-end">
                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                   <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
@@ -135,6 +137,8 @@
   
   <script>
   import api, { Attendance } from '../api.js'
+  import flatpickr from 'flatpickr'
+  import 'flatpickr/dist/flatpickr.css'
   
   export default {
     name: 'Attendance',
@@ -157,6 +161,7 @@
     mounted() {
       this.fetchLogs()
       this.updateTime()
+      this.initFlatpickr()
       setInterval(this.updateTime, 1000)
 
       Echo.private(`attendance.${this.userId}`)
@@ -181,13 +186,13 @@
         return this.filteredLogs.slice(start, start + this.perPage);
       },
       startItem() {
-        return this.logs.length ? (this.perPage * (this.currentPage - 1)) + 1 : 0
+        return this.filteredLogs.length ? (this.perPage * (this.currentPage - 1)) + 1 : 0
       },
       endItem() {
-        return Math.min(this.startItem + this.paginatedLogs.length - 1, this.logs.length)
+        return Math.min(this.startItem + this.paginatedLogs.length - 1, this.filteredLogs.length)
       },
       totalPages() {
-        return Math.ceil(this.logs.length / this.perPage)
+        return Math.ceil(this.filteredLogs.length / this.perPage)
       },
       visiblePages() {
         const range = 2
@@ -200,6 +205,10 @@
       clearFilters() {
         this.searchDate = '';
         this.searchShift = '';
+        this.currentPage = 1
+        if (this.$refs.datePicker && this.$refs.datePicker._flatpickr) {
+          this.$refs.datePicker._flatpickr.clear()
+        }
       },
       fetchLogs() {
         api.get(Attendance.fetch).then(res => {
@@ -218,6 +227,15 @@
           minute: '2-digit',
           second: '2-digit',
           hour12: true
+        })
+      },
+      initFlatpickr() {
+        flatpickr(this.$refs.datePicker, {
+          dateFormat: 'Y-m-d',
+          onChange: ([selected]) => {
+            this.searchDate = selected ? selected.toISOString().split('T')[0] : ''
+            this.currentPage = 1
+          }
         })
       },
       changePage(page) {

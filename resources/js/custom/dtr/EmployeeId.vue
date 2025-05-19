@@ -8,12 +8,23 @@
 
     <div class="col-lg-12 mt-2">
       <div class="datatable">
-        <div class="my-2 d-flex justify-content-between">
+        <div class="my-2 d-flex justify-content-between flex-wrap">
           <div class="d-flex align-items-center">
             <p class="text-muted mb-0">
               Showing {{ startItem }} to {{ endItem }} of {{ users.length }} items
             </p>
           </div>
+
+            <div class="d-flex align-items-center">
+              <input
+                type="text"
+                v-model="searchQuery"
+                class="form-control mr-2"
+                placeholder="Search..."
+                style="max-width: 250px;"
+              />
+              <button class="btn btn-outline-secondary" @click="clearSearch">Clear</button>
+            </div>
         </div>
 
         <!-- Desktop Table -->
@@ -177,6 +188,7 @@ export default {
   data() {
     return {
       isLoading: true,
+      searchQuery: '',
       users: [],
       currentPage: 1,
       perPage: 10,
@@ -187,15 +199,25 @@ export default {
     }
   },
   computed: {
+    filteredUsers() {
+      if (!this.searchQuery) return this.users;
+      const q = this.searchQuery.toLowerCase();
+      return this.users.filter(user =>
+        `${user.first_name} ${user.last_name}`.toLowerCase().includes(q) ||
+          (user.email || '').toLowerCase().includes(q) ||
+          (user.role || '').toLowerCase().includes(q) ||
+          (user.branch || '').toLowerCase().includes(q)
+      );
+    },
     paginatedUsers() {
-      const start = (this.currentPage - 1) * this.perPage
-      const end = start + this.perPage
-      this.pagination.start = this.users.length ? start + 1 : 0
-      this.pagination.end = Math.min(end, this.users.length)
-      return this.users.slice(start, end)
+      const start = (this.currentPage - 1) * this.perPage;
+      const end = start + this.perPage;
+      this.pagination.start = this.filteredUsers.length ? start + 1 : 0;
+      this.pagination.end = Math.min(end, this.filteredUsers.length);
+      return this.filteredUsers.slice(start, end);
     },
     totalPages() {
-      return Math.ceil(this.users.length / this.perPage);
+      return Math.ceil(this.filteredUsers.length / this.perPage);
     },
     startItem() {
       return this.users.length === 0 ? 0 : (this.perPage * (this.currentPage - 1)) + 1;
@@ -222,6 +244,10 @@ export default {
     }
   },
   methods: {
+    clearSearch() {
+      this.searchQuery = '';
+      this.currentPage = 1;
+    },
     fetchUsers() {
       this.isLoading = true
       api.get(PayrollReports.fetchUsers)
@@ -395,7 +421,6 @@ export default {
   align-items: flex-end;
   gap: 6px;
 }
-
 .underline-wrap span {
   flex-grow: 1;
   border-bottom: 1px solid #000;

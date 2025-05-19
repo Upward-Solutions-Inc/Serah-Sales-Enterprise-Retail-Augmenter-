@@ -112,7 +112,7 @@
 
             </div>
 
-            <nav v-if="totalPages > 1" class="mt-2">
+            <nav class="mt-2">
               <ul class="pagination justify-content-end">
                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                   <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
@@ -185,7 +185,7 @@
         return Math.min(this.startItem + this.paginatedLogs.length - 1, this.logs.length);
       },
       totalPages() {
-        return Math.ceil(this.logs.length / this.perPage);
+        return Math.ceil(this.filteredLogs.length / this.perPage);
       },
       visiblePages() {
         const range = 2
@@ -216,6 +216,27 @@
         const start = (this.currentPage - 1) * this.perPage;
         return this.filteredLogs.slice(start, start + this.perPage);
       }
+    },
+    watch: {
+      searchName() { this.currentPage = 1 },
+      selectedDateRange: {
+        handler() { this.currentPage = 1 },
+        deep: true
+      },
+      selectedShift() { this.currentPage = 1 }
+    },
+    mounted() {
+      this.fetchLogs()
+      this.startClock()
+      this.initQrScanner()
+
+      flatpickr(this.$refs.datePicker, {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        onChange: ([start, end]) => {
+          this.selectedDateRange = { start, end }
+        }
+      })
     },
     methods: {
       clearFilters() {
@@ -400,19 +421,6 @@
         this.scannerInstance = null
         this.initQrScanner()
       }
-    },
-    mounted() {
-      this.fetchLogs()
-      this.startClock()
-      this.initQrScanner()
-
-      flatpickr(this.$refs.datePicker, {
-        mode: 'range',
-        dateFormat: 'Y-m-d',
-        onChange: ([start, end]) => {
-          this.selectedDateRange = { start, end }
-        }
-      })
     }
   }
   </script>

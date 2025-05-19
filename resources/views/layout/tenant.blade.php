@@ -10,6 +10,8 @@
 
         @section('side-bar')
             @php
+                use App\Helpers\Custom\SidebarMenuHelper;
+
                 $sidebarMenu = json_decode(json_encode($permissions), true);
 
                 $dtrSubMenu = [
@@ -17,21 +19,19 @@
                     ['name' => 'Attendance', 'url' => route('dtr.attendance'), 'permission' => true],
                 ];
 
-                if (Auth::user()->roles->first()->pivot->role_id == 1) {
-                    $dtrSubMenu[] = ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true];
-                    $dtrSubMenu[] = ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true];
-                }
-
                 $payrollSubMenu = [
                     ['name' => 'Payslip', 'url' => route('payroll.payslip'), 'permission' => true],
                 ];
 
                 if (Auth::user()->roles->first()->pivot->role_id == 1) {
+                    $dtrSubMenu[] = ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true];
+                    $dtrSubMenu[] = ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true];
+
                     $payrollSubMenu[] = ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true];
                     $payrollSubMenu[] = ['name' => 'Computation', 'url' => route('payroll.computation'), 'permission' => true];
                 }
 
-                $sidebarMenu[] = [
+                $dtrMenu = [
                     'name' => 'Daily Time Record',
                     'id' => 'dtr_system',
                     'icon' => 'clock',
@@ -39,13 +39,15 @@
                     'permission' => true
                 ];
 
-                $sidebarMenu[] = [
+                $payrollMenu = [
                     'name' => 'Payroll',
                     'id' => 'payroll_system',
                     'icon' => 'dollar-sign',
                     'subMenu' => $payrollSubMenu,
                     'permission' => true
                 ];
+
+                $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu]);
             @endphp
 
             <sidebar :data="{{ json_encode($sidebarMenu)  }}"

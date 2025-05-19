@@ -208,7 +208,12 @@
             <div class="dropdown">
               <i class="fas fa-ellipsis-v" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu">
-                <a class="dropdown-item" href="#" @click="earningsEditMode = !earningsEditMode">
+                <a
+                  class="dropdown-item"
+                  v-if="earnings.length"
+                  href="#"
+                  @click="earningsEditMode = !earningsEditMode"
+                >
                   <i :class="earningsEditMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
                   {{ earningsEditMode ? "Hide" : "View" }}
                 </a>
@@ -248,9 +253,14 @@
             <div class="dropdown">
               <i class="fas fa-ellipsis-v" id="deductionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;"></i>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="deductionDropdown">
-                <a class="dropdown-item" href="#" @click="deductionEditMode = !deductionEditMode">
+                <a
+                  class="dropdown-item"
+                  v-if="deductions.length"
+                  href="#"
+                  @click="deductionEditMode = !deductionEditMode"
+                >
                   <i :class="deductionEditMode ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
-                  {{ deductionEditMode ? 'Hide' : 'View' }}
+                  {{ deductionEditMode ? "Hide" : "View" }}
                 </a>
                 <a class="dropdown-item" href="#" @click="openModal('deduction')" data-toggle="modal" data-target="#payrollModal">
                   <i class="fas fa-plus mr-2"></i> Add
@@ -614,7 +624,7 @@ export default {
         .then((response) => {
           this.editModeRate = false;
           const updatedRates = response.data;
-          let message = "<strong>Successfully Updated</strong><br/><br/>";
+          let message = "<strong>Changes applied successfully.</strong><br/><br/>";
           
           updatedRates.forEach(item => {
             message += `${item.label}: ${item.value}<br/>`;
@@ -654,7 +664,7 @@ export default {
       .then((response) => {
         $("#payrollModal").modal("hide");
         const data = response.data;
-        let message = "<strong>Successfully Updated</strong><br/><br/>";
+        let message = "<strong>Changes applied successfully.</strong><br/><br/>";
 
         this.earnings = data.earnings || [];
         this.deductions = data.deductions || [];
