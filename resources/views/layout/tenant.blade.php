@@ -11,49 +11,56 @@
         @section('side-bar')
             @php
                 use App\Helpers\Custom\SidebarMenuHelper;
+                use Illuminate\Support\Facades\Route;
 
                 $sidebarMenu = json_decode(json_encode($permissions), true);
+                $user = Auth::user();
+                $role = optional($user->roles->first());
+                $roleName = $role ? $role->name : null;
+                $roleId = $role && $role->pivot ? $role->pivot->role_id : null;
 
-                $dtrSubMenu = [
-                    ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
-                    ['name' => 'Attendance', 'url' => route('dtr.attendance'), 'permission' => true],
-                ];
+                if ($roleName !== 'Branch Manager') {
+                    $dtrSubMenu = [
+                        ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
+                        ['name' => 'Attendance', 'url' => route('dtr.attendance'), 'permission' => true],
+                    ];
 
-                $payrollSubMenu = [
-                    ['name' => 'Payslip', 'url' => route('payroll.payslip'), 'permission' => true],
-                ];
+                    $payrollSubMenu = [
+                        ['name' => 'Payslip', 'url' => route('payroll.payslip'), 'permission' => true],
+                    ];
 
-                if (Auth::user()->roles->first()->pivot->role_id == 1) {
-                    $dtrSubMenu[] = ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true];
-                    $dtrSubMenu[] = ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true];
+                    if ($roleId == 1) {
+                        $dtrSubMenu[] = ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true];
+                        $dtrSubMenu[] = ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true];
 
-                    $payrollSubMenu[] = ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true];
-                    $payrollSubMenu[] = ['name' => 'Computation', 'url' => route('payroll.computation'), 'permission' => true];
+                        $payrollSubMenu[] = ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true];
+                        $payrollSubMenu[] = ['name' => 'Computation', 'url' => route('payroll.computation'), 'permission' => true];
+                    }
+
+                    $dtrMenu = [
+                        'name' => 'Daily Time Record',
+                        'id' => 'dtr_system',
+                        'icon' => 'clock',
+                        'subMenu' => $dtrSubMenu,
+                        'permission' => true
+                    ];
+
+                    $payrollMenu = [
+                        'name' => 'Payroll',
+                        'id' => 'payroll_system',
+                        'icon' => 'dollar-sign',
+                        'subMenu' => $payrollSubMenu,
+                        'permission' => true
+                    ];
+
+                    $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu]);
                 }
-
-                $dtrMenu = [
-                    'name' => 'Daily Time Record',
-                    'id' => 'dtr_system',
-                    'icon' => 'clock',
-                    'subMenu' => $dtrSubMenu,
-                    'permission' => true
-                ];
-
-                $payrollMenu = [
-                    'name' => 'Payroll',
-                    'id' => 'payroll_system',
-                    'icon' => 'dollar-sign',
-                    'subMenu' => $payrollSubMenu,
-                    'permission' => true
-                ];
-
-                $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu]);
             @endphp
 
-            <sidebar :data="{{ json_encode($sidebarMenu)  }}"
+            <sidebar :data="{{ json_encode($sidebarMenu) }}"
                      logo-src="{{ $logo }}"
                      logo-icon-src="{{ $logo_icon }}"
-                     logo-url="{{ request()->root()  }}">
+                     logo-url="{{ request()->root() }}">
             </sidebar>
         @show
         <div class="container-fluid page-body-wrapper">
@@ -63,7 +70,7 @@
         </div>
     </div>
 @endsection
-    
+
 @push('before-scripts')
     <script>
         window.tenant = <?php echo json_encode(tenant()) ?>
