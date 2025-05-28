@@ -20,6 +20,7 @@
                 $roleId = $role && $role->pivot ? $role->pivot->role_id : null;
 
                 if ($roleName !== 'Branch Manager') {
+                    
                     $dtrSubMenu = [
                         ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
                         ['name' => 'Attendance', 'url' => route('dtr.attendance'), 'permission' => true],
@@ -29,6 +30,11 @@
                         ['name' => 'Payslip', 'url' => route('payroll.payslip'), 'permission' => true],
                     ];
 
+                    $retailSubMenu = [
+                       ['name' => 'Ingredients', 'url' => route('retail.inventory.ingredients'), 'permission' => true],
+                    ];
+
+
                     if ($roleId == 1) {
                         $dtrSubMenu[] = ['name' => 'Employee Id', 'url' => route('dtr.employee_id'), 'permission' => true];
                         $dtrSubMenu[] = ['name' => 'Schedule', 'url' => route('dtr.configuration'), 'permission' => true];
@@ -36,6 +42,7 @@
                         $payrollSubMenu[] = ['name' => 'Reports', 'url' => route('payroll.reports'), 'permission' => true];
                         $payrollSubMenu[] = ['name' => 'Computation', 'url' => route('payroll.computation'), 'permission' => true];
                     }
+                    
 
                     $dtrMenu = [
                         'name' => 'Daily Time Record',
@@ -53,7 +60,15 @@
                         'permission' => true
                     ];
 
-                    $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu]);
+                    $retailMenu = [
+                        'name' => 'Retail',
+                        'id' => 'retail_system',
+                        'icon' => 'box',
+                        'subMenu' => $retailSubMenu,
+                        'permission' => true
+                    ];
+
+                    $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu, $retailMenu]);
                 }
             @endphp
 

@@ -109,3 +109,7 @@ Route::prefix('payroll')->middleware(['auth'])->group(function () {
     require base_path('routes/hr/payroll/payslip.php');
     require base_path('routes/hr/payroll/computation.php');
 });
+
+Route::prefix('inventory')->middleware(['auth'])->group(function () {
+    require base_path('routes/retail/inventory/ingredients.php');
+});
