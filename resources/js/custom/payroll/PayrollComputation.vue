@@ -366,6 +366,7 @@
                 class="form-control"
                 v-model.number="modalData.amount"
               />
+              <small class="text-danger" v-if="modalNan">{{ modalNan }}</small>
             </div>
           </div>
 
@@ -404,6 +405,7 @@ export default {
       earningsEditMode: false,
       deductionEditMode: false,
       
+      modalNan: '',
       modalError: '',
       originalForm: {},
       modalType: "",
@@ -476,6 +478,9 @@ export default {
     },
     'modalData.label'(val) {
       if (val) this.modalError = '';
+    },
+    'modalData.amount'(val) {
+      if (val !== null && val !== '' && !isNaN(val)) this.modalNan = '';
     }
   },
 
@@ -644,52 +649,41 @@ export default {
 
     // for Additional Compensation & Deductions
     saveCompenOrDeduc() {
-      if (!this.modalData.label) {
-        this.modalError = 'Field is empty or invalid!';
-        return;
-      }
-      
       this.modalError = '';
+      this.modalNan = false;
+
+      if (!this.modalData.label) {
+        this.modalError = 'Label is required.';
+      }
+
+      if (this.modalData.amount === null || this.modalData.amount === '' || isNaN(this.modalData.amount)) {
+        this.modalNan = 'Amount is required and must be a valid number.';
+      }
+
+      if (this.modalError || this.modalNan) return;
+
       this.isClick = true;
 
+      const data = { ...this.modalData };
       if (this.modalType === "earning") {
-        this.earnings.push({ ...this.modalData });
+        this.earnings.push(data);
       } else {
-        this.deductions.push({ ...this.modalData });
+        this.deductions.push(data);
       }
+
       api.post(PayrollComputation.updateCompenOrDeduc, {
         earnings: this.earnings,
         deductions: this.deductions,
       })
-      .then((response) => {
+      .then(response => {
         $("#payrollModal").modal("hide");
         const data = response.data;
-        let message = "<strong>Changes applied successfully.</strong><br/><br/>";
-
         this.earnings = data.earnings || [];
         this.deductions = data.deductions || [];
-    
-        if (data.earnings && data.earnings.length) {
-          message += "<u>Earnings:</u><br/>";
-          data.earnings.forEach(item => {
-            message += `${item.label}: ${item.value}<br/>`;
-          });
-        }
-        if (data.deductions && data.deductions.length) {
-          message += "<u>Deductions:</u><br/>";
-          data.deductions.forEach(item => {
-            message += `${item.label}: ${item.value}<br/>`;
-          });
-        }
         this.fetchDynamicData();
-        Swal.fire({
-          icon: 'success',
-          title: 'Successfully Updated',
-          html: message,
-        })
+        Swal.fire({ icon: 'success', title: 'Successfully Updated' });
       })
-      
-      .catch((err) => console.error(err))
+      .catch(err => console.error(err))
       .finally(() => { this.isClick = false; });
     },
 

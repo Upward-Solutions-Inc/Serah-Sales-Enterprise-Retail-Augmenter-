@@ -200,7 +200,7 @@
         return this.logs.filter(log => {
           const dateMatch = this.selectedDateRange && this.selectedDateRange.start && this.selectedDateRange.end
             ? new Date(log.date) >= new Date(this.selectedDateRange.start) &&
-              new Date(log.date) <= new Date(this.selectedDateRange.end)
+              new Date(log.date) <= (d => (d.setHours(23, 59, 59, 999), d))(new Date(this.selectedDateRange.end))
             : true;
 
           const shiftMatch = this.selectedShift ? log.shift === this.selectedShift : true;
@@ -517,5 +517,15 @@
     border-radius: 12px;
     position: relative;
     z-index: 1;
+  }
+  .pagination .page-item.active .page-link {
+    background-color: var(--bs-primary, #007bff); /* fallback if var fails */
+    color: white !important;
+    border-color: var(--bs-primary, #007bff);
+  }
+  .pagination .page-link:hover {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
   }
   </style>  
