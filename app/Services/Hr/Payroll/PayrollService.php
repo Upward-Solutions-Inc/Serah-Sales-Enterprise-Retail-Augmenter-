@@ -144,12 +144,14 @@ class PayrollService
     public function calculateBasicPayFromDtrLogs(): float
     {
         $pay = 0;
-        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
+        $hourlyRate = round($this->salary->monthly_salary / (22 * 8), 2);
     
         foreach ($this->dtrLogs ?? [] as $log) {
             $workHours = (float) ($log->total_work_hours ?? 0);
             $overtime = ((int) ($log->overtime_minutes ?? 0)) / 60;
-            $regularHours = max(0, $workHours - $overtime);
+            $graceLate = ((int) ($log->grace_late_minutes ?? 0)) / 60;
+
+            $regularHours = max(0, $workHours - $overtime) + $graceLate;
             $pay += $regularHours * $hourlyRate; // include day + night regular hours
         }
     
@@ -179,7 +181,7 @@ class PayrollService
         $totalOvertimeMinutes = 0;
         if ($this->dtrLogs) {
             foreach ($this->dtrLogs as $log) {
-                $totalOvertimeMinutes += $log->overtime_minutes;
+                $totalOvertimeMinutes += max(0, $log->overtime_minutes - $log->grace_overtime_minutes);
             }
         }
         $overtimeHours = $totalOvertimeMinutes / 60;
@@ -220,11 +222,15 @@ class PayrollService
         $sssRate = (float) ($this->components['sss'] ?? 0.045);
         $philhealthRate = (float) ($this->components['philhealth'] ?? 0.025);
         $pagibigRate = (float) ($this->components['pagibig'] ?? 0.01);
+
+        $f_sss = (float) ($this->components['f_sss'] ?? 0);
+        $f_philhealth = (float) ($this->components['f_philhealth'] ?? 0);
+        $f_pagibig = (float) ($this->components['f_pagibig'] ?? 0);
     
-        $sss = $monthlySalary * $sssRate;
-        $philhealth = $monthlySalary < 10000 ? 250 : $monthlySalary * $philhealthRate;
-        $pagibig = $monthlySalary < 1500 ? 100 : $monthlySalary * $pagibigRate;
-    
+        $sss = $monthlySalary < 1000 ? 0 : ($monthlySalary <= 3250 ? $f_sss : $monthlySalary * $sssRate);
+        $philhealth = $monthlySalary < 10000 ? $f_philhealth : $monthlySalary * $philhealthRate;
+        $pagibig = $monthlySalary < 1500 ? $f_pagibig : $monthlySalary * $pagibigRate;
+
         $otherEarnings = $this->calculateGrossPay($data['earnings'] ?? []);
         $overtimeAmount = $this->calculateOvertimeFromDtrLogs();
     

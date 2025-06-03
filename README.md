@@ -130,9 +130,10 @@ GROSS PAY
 - DEDUCTIONS
 ✔ Income Tax (get the online matrix)
 
-✔SSS (4.5%)
-✔PhilHealth (2.5%)
+✔SSS (4.5%) below 1,000 -> 0; 1,000 - 3,250 = 35
+✔PhilHealth (2.5%) less 10,000 -> 225
 ✔Pagibig ( Default - 100 | 1,500 > MS= 1%, |  1,500 < MS= 2%),
+
 
 ✔Loan
 ✔Late

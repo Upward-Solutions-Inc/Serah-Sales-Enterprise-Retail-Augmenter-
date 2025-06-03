@@ -20,7 +20,9 @@ return new class extends Migration
             $table->string('shift', 20); // Morning, Afternoon, Night
             $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
+            $table->integer('grace_late_minutes')->default(0);
             $table->integer('late_minutes')->default(0);
+            $table->integer('grace_overtime_minutes')->default(0);
             $table->integer('overtime_minutes')->default(0);
             $table->decimal('total_work_hours', 5, 2)->default(0.00);
             $table->timestamps();

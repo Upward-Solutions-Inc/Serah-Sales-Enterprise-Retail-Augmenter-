@@ -16,6 +16,7 @@ class TimeClockService
         $now = now();
         $currentDate = $now->toDateString();
         $shiftConfig = cache()->remember('dtr_config', now()->addMinutes(10), fn() => DtrConfig::first());
+        $gracePeriod = (int) ($shiftConfig->grace_period ?? 0);
 
         $morningEnd = Carbon::parse($shiftConfig->morning_shift_end)->setDateFrom($now);
         $afternoonEnd = Carbon::parse($shiftConfig->afternoon_shift_end)->setDateFrom($now);
@@ -43,12 +44,14 @@ class TimeClockService
         };
 
         $lateMinutes = $now->gt($shiftStart) ? $shiftStart->diffInMinutes($now) : 0;
+        $graceLateMinutes = $lateMinutes <= $gracePeriod ? $lateMinutes : 0;
 
         DtrLog::create([
             'user_id' => $user->id,
             'date' => $currentDate,
             'shift' => $shift,
             'clock_in' => $now,
+            'grace_late_minutes' => $graceLateMinutes,
             'late_minutes' => $lateMinutes,
             'overtime_minutes' => 0,
             'total_work_hours' => 0,
@@ -144,10 +147,14 @@ class TimeClockService
         
         $totalWorkMinutes = $actualStart->diffInMinutes($clockOutTime);
         $totalWorkHours = round($totalWorkMinutes / 60, 2);
-    
+        
+        $graceOvertimeThreshold = (int) ($shiftConfig->overtime ?? 0);
+        $graceOvertimeMinutes = $overtimeMinutes <= $graceOvertimeThreshold ? $overtimeMinutes : 0;
+
         $log->update([
             'clock_out' => $clockOutTime,
             'overtime_minutes' => $overtimeMinutes,
+            'grace_overtime_minutes' => $graceOvertimeMinutes,
             'total_work_hours' => $totalWorkHours
         ]);
     
@@ -161,5 +168,5 @@ class TimeClockService
             'overtime' => "$overtimeMinutes min",
             'total_hours' => $totalWorkHours
         ];
-    }      
+    }
 }

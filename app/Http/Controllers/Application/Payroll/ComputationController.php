@@ -79,7 +79,10 @@ class ComputationController extends Controller
             'ot_holiday',
             'sss',
             'philhealth',
-            'pagibig'
+            'pagibig',
+            'f_sss',
+            'f_philhealth',
+            'f_pagibig'
         ]);
         
         $componentFields = [
@@ -91,7 +94,10 @@ class ComputationController extends Controller
             'ot_holiday',
             'sss',
             'philhealth',
-            'pagibig'
+            'pagibig',
+            'f_sss',
+            'f_philhealth',
+            'f_pagibig'
         ];
         
         $labels = [
@@ -103,7 +109,10 @@ class ComputationController extends Controller
             'ot_holiday' => 'Holiday Overtime',
             'sss'        => 'Social Security System',
             'philhealth' => 'PhilHealth',
-            'pagibig'    => 'Pagibig'
+            'pagibig'    => 'Pagibig',
+            'f_sss'  => 'Fixed SSS',
+            'f_philhealth' => 'Fixed PhilHealth',
+            'f_pagibig' => 'Fixed Pagibig'
           ];
 
           $updatedCodes = [];

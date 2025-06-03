@@ -88,6 +88,26 @@ class ReportsController extends Controller
         ])->toArray();
 
         DB::transaction(function () use ($userIds, $start, $end, $payrollType, $createdBy, $rates, $earnings, $deductions) {
+
+            PayrollCount::where('date_range_start', $start)
+                ->where('date_range_end', $end)
+                ->where('payroll_type', $payrollType)
+                ->get()
+                ->each(function ($existing) use ($userIds) {
+                    $existingUserIds = PayrollPayslip::where('payroll_count_id', $existing->id)
+                        ->pluck('user_id')
+                        ->toArray();
+
+                    sort($existingUserIds);
+                    $submittedUserIds = $userIds;
+                    sort($submittedUserIds);
+
+                    if ($existingUserIds === $submittedUserIds) {
+                        PayrollPayslip::where('payroll_count_id', $existing->id)->delete();
+                        $existing->delete();
+                    }
+                });
+
             $payrollService = new PayrollService(null, $rates);
             $payrollService->generatePayrollBatch($userIds, $start, $end, $payrollType, $createdBy, $earnings, $deductions);
         });

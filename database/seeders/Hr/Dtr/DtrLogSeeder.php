@@ -18,7 +18,9 @@ class DtrLogSeeder extends Seeder
             'shift' => 'Morning',
             'clock_in' => Carbon::parse('2025-03-18 08:10:00'),
             'clock_out' => Carbon::parse('2025-03-18 12:00:00'),
+            'grace_late_minutes' => 5,
             'late_minutes' => 10,
+            'grace_overtime_minutes' => 0,
             'overtime_minutes' => 0,
             'total_work_hours' => 3.83,
         ]);
@@ -29,7 +31,9 @@ class DtrLogSeeder extends Seeder
             'shift' => 'Afternoon',
             'clock_in' => Carbon::parse('2025-03-18 13:00:00'),
             'clock_out' => Carbon::parse('2025-03-18 17:30:00'),
+            'grace_late_minutes' => 5,
             'late_minutes' => 0,
+            'grace_overtime_minutes' => 10,
             'overtime_minutes' => 30,
             'total_work_hours' => 4.50,
         ]);;

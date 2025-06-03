@@ -41,20 +41,20 @@ if (document.querySelector('meta[name="csrf-token"]')) {
  */
 
 //  *** prod ***//
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: 'e8afa73de63ee3d9a0f0',
-//     cluster: 'ap1',
-//     forceTLS: true
-// });
-
-// *** local ***//
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: process.env.MIX_PUSHER_APP_KEY,
-    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-    wsHost: window.location.hostname,
-    wsPort: 6001,
-    forceTLS: false,
-    disableStats: true,
+    key: 'e8afa73de63ee3d9a0f0',
+    cluster: 'ap1',
+    forceTLS: true
 });
+
+// *** local ***//
+// window.Echo = new Echo({
+//     broadcaster: 'pusher',
+//     key: process.env.MIX_PUSHER_APP_KEY,
+//     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+//     wsHost: window.location.hostname,
+//     wsPort: 6001,
+//     forceTLS: false,
+//     disableStats: true,
+// });

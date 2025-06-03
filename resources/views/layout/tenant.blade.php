@@ -16,10 +16,9 @@
                 $sidebarMenu = json_decode(json_encode($permissions), true);
                 $user = Auth::user();
                 $role = optional($user->roles->first());
-                $roleName = $role ? $role->name : null;
                 $roleId = $role && $role->pivot ? $role->pivot->role_id : null;
 
-                if ($roleName !== 'Branch Manager') {
+                if ($roleId !== 4) {
                     
                     $dtrSubMenu = [
                         ['name' => 'Time Clock', 'url' => route('dtr.time_clock'), 'permission' => true],
@@ -68,7 +67,10 @@
                         'permission' => true
                     ];
 
-                    $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu, $retailMenu]);
+                    $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu]);
+                    if ($roleId == 5) {
+                        $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$retailMenu]);
+                    }
                 }
             @endphp
 

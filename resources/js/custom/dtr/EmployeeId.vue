@@ -65,10 +65,10 @@
             </tbody>
           </table>
 
-          <div v-if="users.length === 0 && !isLoading" class="text-center p-primary">
+          <div v-if="users.length === 0 && !isLoading" class="no-data-found-wrapper text-center p-primary">
             <img src="/images/no_data.svg" alt="" class="mb-primary" />
             <p class="mb-0">Nothing to show here</p>
-            <p class="text-secondary font-size-90">Please add a new entity or manage the data table to see content.</p>
+            <p class="mb-0 text-center text-secondary font-size-90">Please add a new entity or manage the data table to see content.</p>
           </div>
         </div>
 
@@ -425,5 +425,20 @@ export default {
   flex-grow: 1;
   border-bottom: 1px solid #000;
   height: 1px;
+}
+.pagination .page-item .page-link {
+  background-color: transparent;
+  color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 50%;
+}
+
+.pagination .page-item.active .page-link,
+.pagination .page-item:not(.active) .page-link:hover,
+.pagination .page-item:not(.active) .page-link:focus {
+  background-color: #007bff !important;
+  color: white !important;
+  border-color: #007bff !important;
+  box-shadow: none !important;
 }
 </style>

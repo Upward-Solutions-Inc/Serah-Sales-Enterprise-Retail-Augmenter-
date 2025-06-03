@@ -165,35 +165,72 @@
         <div class="col-lg-4">
           <label class="mb-4"><b>Deductions</b></label>
 
-          <div class="form-group">
-            <label> Social Security System </label>
-            <div v-if="!editModeRate">
-              <input type="text" class="form-control" :value="formatPercent(form.sss)" readonly />
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <label>Social Security System</label>
+              <div v-if="!editModeRate">
+                <input type="text" class="form-control" :value="formatPercent(form.sss)" readonly />
+              </div>
+              <div v-else>
+                <input type="number" class="form-control" v-model.number="form.sss" />
+              </div>
             </div>
-            <div v-else>
-              <input type="number" class="form-control" v-model.number="form.sss" />
+
+            <div class="form-group col-md-4">
+              <label>Fixed Value</label>
+              <div v-if="!editModeRate">
+                <input type="text" class="form-control" :value="formatCurrency(form.f_sss)" readonly />
+              </div>
+              <div v-else>
+                <input type="number" class="form-control" v-model.number="form.f_sss" />
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label> PhilHealth </label>
-            <div v-if="!editModeRate">
-              <input type="text" class="form-control" :value="formatPercent(form.philhealth)" readonly />
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <label>PhilHealth</label>
+              <div v-if="!editModeRate">
+                <input type="text" class="form-control" :value="formatPercent(form.philhealth)" readonly />
+              </div>
+              <div v-else>
+                <input type="number" class="form-control" v-model.number="form.philhealth" />
+              </div>
             </div>
-            <div v-else>
-              <input type="number" class="form-control" v-model.number="form.philhealth" />
+
+            <div class="form-group col-md-4">
+              <label>Fixed Value</label>
+              <div v-if="!editModeRate">
+                <input type="text" class="form-control" :value="formatCurrency(form.f_philhealth)" readonly />
+              </div>
+              <div v-else>
+                <input type="number" class="form-control" v-model.number="form.f_philhealth" />
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label> Pagibig </label>
-            <div v-if="!editModeRate">
-              <input type="text" class="form-control" :value="formatPercent(form.pagibig)" readonly />
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <label>Pagibig</label>
+              <div v-if="!editModeRate">
+                <input type="text" class="form-control" :value="formatPercent(form.pagibig)" readonly />
+              </div>
+              <div v-else>
+                <input type="number" class="form-control" v-model.number="form.pagibig" />
+              </div>
             </div>
-            <div v-else>
-              <input type="number" class="form-control" v-model.number="form.pagibig" />
+
+            <div class="form-group col-md-4">
+              <label>Fixed Value</label>
+              <div v-if="!editModeRate">
+                <input type="text" class="form-control" :value="formatCurrency(form.f_pagibig)" readonly />
+              </div>
+              <div v-else>
+                <input type="number" class="form-control" v-model.number="form.f_pagibig" />
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -425,6 +462,9 @@ export default {
         sss: 0,
         philhealth: 0,
         pagibig: 0,
+        f_sss: 0,
+        f_philhealth: 0,
+        f_pagibig: 0,
 
         // basic pay
         role_id: null,
@@ -456,6 +496,9 @@ export default {
         this.form.sss = this.getValue("sss");
         this.form.philhealth = this.getValue("philhealth");
         this.form.pagibig = this.getValue("pagibig");
+        this.form.f_sss = this.getValue("f_sss");
+        this.form.f_philhealth = this.getValue("f_philhealth");
+        this.form.f_pagibig = this.getValue("f_pagibig");
 
         this.form.role_id = savedRoleId ? parseInt(savedRoleId) : (this.roles[0]?.id || null);
         this.form.branch_id = savedBranchId ? parseInt(savedBranchId) : (this.branches[0]?.id || null);

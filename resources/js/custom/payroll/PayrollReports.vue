@@ -609,4 +609,19 @@ import api, { PayrollReports } from '../api.js'
         font-size: 14px;
         margin-bottom: 3px;
     }
+    .pagination .page-item .page-link {
+      background-color: transparent;
+      color: #007bff;
+      border: 1px solid #007bff;
+      border-radius: 50%;
+    }
+
+    .pagination .page-item.active .page-link,
+    .pagination .page-item:not(.active) .page-link:hover,
+    .pagination .page-item:not(.active) .page-link:focus {
+      background-color: #007bff !important;
+      color: white !important;
+      border-color: #007bff !important;
+      box-shadow: none !important;
+    }
 </style>

@@ -121,8 +121,15 @@
                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                   <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
                 </li>
-                <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
-                  <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                <li
+                  class="page-item"
+                  v-for="page in visiblePages"
+                  :key="page"
+                  :class="{ active: currentPage === page }"
+                >
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">
+                    {{ page }}
+                  </a>
                 </li>
                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
                   <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
@@ -267,5 +274,20 @@
     .card div {
       font-size: 14px;
       margin-bottom: 3px;
+    }
+    .pagination .page-item .page-link {
+      background-color: transparent;
+      color: #007bff;
+      border: 1px solid #007bff;
+      border-radius: 50%;
+    }
+
+    .pagination .page-item.active .page-link,
+    .pagination .page-item:not(.active) .page-link:hover,
+    .pagination .page-item:not(.active) .page-link:focus {
+      background-color: #007bff !important;
+      color: white !important;
+      border-color: #007bff !important;
+      box-shadow: none !important;
     }
   </style> 

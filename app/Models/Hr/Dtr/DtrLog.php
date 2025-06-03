@@ -18,7 +18,9 @@ class DtrLog extends Model
         'shift',
         'clock_in',
         'clock_out',
+        'grace_late_minutes',
         'late_minutes',
+        'grace_overtime_minutes',
         'overtime_minutes',
         'total_work_hours',
     ];
