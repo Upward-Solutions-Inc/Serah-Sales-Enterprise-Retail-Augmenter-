@@ -30,7 +30,9 @@
                     ];
 
                     $retailSubMenu = [
-                       ['name' => 'Ingredients', 'url' => route('retail.inventory.ingredients'), 'permission' => true],
+                       ['name' => 'Inventory', 'url' => route('retail.inventory.product_inventory'), 'permission' => true],
+                       ['name' => 'Ingredients', 'url' => route('retail.inventory.product_inventory'), 'permission' => true],
+                       ['name' => 'Stocks', 'url' => route('retail.inventory.product_inventory'), 'permission' => true],
                     ];
 
 
@@ -68,7 +70,7 @@
                     ];
 
                     $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$dtrMenu, $payrollMenu]);
-                    if ($roleId == 5) {
+                    if ($roleId == 1) {
                         $sidebarMenu = SidebarMenuHelper::injectBefore($sidebarMenu, 'Inventory', [$retailMenu]);
                     }
                 }

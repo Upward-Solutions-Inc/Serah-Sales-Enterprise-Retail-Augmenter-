@@ -9,7 +9,9 @@ import PayrollPayslip from './payroll/PayrollPayslip.vue'
 import PayrollReports from './payroll/PayrollReports.vue'
 import PayrollComputation from './payroll/PayrollComputation.vue'
 
-import InventoryIngredients from './retail/inventory/InventoryIngredients.vue'
+import ProductInventory from './retail/inventory/ProductInventory.vue'
+import ProductIngredients from './retail/ingredients/ProductIngredients.vue'
+import ProductStocks from './retail/stocks/ProductStocks.vue'
 
 Vue.component('time-clock', TimeClock)
 Vue.component('attendance', Attendance)
@@ -20,4 +22,6 @@ Vue.component('payroll-payslip', PayrollPayslip)
 Vue.component('payroll-reports', PayrollReports)
 Vue.component('payroll-computation', PayrollComputation)
 
-Vue.component('inventory-ingredients', InventoryIngredients)
+Vue.component('product-inventory', ProductInventory)
+Vue.component('product-ingredients', ProductIngredients)
+Vue.component('product-stocks', ProductStocks)
