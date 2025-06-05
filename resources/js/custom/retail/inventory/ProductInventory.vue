@@ -15,16 +15,29 @@
             </p>
           </div>
 
-            <div class="d-flex align-items-center">
-              <input
-                type="text"
-                v-model="searchQuery"
-                class="form-control mr-2"
-                placeholder="Search..."
-                style="max-width: 250px;"
-              />
-              <button class="btn btn-outline-secondary" @click="clearSearch">Clear</button>
-            </div>
+          <div class="d-flex align-items-center">
+            <input
+              type="text"
+              v-model="searchQuery"
+              class="form-control"
+              placeholder="Search..."
+              style="max-width: 300px; height: 40px;"
+            />
+              <button
+                  class="btn btn-primary ml-3"
+                  style="height: 42px; width: 250px;"
+                  @click="addMeasurements"
+                >
+                  Add Ingredients
+              </button>
+              <button
+                  class="btn btn-primary ml-3"
+                  style="height: 42px; width: 250px;"
+                  @click="addIngredients"
+                >
+                  Add Measurements
+              </button>
+          </div>
         </div>
 
         <!-- Desktop Table -->
