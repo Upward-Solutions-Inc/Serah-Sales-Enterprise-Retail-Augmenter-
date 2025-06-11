@@ -145,4 +145,14 @@ GROSS PAY
 > composer dump-autoload
 > php artisan db:seed --class=Database\Seeders\Hr\Payroll\PayrollComponentSeeder
 
-test
+
+# Retail Inventory & POS System
+
+> Retail
+- Ingredients
+- Recipe
+- Measurements
+
+> Ingredients (Inventory)
+> Link to recipe (Ingredients)
+> POS~
