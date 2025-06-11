@@ -30,9 +30,9 @@
                     ];
 
                     $retailSubMenu = [
-                       ['name' => 'Inventory', 'url' => route('retail.inventory.product_inventory'), 'permission' => true],
                        ['name' => 'Ingredients', 'url' => route('retail.inventory.product_ingredients'), 'permission' => true],
-                       ['name' => 'Stocks', 'url' => route('retail.inventory.product_inventory'), 'permission' => true],
+                       ['name' => 'Recipe', 'url' => route('retail.inventory.product_inventory'), 'permission' => true],
+                       ['name' => 'Measurements', 'url' => route('retail.inventory.product_measurements'), 'permission' => true]
                     ];
 
 

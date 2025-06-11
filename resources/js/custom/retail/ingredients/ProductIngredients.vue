@@ -7,261 +7,198 @@
     </div>
 
     <div class="col-lg-12 mt-2">
-      <div class="datatable">
-        <div class="my-2 d-flex justify-content-between flex-wrap">
-          <div class="d-flex align-items-center">
+      <div class="datatable d-flex flex-column" style="min-height: 90vh;">
+        <!-- Filters -->
+        <div class="my-2 row">
+          <div class="col-md-6 col-12 mb-2 d-flex align-items-center">
             <p class="text-muted mb-0">
-              Showing {{ startItem }} to {{ endItem }} of {{ users.length }} items
+              Showing {{ startItem }} to {{ endItem }} of {{ measures.length }} items
             </p>
           </div>
-
-            <div class="d-flex align-items-center">
-              <input
-                type="text"
-                v-model="searchQuery"
-                class="form-control mr-2"
-                placeholder="Search..."
-                style="max-width: 250px;"
-              />
-              <button class="btn btn-outline-secondary" @click="clearSearch">ADD +</button>
-            </div>
-        </div>
-
-        <!-- Desktop Table -->
-        <div class="table-responsive shadow pt-primary position-relative d-none d-md-block">
-          <loader
-            class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center"
-            style="top: 0; left: 0; z-index: 1050;"
-            :visible="isLoading"
-            v-if="isLoading"
-          />
-          <table v-else class="table table-striped table-borderless">
-            <thead>
-              <tr>
-                <th class="text-center">User ID</th>
-                <th class="text-center">Name</th>
-                <th class="text-center">Email</th>
-                <th class="text-center">Role</th>
-                <th class="text-center">Branch</th>
-                <th class="text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in paginatedUsers" :key="user.id" class="text-center">
-                <td>{{ user.id }}</td>
-                <td>{{ user.first_name }} {{ user.last_name }}</td>
-                <td>{{ user.email || 'N/A' }}</td>
-                <td>{{ user.role || 'N/A' }}</td>
-                <td>{{ user.branch || 'N/A' }}</td>
-                <td>
-                  <div class="dropdown">
-                    <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
-                    <div class="dropdown-menu">
-                      <a class="dropdown-item" href="#" @click="generateQr(user)">View</a>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div v-if="users.length === 0 && !isLoading" class="no-data-found-wrapper text-center p-primary">
-            <img src="/images/no_data.svg" alt="" class="mb-primary" />
-            <p class="mb-0">Nothing to show here</p>
-            <p class="mb-0 text-center text-secondary font-size-90">Please add a new entity or manage the data table to see content.</p>
-          </div>
-        </div>
-
-        <!-- Pagination -->
-        <nav v-if="totalPages > 1" class="mt-2">
-          <ul class="pagination justify-content-end">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
-            </li>
-            <li
-              class="page-item"
-              v-for="page in visiblePages"
-              :key="page"
-              :class="{ active: currentPage === page }"
+          <div class="col-md-6 col-12 d-flex align-items-center justify-content-md-end flex-column flex-md-row">
+            <input
+              type="text"
+              v-model="searchQuery"
+              class="form-control mb-2 mb-md-0"
+              placeholder="Search..."
+              style="max-width: 300px; height: 40px;"
+            />
+            <button
+              class="btn btn-primary ml-md-3"
+              style="height: 42px; width: 100%; max-width: 280px;"
+              data-toggle="modal" 
+              data-target="#addIngredientsModal"
             >
-              <a class="page-link" href="#" @click.prevent="changePage(page)">
-                {{ page }}
-              </a>
-            </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
-            </li>
-          </ul>
+              Add Measurements
+            </button>
+          </div>
+        </div>
+
+        <!-- Data View -->
+        <div class="flex-grow-1">
+          <!-- Desktop Table -->
+          <div class="table-responsive shadow pt-primary position-relative d-none d-md-block">
+            <loader
+              class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center"
+              style="top: 0; left: 0; z-index: 1050;"
+              :visible="isLoading"
+              v-if="isLoading"
+            />
+            <table v-else class="table table-striped table-borderless">
+              <thead>
+                <tr>
+                  <th class="text-center">#</th>
+                  <th class="text-center">Measurement</th>
+                  <th class="text-center">Unit</th>
+                  <th class="text-center">Amount</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="measure in paginatedUsers" :key="measure.id" class="text-center">
+                  <td>{{ measure.id }}</td>
+                  <td>{{ measure.name || 'N/A' }}</td>
+                  <td>{{ measure.unit || 'N/A' }}</td>
+                  <td>{{ measure.amount || 'N/A' }}</td>
+                  <td>
+                    <div class="dropdown">
+                      <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
+                      <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#" @click="generateQr(measure)">View</a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div v-if="measures.length === 0 && !isLoading" class="no-data-found-wrapper text-center p-primary">
+              <img src="/images/no_data.svg" alt="" class="mb-primary" />
+              <p class="mb-0">Nothing to show here</p>
+              <p class="mb-0 text-center text-secondary font-size-90">Please add a new entity or manage the data table to see content.</p>
+            </div>
+          </div>
+
+          <!-- Mobile Cards -->
+          <div class="d-md-none">
+            <div v-if="!isLoading && measures.length" v-for="measure in paginatedUsers" :key="measure.id" class="card p-3 mb-2">
+              <div><strong>ID:</strong> {{ measure.id }}</div>
+              <div><strong>Measurement:</strong> {{ measure.name || 'N/A' }}</div>
+              <div><strong>Unit:</strong> {{ measure.unit || 'N/A' }}</div>
+              <div><strong>Amount:</strong> {{ measure.amount || 'N/A' }}</div>
+              <div class="text-right mt-2">
+                <button class="btn btn-sm btn-primary" @click="generateQr(measure)">View</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination Always at Bottom -->
+        <nav v-if="totalPages > 1" class="mt-auto">
+          <div class="d-flex justify-content-center justify-content-md-end">
+            <ul class="pagination">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
+              </li>
+              <li
+                class="page-item"
+                v-for="page in visiblePages"
+                :key="page"
+                :class="{ active: currentPage === page }"
+              >
+                <a class="page-link" href="#" @click.prevent="changePage(page)">
+                  {{ page }}
+                </a>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+              </li>
+            </ul>
+          </div>
         </nav>
-
-        <!-- Mobile Cards -->
-        <div class="d-md-none">
-          <div v-if="!isLoading && users.length" v-for="user in paginatedUsers" :key="user.id" class="card p-3 mb-2">
-            <div><strong>User ID:</strong> {{ user.id }}</div>
-            <div><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</div>
-            <div><strong>Email:</strong> {{ user.email || 'N/A' }}</div>
-            <div><strong>Role:</strong> {{ user.role || 'N/A' }}</div>
-            <div><strong>Branch:</strong> {{ user.branch || 'N/A' }}</div>
-            <div class="text-right mt-2">
-              <button class="btn btn-sm btn-primary" @click="generateQr(user)">View</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- QR Modal -->
-        <div class="modal fade" id="qrModal" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-              <div class="modal-header py-2">
-                <h5 class="modal-title w-100 text-center m-0">Digital ID</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="qrSvg = null">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body text-center p-3">
-                <div ref="svgContainer" v-html="qrSvg" style="display: none;"></div>
-                <canvas ref="canvas" width="300" height="300" style="display: none;"></canvas>
-
-                <div class="flip-card mx-auto">
-                  <div class="flip-card-inner">
-
-                      <div class="flip-card-front text-center p-3"  ref="idCardExportFront">
-                        <h5 class="mb-2">THE NEST</h5>
-                        <img :src="selectedUser.image || 'https://www.svgrepo.com/show/452030/avatar-default.svg'" class="id-photo" />
-                        <h6 class="mt-2">{{ selectedUser.first_name }} {{ selectedUser.last_name }}</h6>
-                        <p>ID: {{ selectedUser.id || 'N/A' }}</p>
-                        <p>Role: {{ selectedUser.role || 'N/A' }}</p>
-                        <p>Branch: {{ selectedUser.branch || 'N/A' }}</p>
-                      </div>
-
-                      <div class="flip-card-back d-flex flex-column justify-content-center align-items-center p-3" ref="idCardExportBack">
-                        <div v-if="pngDataUrl">
-                          <img :src="pngDataUrl" style="width: 250px;" />
-                        </div>
-                          <p class="mb-1 font-italic small">Please scan to log time</p>
-                          <hr style="width: 80%; border-top: 1px dashed #000;" />
-
-                        <div class="mt-2 text-left w-100 px-3">
-                          <div class="underline-wrap">
-                            <p class="small mb-1">Employee Signature:</p>
-                            <span></span>
-                          </div>
-                          <div class="underline-wrap">
-                            <p class="small mb-1">Emergency Contact:</p>
-                            <span></span>
-                          </div>
-                          <div class="underline-wrap">
-                            <p class="small mb-1">Address:</p>
-                            <span></span>
-                          </div>
-                        </div>
-                      </div>
-
-                  </div>
-                </div>
-
-              </div>
-              <div class="modal-footer justify-content-center border-0 pt-0">
-                <button class="btn btn-secondary btn-sm mr-2" data-dismiss="modal" @click="qrSvg = null">Close</button>
-                <button class="btn btn-primary btn-sm d-flex align-items-center justify-content-center px-3" :disabled="isLoading" @click="downloadQr">
-                  <Loader v-if="isLoading" class="mr-1" style="width: 18px; height: 18px;" />
-                  <span v-else>Download</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
+    <!-- Add Measurement Modal -->
+    <div class="modal fade" id="addIngredientsModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Measurement</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span>&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Measurement Name:</label>
+              <input type="text" class="form-control" v-model="newMeasure.name" />
+            </div>
+            <div class="form-group">
+              <label>Unit:</label>
+              <input type="text" class="form-control" v-model="newMeasure.unit" />
+            </div>
+            <div class="form-group">
+              <label>Amount:</label>
+              <input type="number" class="form-control" v-model="newMeasure.amount" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" @click="saveMeasurement">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-
 export default {
-  name: 'InventoryIngredients',
+  name: 'ProductMeasurements',
   data() {
     return {
       searchQuery: '',
       isLoading: false,
-      qrSvg: null,
-      pngDataUrl: null,
       currentPage: 1,
-      usersPerPage: 5,
-      selectedUser: {},
-      users: [
-        {
-          id: 1,
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john.doe@example.com',
-          role: 'Manager',
-          branch: 'Manila',
-          image: ''
-        },
-        {
-          id: 2,
-          first_name: 'Jane',
-          last_name: 'Smith',
-          email: 'jane.smith@example.com',
-          role: 'Cashier',
-          branch: 'Cebu',
-          image: ''
-        },
-        {
-          id: 3,
-          first_name: 'Mike',
-          last_name: 'Brown',
-          email: 'mike.brown@example.com',
-          role: 'Chef',
-          branch: 'Davao',
-          image: ''
-        },
-        {
-          id: 4,
-          first_name: 'Anna',
-          last_name: 'Taylor',
-          email: 'anna.taylor@example.com',
-          role: 'Waiter',
-          branch: 'Baguio',
-          image: ''
-        },
-        {
-          id: 5,
-          first_name: 'Paul',
-          last_name: 'Walker',
-          email: 'paul.walker@example.com',
-          role: 'Manager',
-          branch: 'Quezon City',
-          image: ''
-        }
+      measuresPerPage: 5,
+      newMeasure: {
+        name: '',
+        unit: '',
+        amount: ''
+      },
+      measures: [
+        { id: 1, name: 'Kilogram', unit: 'kg', amount: '5' },
+        { id: 2, name: 'Liter', unit: 'L', amount: '10' },
+        { id: 3, name: 'Meter', unit: 'm', amount: '15' },
+        { id: 4, name: 'Gram', unit: 'g', amount: '20' },
+        { id: 5, name: 'Celsius', unit: '°C', amount: '25' },
+        { id: 6, name: 'Milliliter', unit: 'ml', amount: '30' }
       ]
     }
   },
   computed: {
     filteredUsers() {
-      if (!this.searchQuery) return this.users
-      return this.users.filter(user =>
-        `${user.first_name} ${user.last_name}`.toLowerCase().includes(this.searchQuery.toLowerCase())
+      if (!this.searchQuery) return this.measures
+      return this.measures.filter(measure =>
+        `${measure.name} ${measure.unit}`.toLowerCase().includes(this.searchQuery.toLowerCase())
       )
     },
     paginatedUsers() {
-      const start = (this.currentPage - 1) * this.usersPerPage
-      return this.filteredUsers.slice(start, start + this.usersPerPage)
+      const start = (this.currentPage - 1) * this.measuresPerPage
+      return this.filteredUsers.slice(start, start + this.measuresPerPage)
     },
     totalPages() {
-      return Math.ceil(this.filteredUsers.length / this.usersPerPage)
+      return Math.ceil(this.filteredUsers.length / this.measuresPerPage)
     },
     visiblePages() {
       return Array.from({ length: this.totalPages }, (_, i) => i + 1)
     },
     startItem() {
-      return (this.currentPage - 1) * this.usersPerPage + 1
+      return (this.currentPage - 1) * this.measuresPerPage + 1
     },
     endItem() {
-      return Math.min(this.currentPage * this.usersPerPage, this.filteredUsers.length)
+      return Math.min(this.currentPage * this.measuresPerPage, this.filteredUsers.length)
     }
   },
   methods: {
@@ -273,13 +210,18 @@ export default {
         this.currentPage = page
       }
     },
-    generateQr(user) {
-      this.selectedUser = user
-      $('#qrModal').modal('show')
+    generateQr(measure) {
+      alert(`Generate QR for: ${measure.name}`)
     },
-    downloadQr() {
-      // dummy download trigger
-      alert('Downloading QR...')
+    saveMeasurement() {
+      if (!this.newMeasure.name || !this.newMeasure.unit || !this.newMeasure.amount) {
+        alert('Please fill out all fields.')
+        return
+      }
+      const id = this.measures.length + 1
+      this.measures.push({ id, ...this.newMeasure })
+      this.newMeasure = { name: '', unit: '', amount: '' }
+      $('#addIngredientsModal').modal('hide')
     }
   }
 }
