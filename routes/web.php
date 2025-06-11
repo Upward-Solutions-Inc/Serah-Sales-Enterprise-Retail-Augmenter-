@@ -111,7 +111,7 @@ Route::prefix('payroll')->middleware(['auth'])->group(function () {
 });
 
 Route::prefix('inventory')->middleware(['auth'])->group(function () {
-    require base_path('routes/retail/inventory/product_inventory.php');
     require base_path('routes/retail/inventory/product_ingredients.php');
+    require base_path('routes/retail/inventory/product_recipe.php');
     require base_path('routes/retail/inventory/product_measurements.php');
 });
