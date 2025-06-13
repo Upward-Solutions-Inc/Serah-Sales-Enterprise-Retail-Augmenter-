@@ -231,7 +231,8 @@ import Swal from "sweetalert2";
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 import api, { PayrollReports } from '../api.js'
-    export default {
+
+export default {
     name: 'PayrollReports',
     components: {
         Loader,

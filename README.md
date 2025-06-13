@@ -141,7 +141,8 @@ GROSS PAY
 
 # use -- User.php -- to get the current log user
 
-# RIGHT WAY TO SEED
+# RIGHT WAY TO SEED & migrate specific file
+> php artisan migrate --path=/database/migrations/2025_06_12_174948_create_measurements_table.php
 > composer dump-autoload
 > php artisan db:seed --class=Database\Seeders\Hr\Payroll\PayrollComponentSeeder
 

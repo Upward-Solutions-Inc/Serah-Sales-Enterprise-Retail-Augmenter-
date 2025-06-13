@@ -46,25 +46,24 @@
             />
             <table v-else class="table table-striped table-borderless">
               <thead>
-                <tr>
-                  <th class="text-center">#</th>
-                  <th class="text-center">Measurement</th>
-                  <th class="text-center">Unit</th>
-                  <th class="text-center">Amount</th>
-                  <th class="text-center">Action</th>
-                </tr>
+                  <tr>
+                  <th v-for="(label, index) in headers" :key="index" class="datatable-th pt-0 text-center fixed-col">
+                      <span class="font-size-default">{{ label }}</span>
+                  </th>
+                  </tr>
               </thead>
               <tbody>
                 <tr v-for="measure in paginatedUsers" :key="measure.id" class="text-center">
                   <td>{{ measure.id }}</td>
                   <td>{{ measure.name || 'N/A' }}</td>
+                  <td>{{ measure.measure || 'N/A' }}</td>
                   <td>{{ measure.unit || 'N/A' }}</td>
                   <td>{{ measure.amount || 'N/A' }}</td>
                   <td>
                     <div class="dropdown">
                       <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
                       <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" @click="generateQr(measure)">View</a>
+                        <a class="dropdown-item" href="#">View</a>
                       </div>
                     </div>
                   </td>
@@ -77,9 +76,10 @@
               <p class="mb-0">Nothing to show here</p>
               <p class="mb-0 text-center text-secondary font-size-90">Please add a new entity or manage the data table to see content.</p>
             </div>
+
           </div>
 
-          <!-- Mobile Cards -->
+          <!-- Mobile View -->
           <div class="d-md-none">
             <div v-if="!isLoading && measures.length" v-for="measure in paginatedUsers" :key="measure.id" class="card p-3 mb-2">
               <div><strong>ID:</strong> {{ measure.id }}</div>
@@ -92,6 +92,7 @@
             </div>
           </div>
 
+          <!-- pagination -->
           <nav v-if="totalPages > 1" :class="['mt-2', 'w-100', 'd-block']">
             <div class="d-flex justify-content-center d-md-none"> <!-- Mobile view bottom center -->
               <ul class="pagination">
@@ -146,16 +147,26 @@
               <input type="text" class="form-control" v-model="newIngredients.name" />
             </div>
             <div class="form-group">
-              <label>Measurement:</label>
-              <input type="text" class="form-control" v-model="newIngredients.measure" />
+              <label>Measurement Type:</label>
+              <select class="form-control" v-model="newIngredients.measure">
+                <option disabled value="">Select measurement type</option>
+                <option v-for="m in measures" :key="m.type" :value="m.type">
+                  {{ m.type }}
+                </option>
+              </select>
             </div>
             <div class="form-group">
               <label>Unit:</label>
-              <input type="text" class="form-control" v-model="newIngredients.unit" />
+              <select class="form-control" v-model="newIngredients.unit">
+                <option disabled value="">Select unit</option>
+                <option v-for="unit in filteredUnits()" :key="unit.unit" :value="unit.unit">
+                  {{ unit.label }} ({{ unit.unit }})
+                </option>
+              </select>
             </div>
             <div class="form-group">
               <label>Amount:</label>
-              <input type="number" class="form-control" v-model="newIngredients.amount" />
+              <input type="number" step="any" class="form-control" v-model="newIngredients.amount" />
             </div>
           </div>
           <div class="modal-footer">
@@ -169,8 +180,14 @@
 </template>
 
 <script>
+import api, { ProductIngredients } from '../../api.js'
+import Loader from '../../components/Loader.vue'
+
 export default {
   name: 'ProductMeasurements',
+  components: {
+      Loader
+  },
   data() {
     return {
       searchQuery: '',
@@ -183,13 +200,15 @@ export default {
         unit: '',
         amount: ''
       },
-      measures: [
-        { id: 1, name: 'Kilogram', unit: 'kg', amount: '5' },
-        { id: 2, name: 'Liter', unit: 'L', amount: '10' },
-        { id: 3, name: 'Meter', unit: 'm', amount: '15' },
-        { id: 4, name: 'Gram', unit: 'g', amount: '20' },
-        { id: 5, name: 'Celsius', unit: '°C', amount: '25' },
-        { id: 6, name: 'Milliliter', unit: 'ml', amount: '30' }
+      measures: [],
+
+      headers: [
+          '#',
+          'Ingredient Name',
+          'Measurement Type',
+          'Unit',
+          'Amount',
+          'Action'
       ]
     }
   },
@@ -217,6 +236,9 @@ export default {
       return Math.min(this.currentPage * this.measuresPerPage, this.filteredUsers.length)
     }
   },
+  mounted() {
+    this.fetchMeasurements()
+  },
   methods: {
     clearSearch() {
       this.searchQuery = ''
@@ -226,9 +248,21 @@ export default {
         this.currentPage = page
       }
     },
-    generateQr(measure) {
-      alert(`Generate QR for: ${measure.name}`)
+    fetchMeasurements() {
+      this.isLoading = true
+      api.get(ProductIngredients.fetchMeasurements)
+        .then(res => {
+          this.measures = res.data
+        })
+        .finally(() => {
+          this.isLoading = false
+        })
     },
+    filteredUnits() {
+      const selected = this.measures.find(m => m.type === this.newIngredients.measure)
+      return selected ? selected.units : []
+    },
+
     saveIngredients() {
       if (!this.newIngredients.name || !this.newIngredients.unit || !this.newIngredients.amount) {
         alert('Please fill out all fields.')

@@ -58,3 +58,7 @@ export const PayrollComputation = {
   fetchDynamicData: '/payroll/computation/dynamicData',
   deleteComponent: '/payroll/computation/deleteComponent'
 }
+
+export const ProductIngredients = {
+  fetchMeasurements: '/inventory/product_ingredients/measurements/fetch'
+}
