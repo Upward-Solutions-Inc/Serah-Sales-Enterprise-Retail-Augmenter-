@@ -60,5 +60,10 @@ export const PayrollComputation = {
 }
 
 export const ProductIngredients = {
-  fetchMeasurements: '/inventory/product_ingredients/measurements/fetch'
+  fetchMeasurements: '/inventory/product_ingredients/measurements/fetch',
+  fetchList: '/inventory/product_ingredients/list',
+  store: '/inventory/product_ingredients/store',
+  show: id => `/inventory/product_ingredients/${id}`,
+  update: id => `/inventory/product_ingredients/${id}`,
+  delete: id => `/inventory/product_ingredients/${id}`
 }
