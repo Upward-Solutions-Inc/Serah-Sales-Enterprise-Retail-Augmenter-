@@ -2,7 +2,7 @@
   <div class="content-wrapper position-relative">
     <div class="row">
       <div class="col-sm-3">
-        <h4>Recipe</h4>
+        <h4>Recipes</h4>
       </div>
     </div>
 
@@ -12,7 +12,7 @@
         <div class="my-2 row">
           <div class="col-md-6 col-12 mb-2 d-flex align-items-center">
             <p class="text-muted mb-0">
-              Showing {{ startItem }} to {{ endItem }} of {{ measures.length }} items
+              Showing {{ startItem }} to {{ endItem }} of {{ recipes.length }} items
             </p>
           </div>
           <div class="col-md-6 col-12 d-flex align-items-center justify-content-md-end flex-column flex-md-row">
@@ -29,7 +29,7 @@
               data-toggle="modal" 
               data-target="#addRecipeModal"
             >
-              Add Measurements
+              Add Recipe
             </button>
           </div>
         </div>
@@ -48,23 +48,22 @@
               <thead>
                 <tr>
                   <th class="text-center">#</th>
-                  <th class="text-center">Measurement</th>
-                  <th class="text-center">Unit</th>
-                  <th class="text-center">Amount</th>
+                  <th class="text-center">Recipe Name</th>
+                  <th class="text-center">Ingredients</th>
                   <th class="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="measure in paginatedUsers" :key="measure.id" class="text-center">
-                  <td>{{ measure.id }}</td>
-                  <td>{{ measure.name || 'N/A' }}</td>
-                  <td>{{ measure.unit || 'N/A' }}</td>
-                  <td>{{ measure.amount || 'N/A' }}</td>
+                <tr v-for="recipe in paginatedRecipes" :key="recipe.id" class="text-center">
+                  <td>{{ recipe.id }}</td>
+                  <td>{{ recipe.name }}</td>
+                  <td>{{ recipe.ingredients }} item(s)</td>
                   <td>
                     <div class="dropdown">
                       <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
                       <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" @click="generateQr(measure)">View</a>
+                        <a class="dropdown-item" href="#" @click="viewRecipe(recipe)">View</a>
+                        <a class="dropdown-item text-danger" href="#" @click="deleteRecipe(recipe.id)">Delete</a>
                       </div>
                     </div>
                   </td>
@@ -72,22 +71,21 @@
               </tbody>
             </table>
 
-            <div v-if="measures.length === 0 && !isLoading" class="no-data-found-wrapper text-center p-primary">
+            <div v-if="recipes.length === 0 && !isLoading" class="no-data-found-wrapper text-center p-primary">
               <img src="/images/no_data.svg" alt="" class="mb-primary" />
               <p class="mb-0">Nothing to show here</p>
-              <p class="mb-0 text-center text-secondary font-size-90">Please add a new entity or manage the data table to see content.</p>
+              <p class="mb-0 text-center text-secondary font-size-90">Please add a new recipe to see content.</p>
             </div>
           </div>
 
           <!-- Mobile Cards -->
           <div class="d-md-none">
-            <div v-if="!isLoading && measures.length" v-for="measure in paginatedUsers" :key="measure.id" class="card p-3 mb-2">
-              <div><strong>ID:</strong> {{ measure.id }}</div>
-              <div><strong>Measurement:</strong> {{ measure.name || 'N/A' }}</div>
-              <div><strong>Unit:</strong> {{ measure.unit || 'N/A' }}</div>
-              <div><strong>Amount:</strong> {{ measure.amount || 'N/A' }}</div>
+            <div v-if="!isLoading && recipes.length" v-for="recipe in paginatedRecipes" :key="recipe.id" class="card p-3 mb-2">
+              <div><strong>ID:</strong> {{ recipe.id }}</div>
+              <div><strong>Name:</strong> {{ recipe.name }}</div>
+              <div><strong>Ingredients:</strong> {{ recipe.ingredients }} item(s)</div>
               <div class="text-right mt-2">
-                <button class="btn btn-sm btn-primary" @click="generateQr(measure)">View</button>
+                <button class="btn btn-sm btn-primary" @click="viewRecipe(recipe)">View</button>
               </div>
             </div>
           </div>
@@ -98,12 +96,7 @@
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
                 <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Prev</a>
               </li>
-              <li
-                class="page-item"
-                v-for="page in visiblePages"
-                :key="page"
-                :class="{ active: currentPage === page }"
-              >
+              <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
                 <a class="page-link" href="#" @click.prevent="changePage(page)">
                   {{ page }}
                 </a>
@@ -113,38 +106,33 @@
               </li>
             </ul>
           </nav>
-
         </div>
       </div>
     </div>
 
-    <!-- Add Measurement Modal -->
+    <!-- Add Recipe Modal -->
     <div class="modal fade" id="addRecipeModal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Add Measurement</h5>
+            <h5 class="modal-title">Add Recipe</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span>&times;</span>
             </button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label>Measurement Name:</label>
-              <input type="text" class="form-control" v-model="newMeasure.name" />
+              <label>Recipe Name:</label>
+              <input type="text" class="form-control" v-model="newRecipe.name" />
             </div>
             <div class="form-group">
-              <label>Unit:</label>
-              <input type="text" class="form-control" v-model="newMeasure.unit" />
-            </div>
-            <div class="form-group">
-              <label>Amount:</label>
-              <input type="number" class="form-control" v-model="newMeasure.amount" />
+              <label>Number of Ingredients:</label>
+              <input type="number" min="1" class="form-control" v-model="newRecipe.ingredients" />
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" @click="saveMeasurement">Save</button>
+            <button class="btn btn-primary" @click="saveRecipe">Save</button>
           </div>
         </div>
       </div>
@@ -154,50 +142,48 @@
 
 <script>
 export default {
-  name: 'ProductMeasurements',
+  name: 'ProductRecipe',
   data() {
     return {
       searchQuery: '',
       isLoading: false,
       currentPage: 1,
-      measuresPerPage: 5,
-      newMeasure: {
+      recipesPerPage: 5,
+      newRecipe: {
         name: '',
-        unit: '',
-        amount: ''
+        ingredients: ''
       },
-      measures: [
-        { id: 1, name: 'Kilogram', unit: 'kg', amount: '5' },
-        { id: 2, name: 'Liter', unit: 'L', amount: '10' },
-        { id: 3, name: 'Meter', unit: 'm', amount: '15' },
-        { id: 4, name: 'Gram', unit: 'g', amount: '20' },
-        { id: 5, name: 'Celsius', unit: '°C', amount: '25' },
-        { id: 6, name: 'Milliliter', unit: 'ml', amount: '30' }
+      recipes: [
+        { id: 1, name: 'Mocha Cafe', ingredients: 5 },
+        { id: 2, name: 'Caramel Latte', ingredients: 4 },
+        { id: 3, name: 'Espresso Shot', ingredients: 2 },
+        { id: 4, name: 'Vanilla Frappe', ingredients: 6 },
+        { id: 5, name: 'Iced Americano', ingredients: 3 }
       ]
     }
   },
   computed: {
-    filteredUsers() {
-      if (!this.searchQuery) return this.measures
-      return this.measures.filter(measure =>
-        `${measure.name} ${measure.unit}`.toLowerCase().includes(this.searchQuery.toLowerCase())
+    filteredRecipes() {
+      if (!this.searchQuery) return this.recipes
+      return this.recipes.filter(recipe =>
+        recipe.name.toLowerCase().includes(this.searchQuery.toLowerCase())
       )
     },
-    paginatedUsers() {
-      const start = (this.currentPage - 1) * this.measuresPerPage
-      return this.filteredUsers.slice(start, start + this.measuresPerPage)
+    paginatedRecipes() {
+      const start = (this.currentPage - 1) * this.recipesPerPage
+      return this.filteredRecipes.slice(start, start + this.recipesPerPage)
     },
     totalPages() {
-      return Math.ceil(this.filteredUsers.length / this.measuresPerPage)
+      return Math.ceil(this.filteredRecipes.length / this.recipesPerPage)
     },
     visiblePages() {
       return Array.from({ length: this.totalPages }, (_, i) => i + 1)
     },
     startItem() {
-      return (this.currentPage - 1) * this.measuresPerPage + 1
+      return (this.currentPage - 1) * this.recipesPerPage + 1
     },
     endItem() {
-      return Math.min(this.currentPage * this.measuresPerPage, this.filteredUsers.length)
+      return Math.min(this.currentPage * this.recipesPerPage, this.filteredRecipes.length)
     }
   },
   methods: {
@@ -209,17 +195,20 @@ export default {
         this.currentPage = page
       }
     },
-    generateQr(measure) {
-      alert(`Generate QR for: ${measure.name}`)
+    viewRecipe(recipe) {
+      alert(`Viewing recipe: ${recipe.name}`)
     },
-    saveMeasurement() {
-      if (!this.newMeasure.name || !this.newMeasure.unit || !this.newMeasure.amount) {
+    deleteRecipe(id) {
+      this.recipes = this.recipes.filter(r => r.id !== id)
+    },
+    saveRecipe() {
+      if (!this.newRecipe.name || !this.newRecipe.ingredients) {
         alert('Please fill out all fields.')
         return
       }
-      const id = this.measures.length + 1
-      this.measures.push({ id, ...this.newMeasure })
-      this.newMeasure = { name: '', unit: '', amount: '' }
+      const id = this.recipes.length + 1
+      this.recipes.push({ id, ...this.newRecipe })
+      this.newRecipe = { name: '', ingredients: '' }
       $('#addRecipeModal').modal('hide')
     }
   }

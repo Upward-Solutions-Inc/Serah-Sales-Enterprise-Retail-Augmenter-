@@ -52,12 +52,29 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in paginatedItems" :key="item.id" class="text-center">
-                  <td>{{ item.id }}</td>
-                  <td>{{ item.ingredient_name || 'N/A' }}</td>
+                <tr v-for="(item, index) in paginatedItems" :key="item.id" class="text-center">
+                  <td>{{ (currentPage - 1) * ingredientsPerPage + index + 1 }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="mr-2">
+                        <div class="avatars-w-60">
+                          <img
+                            :src="resolveImage(item.image)"
+                            @error="handleImageError($event, item)"
+                            class="rounded-circle avatar-bordered"
+                          />
+                          <span class="status bg-success"></span>
+                        </div>
+                      </div>
+                      <div>
+                        <a href="javascript:void(0)">{{ item.ingredient_name }}</a>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ item.brand || 'N/A' }}</td>
+                  <td>{{ item.category || 'N/A' }}</td>
                   <td>{{ item.measurement_type || 'N/A' }}</td>
-                  <td>{{ item.unit || 'N/A' }}</td>
-                  <td>{{ item.amount || 'N/A' }}</td>
+                  <td>{{ formatAmount(item.amount, item.unit) }}</td>
                   <td>
                     <div class="dropdown">
                       <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
@@ -72,10 +89,13 @@
               </tbody>
             </table>
 
-            <div v-if="ingredients.length === 0 && !isLoading" class="text-center p-primary">
+            <div v-if="ingredients.length === 0 && !isLoading" class="no-data-found-wrapper text-center p-primary">
               <img src="/images/no_data.svg" alt="" class="mb-primary" />
-              <p class="mb-0">Nothing to show here</p>
-              <p class="text-secondary font-size-90">Please add a new entity to see content.</p>
+                <p class="mb-0 text-center">Nothing to show here</p>
+                <p class="mb-0 text-center text-secondary font-size-90">
+                  Please add a new entity or manage the data table to see the content here
+                </p>
+                <p class="mb-0 text-center text-secondary font-size-90">Thank you</p>
             </div>
           </div>
 
@@ -88,10 +108,25 @@
               class="card p-3 mb-2"
             >
               <div><strong>ID:</strong> {{ item.id }}</div>
-              <div><strong>Name:</strong> {{ item.ingredient_name }}</div>
+              <div class="text-center d-flex align-items-center mb-2">
+                <div class="mr-2">
+                  <div class="avatars-w-60">
+                    <img
+                      :src="resolveImage(item.image)"
+                      @error="handleImageError($event, item)"
+                      class="rounded-circle avatar-bordered"
+                    />
+                    <span class="status bg-success"></span>
+                  </div>
+                </div>
+                <div>
+                  <strong>{{ item.ingredient_name }}</strong>
+                </div>
+              </div>
+              <div><strong>Brand:</strong> {{ item.brand }}</div>
+              <div><strong>Category:</strong> {{ item.category }}</div>
               <div><strong>Type:</strong> {{ item.measurement_type }}</div>
-              <div><strong>Unit:</strong> {{ item.unit }}</div>
-              <div><strong>Amount:</strong> {{ item.amount }}</div>
+              <div><strong>Amount:</strong> {{ formatAmount(item.amount, item.unit) }} </div>
               <div class="text-right mt-2">
                 <button class="btn btn-sm btn-primary" @click="viewIngredient(item.id)">View</button>
                 <button class="btn btn-sm btn-warning" @click="editIngredient(item.id)">Edit</button>
@@ -157,9 +192,40 @@
           </div>
           <div class="modal-body">
             <div class="form-group">
+              <label>Image:</label>
+              <div class="custom-image-upload-wrapper">
+                <!-- preview -->
+                <div class="image-area d-flex" style="width: 100%; height: 120px; overflow: hidden;">
+                  <img
+                    v-if="newIngredients.imagePreview"
+                    :src="newIngredients.imagePreview"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;"
+                  />
+                </div>
+                <div class="input-area">
+                  <label id="upload-label" for="formData_product_thumbnail">Upload file</label>
+                  <input
+                    id="formData_product_thumbnail"
+                    type="file"
+                    class="form-control d-none"
+                    @change="handleFileUpload"
+                    :disabled="modalMode === 'view'"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
               <label>Ingredient Name:</label>
               <input type="text" class="form-control" v-model="newIngredients.ingredient_name" :disabled="modalMode === 'view'"/>
               <small class="text-danger" v-if="errors.ingredient_name">{{ errors.ingredient_name }}</small>
+            </div>
+            <div class="form-group">
+              <label>Brand:</label>
+              <input type="text" class="form-control" v-model="newIngredients.brand" :disabled="modalMode === 'view'" />
+            </div>
+            <div class="form-group">
+              <label>Category:</label>
+              <input type="text" class="form-control" v-model="newIngredients.category" :disabled="modalMode === 'view'" />
             </div>
             <div class="form-group">
               <label>Measurement Type:</label>
@@ -191,9 +257,10 @@
             <button class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
             <button
               class="btn btn-primary"
+              :disabled="isSaving"
               @click="modalMode === 'edit' ? updateIngredient() : saveIngredients()"
             >
-              Save
+              {{ isSaving ? 'Saving...' : 'Save' }}
             </button>
           </div>
         </div>
@@ -215,9 +282,10 @@ export default {
       searchQuery: '',
       isLoading: false,
       currentPage: 1,
-      ingredientsPerPage: 5,
+      ingredientsPerPage: 10,
+      fallbackImage: '/storage/err/image.png',
 
-      headers: ['#', 'Ingredient Name', 'Measurement Type', 'Unit', 'Amount', 'Action'],
+      headers: ['#', 'Ingredient Name', 'Brand', 'Category', 'Measurement Type', 'Amount', 'Action'],
       measures: [], // for dropdowns only
       ingredients: [],
 
@@ -225,7 +293,11 @@ export default {
         ingredient_name: '',
         measurement_type: '',
         unit: '',
-        amount: ''
+        amount: '',
+        brand: '',
+        category: '',
+        imageFile: null,
+        imagePreview: null
       },
 
       errors: {
@@ -236,7 +308,8 @@ export default {
       },
 
       modalMode: 'create', // or 'edit' or 'view'
-      editingId: null
+      editingId: null,
+      isSaving: false
     };
   },
   computed: {
@@ -280,6 +353,19 @@ export default {
     }
   },
   methods: {
+    // helper functions
+    formatAmount(amount, unit) {
+      return `${parseInt(amount)} ${unit}`.trim();
+    },
+    handleImageError(event, item) {
+      event.target.onerror = null;
+      item.image = this.fallbackImage;
+      event.target.src = this.fallbackImage;
+    },
+    resolveImage(path) {
+      if (!path) return this.fallbackImage;
+      return path.startsWith('/storage') ? path : `/storage/ingredients/${path}`;
+    },
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) this.currentPage = page;
     },
@@ -302,8 +388,15 @@ export default {
         amount: null
       };
     },
+    handleFileUpload(event) {
+      const file = event.target.files[0];
+      this.newIngredients.imageFile = file || null;
+      this.newIngredients.imagePreview = file ? URL.createObjectURL(file) : null;
+    },
+
+    // API calls
     fetchMeasurements() {
-      api.get(ProductIngredients.fetchMeasurements).then(res => {
+      return api.get(ProductIngredients.fetchMeasurements).then(res => {
         this.measures = res.data;
       });
     },
@@ -327,54 +420,102 @@ export default {
         ingredient_name: !this.newIngredients.ingredient_name ? 'Ingredient name is required.' : null,
         measurement_type: !this.newIngredients.measurement_type ? 'Measurement type is required.' : null,
         unit: !this.newIngredients.unit ? 'Unit is required.' : null,
-        amount:
-          !this.newIngredients.amount || isNaN(this.newIngredients.amount)
-            ? 'Valid amount is required.'
-            : null
+        amount: (!this.newIngredients.amount || isNaN(this.newIngredients.amount)) ? 'Valid amount is required.' : null
       };
 
       if (Object.values(this.errors).some(Boolean)) return;
 
-      api.post(ProductIngredients.store, this.newIngredients)
+      const formData = new FormData();
+      formData.append('ingredient_name', this.newIngredients.ingredient_name);
+      formData.append('measurement_type', this.newIngredients.measurement_type);
+      formData.append('unit', this.newIngredients.unit);
+      formData.append('amount', this.newIngredients.amount);
+      formData.append('brand', this.newIngredients.brand || '');
+      formData.append('category', this.newIngredients.category || '');
+
+      if (this.newIngredients.imageFile) {
+        formData.append('image', this.newIngredients.imageFile);
+      }
+
+      this.isSaving = true;
+      api.post(ProductIngredients.store, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
         .then(res => {
-          this.ingredients.push(res.data);
-          this.newIngredients = { ingredient_name: '', measurement_type: '', unit: '', amount: '' };
+          this.ingredients.unshift(res.data);
+          this.newIngredients = {
+            ingredient_name: '',
+            measurement_type: '',
+            unit: '',
+            amount: '',
+            brand: '',
+            category: '',
+            imageFile: null
+          };
           $('#addIngredientsModal').modal('hide');
           Swal.fire('Success', 'Ingredient added successfully.', 'success');
         })
         .catch(() => {
           Swal.fire('Error', 'Failed to save ingredient.', 'error');
+        })
+        .finally(() => {
+          this.isSaving = false;
         });
     },
     viewIngredient(id) {
-      api.get(ProductIngredients.show(id)).then(res => {
-        this.newIngredients = { ...res.data };
-        this.modalMode = 'view';
-        $('#addIngredientsModal').modal('show');
+      this.fetchMeasurements().then(() => {
+        api.get(ProductIngredients.show(id)).then(res => {
+          this.newIngredients = {
+            ...res.data,
+            imagePreview: res.data.image || null,
+            imageFile: null
+          };
+          this.modalMode = 'view';
+          $('#addIngredientsModal').modal('show');
+        });
       });
     },
     editIngredient(id) {
       const ingredient = this.ingredients.find(i => i.id === id);
       if (!ingredient) return;
 
-      this.newIngredients = { ...ingredient };
-      this.editingId = id;
-      this.modalMode = 'edit';
-      $('#addIngredientsModal').modal('show');
+      this.fetchMeasurements().then(() => {
+        this.newIngredients = {
+          ...ingredient,
+          imagePreview: ingredient.image || null,
+          imageFile: null
+        };
+        this.editingId = id;
+        this.modalMode = 'edit';
+        $('#addIngredientsModal').modal('show');
+      });
     },
     updateIngredient() {
       if (!this.editingId) return;
 
-      api.put(ProductIngredients.update(this.editingId), this.newIngredients)
-        .then(res => {
-          const index = this.ingredients.findIndex(i => i.id === this.editingId);
-          if (index !== -1) this.ingredients.splice(index, 1, res.data);
+      const formData = new FormData();
+      formData.append('_method', 'PUT'); // Tell Laravel to treat as PUT
+      formData.append('ingredient_name', this.newIngredients.ingredient_name);
+      formData.append('measurement_type', this.newIngredients.measurement_type);
+      formData.append('unit', this.newIngredients.unit);
+      formData.append('amount', this.newIngredients.amount);
+      formData.append('brand', this.newIngredients.brand || '');
+      formData.append('category', this.newIngredients.category || '');
+      if (this.newIngredients.imageFile) {
+        formData.append('image', this.newIngredients.imageFile);
+      }
 
-          this.editingId = null;
-          $('#addIngredientsModal').modal('hide');
-          Swal.fire('Updated', 'Ingredient updated successfully.', 'success');
-        })
-        .catch(() => Swal.fire('Error', 'Failed to update.', 'error'));
+      api.post(ProductIngredients.update(this.editingId), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      .then(res => {
+        const index = this.ingredients.findIndex(i => i.id === this.editingId);
+        if (index !== -1) this.ingredients.splice(index, 1, res.data);
+        this.editingId = null;
+        $('#addIngredientsModal').modal('hide');
+        Swal.fire('Updated', 'Ingredient updated successfully.', 'success');
+      })
+      .catch(() => Swal.fire('Error', 'Failed to update.', 'error'));
     },
     deleteIngredient(id) {
       Swal.fire({

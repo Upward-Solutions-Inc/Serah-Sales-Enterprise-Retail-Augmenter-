@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Ingredient extends Model
 {
     protected $fillable = [
-        'ingredient_name', 'measurement_type', 'unit', 'amount'
+    'image',
+    'ingredient_name',
+    'brand',
+    'category',
+    'measurement_type',
+    'unit',
+    'amount'
     ];
 }

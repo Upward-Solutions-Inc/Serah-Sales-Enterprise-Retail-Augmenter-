@@ -15,7 +15,10 @@ return new class extends Migration
     {
         Schema::create('ingredients', function (Blueprint $table) {
             $table->id();
+            $table->string('image')->nullable();
             $table->string('ingredient_name');
+            $table->string('brand')->nullable();
+            $table->string('category')->nullable();
             $table->string('measurement_type');
             $table->string('unit');
             $table->decimal('amount', 10, 2);
