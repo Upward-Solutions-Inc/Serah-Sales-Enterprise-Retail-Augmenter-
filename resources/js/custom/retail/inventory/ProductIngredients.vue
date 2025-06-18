@@ -505,6 +505,7 @@ export default {
         formData.append('image', this.newIngredients.imageFile);
       }
 
+      this.isSaving = true;
       api.post(ProductIngredients.update(this.editingId), formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
@@ -515,7 +516,12 @@ export default {
         $('#addIngredientsModal').modal('hide');
         Swal.fire('Updated', 'Ingredient updated successfully.', 'success');
       })
-      .catch(() => Swal.fire('Error', 'Failed to update.', 'error'));
+      .catch(() => {
+        Swal.fire('Error', 'Failed to update.', 'error')
+      })
+      .finally(() => {
+        this.isSaving = false;
+      });
     },
     deleteIngredient(id) {
       Swal.fire({

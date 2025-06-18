@@ -67,3 +67,11 @@ export const ProductIngredients = {
   update: id => `/inventory/product_ingredients/${id}`,
   delete: id => `/inventory/product_ingredients/${id}`
 }
+
+export const ProductMeasurements = {
+  fetchList: '/inventory/product_measurements/list',
+  store: '/inventory/product_measurements/store',
+  show: id => `/inventory/product_measurements/${id}`,
+  update: id => `/inventory/product_measurements/${id}`,
+  delete: id => `/inventory/product_measurements/${id}`
+}

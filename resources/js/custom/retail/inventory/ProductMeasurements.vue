@@ -47,24 +47,24 @@
             <table v-else class="table table-striped table-borderless">
               <thead>
                 <tr>
-                  <th class="text-center">#</th>
-                  <th class="text-center">Measurement</th>
-                  <th class="text-center">Unit</th>
-                  <th class="text-center">Amount</th>
-                  <th class="text-center">Action</th>
+                  <th v-for="(label, index) in headers" :key="index" class="text-center">
+                    <span>{{ label }}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="measure in paginatedUsers" :key="measure.id" class="text-center">
-                  <td>{{ measure.id }}</td>
-                  <td>{{ measure.name || 'N/A' }}</td>
-                  <td>{{ measure.unit || 'N/A' }}</td>
-                  <td>{{ measure.amount || 'N/A' }}</td>
+                <tr v-for="(measure, index) in paginatedUsers" :key="measure.id" class="text-center">
+                  <td>{{ (currentPage - 1) * measuresPerPage + index + 1 }}</td>
+                  <td>{{ measure.label }}</td>
+                  <td>{{ measure.unit }}</td>
+                  <td>{{ measure.type }}</td>
+                  <td>{{ measure.multiplier }}</td>
                   <td>
                     <div class="dropdown">
                       <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
                       <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" @click="generateQr(measure)">View</a>
+                        <a class="dropdown-item" href="#" @click="editMeasurement(measure.id)">Edit</a>
+                        <a class="dropdown-item text-danger" href="#" @click="deleteMeasurement(measure.id)">Delete</a>
                       </div>
                     </div>
                   </td>
@@ -81,13 +81,15 @@
 
           <!-- Mobile Cards -->
           <div class="d-md-none">
-            <div v-if="!isLoading && measures.length" v-for="measure in paginatedUsers" :key="measure.id" class="card p-3 mb-2">
-              <div><strong>ID:</strong> {{ measure.id }}</div>
-              <div><strong>Measurement:</strong> {{ measure.name || 'N/A' }}</div>
-              <div><strong>Unit:</strong> {{ measure.unit || 'N/A' }}</div>
-              <div><strong>Amount:</strong> {{ measure.amount || 'N/A' }}</div>
+            <div v-for="(measure, index) in paginatedUsers" :key="measure.id" class="card p-3 mb-2">
+              <div><strong>ID: </strong>{{ (currentPage - 1) * measuresPerPage + index + 1 }}</div>
+              <div><strong>Measurement Label: </strong>{{ measure.label }}</div>
+              <div><strong>Unit: </strong>{{ measure.unit }}</div>
+              <div><strong>Measurement Type: </strong>{{ measure.type }}</div>
+              <div><strong>Multiplier: </strong>{{ measure.multiplier }}</div>
               <div class="text-right mt-2">
-                <button class="btn btn-sm btn-primary" @click="generateQr(measure)">View</button>
+                <button class="btn btn-sm btn-primary" @click="editMeasurement(measure.id)">Edit</button>
+                <button class="btn btn-sm btn-danger" @click="deleteMeasurement(measure.id)">Delete</button>
               </div>
             </div>
           </div>
@@ -135,28 +137,39 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Add Measurement</h5>
+            <h5 class="modal-title">
+              {{ editingId ? 'Edit Measurement' : 'Add Measurement' }}
+            </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span>&times;</span>
             </button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label>Measurement Name:</label>
-              <input type="text" class="form-control" v-model="newMeasure.name" />
+              <label>Measurement Label:</label>
+              <input type="text" class="form-control" v-model="newMeasure.label" />
+            </div>
+            <div class="form-group">
+              <label>Measurement Type:</label>
+              <input type="text" class="form-control" v-model="newMeasure.type" />
             </div>
             <div class="form-group">
               <label>Unit:</label>
               <input type="text" class="form-control" v-model="newMeasure.unit" />
             </div>
             <div class="form-group">
-              <label>Amount:</label>
-              <input type="number" class="form-control" v-model="newMeasure.amount" />
+              <label>Multiplier:</label>
+              <input type="number" class="form-control" v-model="newMeasure.multiplier" />
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" @click="saveMeasurement">Save</button>
+            <button class="btn btn-primary"
+            :disabled="isSaving"
+            @click="editingId ? updateMeasurement() : saveMeasurement()"
+            >
+              {{ isSaving ? 'Saving...' : 'Save' }}
+            </button>
           </div>
         </div>
       </div>
@@ -165,42 +178,46 @@
 </template>
 
 <script>
+import api, { ProductMeasurements } from '../../api.js';
+import Loader from '../../components/Loader.vue';
+import Swal from 'sweetalert2';
+
 export default {
   name: 'ProductMeasurements',
+  components: { Loader },
   data() {
     return {
       searchQuery: '',
       isLoading: false,
       currentPage: 1,
-      measuresPerPage: 5,
+      measuresPerPage: 10,
+      editingId: null,
+      isSaving: false,
+
+      // Default new measure object
       newMeasure: {
-        name: '',
+        type: '',
         unit: '',
-        amount: ''
+        label: '',
+        multiplier: '',
+        base_unit: ''
       },
-      measures: [
-        { id: 1, name: 'Kilogram', unit: 'kg', amount: '5' },
-        { id: 2, name: 'Liter', unit: 'L', amount: '10' },
-        { id: 3, name: 'Meter', unit: 'm', amount: '15' },
-        { id: 4, name: 'Gram', unit: 'g', amount: '20' },
-        { id: 5, name: 'Celsius', unit: '°C', amount: '25' },
-        { id: 6, name: 'Milliliter', unit: 'ml', amount: '30' }
-      ]
+      headers: ['#', 'Measurement Label', 'Unit', 'Measurement Type', 'Multiplier', 'Action'],
+      measures: []
     }
   },
   computed: {
-    filteredUsers() {
-      if (!this.searchQuery) return this.measures
-      return this.measures.filter(measure =>
-        `${measure.name} ${measure.unit}`.toLowerCase().includes(this.searchQuery.toLowerCase())
-      )
+    filteredMeasures() {
+      return this.measures.filter(m =>
+        `${m.type} ${m.unit} ${m.label}`.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
     },
     paginatedUsers() {
-      const start = (this.currentPage - 1) * this.measuresPerPage
-      return this.filteredUsers.slice(start, start + this.measuresPerPage)
+      const start = (this.currentPage - 1) * this.measuresPerPage;
+      return this.filteredMeasures.slice(start, start + this.measuresPerPage);
     },
     totalPages() {
-      return Math.ceil(this.filteredUsers.length / this.measuresPerPage)
+      return Math.ceil(this.filteredMeasures.length / this.measuresPerPage);
     },
     visiblePages() {
       return Array.from({ length: this.totalPages }, (_, i) => i + 1)
@@ -209,10 +226,20 @@ export default {
       return (this.currentPage - 1) * this.measuresPerPage + 1
     },
     endItem() {
-      return Math.min(this.currentPage * this.measuresPerPage, this.filteredUsers.length)
+      return Math.min(this.currentPage * this.measuresPerPage, this.filteredMeasures.length);
     }
   },
+  mounted() {
+    this.fetchMeasurements();
+    $('#addMeasurementModal').on('hidden.bs.modal', this.resetModal);
+  },
   methods: {
+    //helper functions
+    resetModal() {
+      this.newMeasure = { type: '', unit: '', label: '', multiplier: '', base_unit: '' };
+      this.editingId = null;
+      this.isSaving = false;
+    },
     clearSearch() {
       this.searchQuery = ''
     },
@@ -221,18 +248,86 @@ export default {
         this.currentPage = page
       }
     },
-    generateQr(measure) {
-      alert(`Generate QR for: ${measure.name}`)
+
+    // core funtions
+    fetchMeasurements() {
+      this.isLoading = true;
+      api.get(ProductMeasurements.fetchList)
+        .then(res => { this.measures = res.data; })
+        .finally(() => { this.isLoading = false; });
     },
     saveMeasurement() {
-      if (!this.newMeasure.name || !this.newMeasure.unit || !this.newMeasure.amount) {
-        alert('Please fill out all fields.')
-        return
+      if (!this.newMeasure.type || !this.newMeasure.unit || !this.newMeasure.label || !this.newMeasure.multiplier) {
+        Swal.fire('Warning', 'All fields are required.', 'warning');
+        return;
       }
-      const id = this.measures.length + 1
-      this.measures.push({ id, ...this.newMeasure })
-      this.newMeasure = { name: '', unit: '', amount: '' }
-      $('#addMeasurementModal').modal('hide')
+
+      this.newMeasure.base_unit = this.newMeasure.unit;
+      this.isSaving = true;
+
+      api.post(ProductMeasurements.store, this.newMeasure)
+        .then(res => {
+          this.measures.unshift(res.data);
+          this.newMeasure = { type: '', unit: '', label: '', multiplier: '', base_unit: '' };
+          $('#addMeasurementModal').modal('hide');
+          Swal.fire('Success', 'Measurement saved successfully.', 'success');
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Failed to save measurement.', 'error');
+        })
+        .finally(() => {
+          this.isSaving = false;
+        });
+    },
+    editMeasurement(id) {
+      api.get(ProductMeasurements.show(id))
+        .then(res => {
+          this.newMeasure = { ...res.data };
+          this.editingId = id;
+          $('#addMeasurementModal').modal('show');
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Failed to load data.', 'error')
+        });
+    },
+    updateMeasurement() {
+      if (!this.editingId) return;
+
+      this.newMeasure.base_unit = this.newMeasure.unit;
+      this.isSaving = true;
+
+      api.put(ProductMeasurements.update(this.editingId), this.newMeasure)
+        .then(res => {
+          const index = this.measures.findIndex(m => m.id === this.editingId);
+          if (index !== -1) this.measures.splice(index, 1, res.data);
+          $('#addMeasurementModal').modal('hide');
+          this.editingId = null;
+          Swal.fire('Updated', 'Measurement updated successfully.', 'success');
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Failed to update measurement.', 'error');
+        })
+        .finally(() => {
+          this.isSaving = false;
+        });
+    },
+    deleteMeasurement(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will permanently delete the measurement.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!'
+      }).then(result => {
+        if (result.isConfirmed) {
+          api.delete(ProductMeasurements.delete(id))
+            .then(() => {
+              this.measures = this.measures.filter(m => m.id !== id);
+              Swal.fire('Deleted', 'Measurement deleted successfully.', 'success');
+            })
+            .catch(() => Swal.fire('Error', 'Failed to delete measurement.', 'error'));
+        }
+      });
     }
   }
 }
