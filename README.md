@@ -157,3 +157,15 @@ GROSS PAY
 > Ingredients (Inventory)
 > Link to recipe (Ingredients)
 > POS~
+
+> Logic for the Retail Items
+- create a link controller where in the products or ingredients will be link:
+- products to many products
+- reciper to many ingredients
+- the intermidiary is the Unit of Measurement
+- the end output will be at the POS
+- so the process is an input will coming from modules 'Inventory', 'Products', 'Ingredients'
+- the process will happen in services that will throw response in the contoller, vice versa.
+- then the POS will the one will trigger all the reponses
+- example once there will a buy in the POS the invertory stocks will adjust, also the hierarchy of items e.g. box-miniBox-pcs.
+ 

@@ -75,3 +75,8 @@ export const ProductMeasurements = {
   update: id => `/inventory/product_measurements/${id}`,
   delete: id => `/inventory/product_measurements/${id}`
 }
+
+export const ProductRecipes = {
+  fetchDropdowns: '/inventory/product_recipes/dropdowns',
+  fetchIngredients: '/inventory/product_recipes/ingredients'
+}

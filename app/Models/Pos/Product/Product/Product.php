@@ -3,6 +3,7 @@
 namespace App\Models\Pos\Product\Product;
 
 use App\Models\Pos\Product\Product\Relationship\ProductAllRelationship;
+use App\Models\Pos\Product\Category\Category;
 use App\Models\Tenant\TenantModel;
 use App\Repositories\Core\Status\StatusRepository;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -72,4 +73,8 @@ class Product extends TenantModel
         return $query->where('status_id', resolve(StatusRepository::class)->productActive());
     }
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
 }

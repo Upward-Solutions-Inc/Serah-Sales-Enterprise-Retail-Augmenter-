@@ -47,10 +47,9 @@
             <table v-else class="table table-striped table-borderless">
               <thead>
                 <tr>
-                  <th class="text-center">#</th>
-                  <th class="text-center">Recipe Name</th>
-                  <th class="text-center">Ingredients</th>
-                  <th class="text-center">Action</th>
+                  <th v-for="(label, index) in headers" :key="index" class="text-center">
+                    <span>{{ label }}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -110,26 +109,79 @@
       </div>
     </div>
 
-    <!-- Add Recipe Modal -->
     <div class="modal fade" id="addRecipeModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Add Recipe</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <h5 class="modal-title">Create Recipe</h5>
+            <button type="button" class="close" data-dismiss="modal">
               <span>&times;</span>
             </button>
           </div>
+
           <div class="modal-body">
+            <!-- Product and Category -->
             <div class="form-group">
-              <label>Recipe Name:</label>
-              <input type="text" class="form-control" v-model="newRecipe.name" />
+              <label>Product:</label>
+              <select class="form-control" v-model="selectedProduct">
+                <option disabled value="">Select product</option>
+                <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
             </div>
+
             <div class="form-group">
-              <label>Number of Ingredients:</label>
-              <input type="number" min="1" class="form-control" v-model="newRecipe.ingredients" />
+              <label>Category:</label>
+              <select class="form-control" v-model="selectedCategory" disabled>
+                <option disabled value="">Select category</option>
+                <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+            </div>
+
+            <!-- Inline Add Ingredient -->
+            <div class="form-row align-items-end">
+              <div class="form-group col-md-6">
+                <label>Ingredient:</label>
+                <select class="form-control" v-model="selectedIngredientId">
+                  <option disabled value="">Select ingredient</option>
+                  <option v-for="ing in allIngredients" :key="ing.id" :value="ing.id">
+                    {{ ing.name }} ({{ ing.unit }})
+                  </option>
+                </select>
+              </div>
+              <div class="form-group col-md-4">
+                <label>Amount:</label>
+                <input type="number" class="form-control" v-model="ingredientAmount" />
+              </div>
+              <div class="form-group col-md-2">
+                <button class="btn btn-success w-100" @click="confirmAddIngredient">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Ingredient List -->
+            <div class="recipe-ingredients-list mt-3">
+              <div
+                v-for="(ingredient, index) in recipeIngredients"
+                :key="index"
+                class="d-flex align-items-center mb-2"
+                style="background: #fdf9ef; padding: 10px; border-radius: 6px;"
+              >
+                <img :src="ingredient.image" class="mr-2" style="width: 24px; height: 24px;" />
+                <span class="flex-grow-1">
+                  <strong>(C)</strong> {{ ingredient.name }}
+                </span>
+                <input
+                  type="number"
+                  class="form-control text-right mx-2"
+                  style="width: 80px;"
+                  v-model="ingredient.amount"
+                />
+                <span>{{ ingredient.unit }}</span>
+              </div>
             </div>
           </div>
+
           <div class="modal-footer">
             <button class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
             <button class="btn btn-primary" @click="saveRecipe">Save</button>
@@ -137,29 +189,42 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script>
+import api, { ProductRecipes } from '../../api.js';
+import Loader from '../../components/Loader.vue';
+import Swal from 'sweetalert2';
+
 export default {
   name: 'ProductRecipe',
+  components: { Loader },
   data() {
     return {
       searchQuery: '',
       isLoading: false,
       currentPage: 1,
-      recipesPerPage: 5,
+      recipesPerPage: 10,
+
+      selectedProduct: '',
+      selectedCategory: '',
+      recipeIngredients: [],
+      products: [],
+      categories: [],
+
+      selectedIngredientId: '',
+      ingredientAmount: '',
+      allIngredients: [],
+
+      headers: ['#', 'Recipe Name', 'Ingredients', 'Action'],
+     
       newRecipe: {
         name: '',
         ingredients: ''
       },
-      recipes: [
-        { id: 1, name: 'Mocha Cafe', ingredients: 5 },
-        { id: 2, name: 'Caramel Latte', ingredients: 4 },
-        { id: 3, name: 'Espresso Shot', ingredients: 2 },
-        { id: 4, name: 'Vanilla Frappe', ingredients: 6 },
-        { id: 5, name: 'Iced Americano', ingredients: 3 }
-      ]
+      recipes: []
     }
   },
   computed: {
@@ -186,6 +251,20 @@ export default {
       return Math.min(this.currentPage * this.recipesPerPage, this.filteredRecipes.length)
     }
   },
+  watch: {
+    selectedProduct(newVal) {
+      const selected = this.products.find(p => p.id === newVal);
+      if (selected && selected.category_id) {
+        this.selectedCategory = selected.category_id;
+      } else {
+        this.selectedCategory = '';
+      }
+    }
+  },
+  mounted() {
+    this.fetchProducts();
+    this.fetchIngredients();
+  },
   methods: {
     clearSearch() {
       this.searchQuery = ''
@@ -195,6 +274,56 @@ export default {
         this.currentPage = page
       }
     },
+    fetchProducts() {
+      this.isLoading = true;
+      api.get(ProductRecipes.fetchProducts)
+        .then(res => {
+          this.products = res.data.products;
+          this.categories = res.data.categories;
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Failed to load product/category data.', 'error');
+        })
+        .finally(() => {
+          this.isLoading = false;
+        });
+    },
+    fetchIngredients() {
+      api.get(ProductRecipes.fetchIngredients)
+        .then(res => {
+          this.allIngredients = res.data;
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Failed to load ingredients.', 'error');
+        });
+    },
+
+    // core functions
+    addIngredientField() {
+      this.recipeIngredients.push({
+        name: 'New Ingredient',
+        image: '/path/to/default.png',
+        unit: 'g',
+        amount: 0
+      })
+    },
+    confirmAddIngredient() {
+      const found = this.allIngredients.find(i => i.id === this.selectedIngredientId)
+      if (!found || !this.ingredientAmount) return Swal.fire('Error', 'Please select an ingredient and amount.', 'error')
+
+      this.recipeIngredients.push({
+        id: found.id,
+        name: found.name,
+        unit: found.unit,
+        image: found.image || '/placeholder.png',
+        amount: this.ingredientAmount
+      })
+
+      this.selectedIngredientId = ''
+      this.ingredientAmount = ''
+      $('#addIngredientModal').modal('hide')
+    },
+
     viewRecipe(recipe) {
       alert(`Viewing recipe: ${recipe.name}`)
     },
