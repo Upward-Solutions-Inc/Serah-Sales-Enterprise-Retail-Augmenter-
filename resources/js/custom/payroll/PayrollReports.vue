@@ -95,16 +95,8 @@
                                 <label>Statutory Deductions</label>
                                 <div class="d-flex flex-column">
                                     <div class="custom-control custom-switch mb-1">
-                                        <input type="checkbox" class="custom-control-input" id="toggleSSS" v-model="statutoryDeductions.sss">
-                                        <label class="custom-control-label" for="toggleSSS">Include SSS</label>
-                                    </div>
-                                    <div class="custom-control custom-switch mb-1">
-                                        <input type="checkbox" class="custom-control-input" id="togglePhilHealth" v-model="statutoryDeductions.philhealth">
-                                        <label class="custom-control-label" for="togglePhilHealth">Include PhilHealth</label>
-                                    </div>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="togglePagibig" v-model="statutoryDeductions.pagibig">
-                                        <label class="custom-control-label" for="togglePagibig">Include Pag-IBIG</label>
+                                        <input type="checkbox" class="custom-control-input" id="toggleStatutory" v-model="statutoryDeductionsEnabled">
+                                        <label class="custom-control-label" for="toggleStatutory">Include Statutory Deductions (SSS, PhilHealth, Pag-IBIG)</label>
                                     </div>
                                 </div>
                             </div>
@@ -277,11 +269,7 @@ export default {
                 users: false
             },
 
-            statutoryDeductions: {
-                sss: true,
-                philhealth: true,
-                pagibig: true
-            },
+            statutoryDeductionsEnabled: true,
 
             headers: [
                 'Date Range',
@@ -445,7 +433,7 @@ export default {
                 start_date: start,
                 end_date: end,
                 user_ids: this.selectedUsers,
-                statutory_include: (this.statutoryDeductions.sss || this.statutoryDeductions.philhealth || this.statutoryDeductions.pagibig) ? 1 : 0
+                statutory_include: this.statutoryDeductionsEnabled ? 1 : 0
             }).then((res) => {
                 this.progress = 100;
                 clearInterval(this.progressInterval);
