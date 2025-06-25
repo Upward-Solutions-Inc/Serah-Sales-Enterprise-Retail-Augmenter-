@@ -91,6 +91,23 @@
                                 </div>
                                 <small v-if="errors.users" class="text-danger d-block">Employee is required.</small>
                             </div>
+                            <div class="form-group">
+                                <label>Statutory Deductions</label>
+                                <div class="d-flex flex-column">
+                                    <div class="custom-control custom-switch mb-1">
+                                        <input type="checkbox" class="custom-control-input" id="toggleSSS" v-model="statutoryDeductions.sss">
+                                        <label class="custom-control-label" for="toggleSSS">Include SSS</label>
+                                    </div>
+                                    <div class="custom-control custom-switch mb-1">
+                                        <input type="checkbox" class="custom-control-input" id="togglePhilHealth" v-model="statutoryDeductions.philhealth">
+                                        <label class="custom-control-label" for="togglePhilHealth">Include PhilHealth</label>
+                                    </div>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="togglePagibig" v-model="statutoryDeductions.pagibig">
+                                        <label class="custom-control-label" for="togglePagibig">Include Pag-IBIG</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -260,6 +277,12 @@ export default {
                 users: false
             },
 
+            statutoryDeductions: {
+                sss: true,
+                philhealth: true,
+                pagibig: true
+            },
+
             headers: [
                 'Date Range',
                 'Payroll Type',
@@ -421,7 +444,8 @@ export default {
                 payroll_type: this.selectedPayrollType,
                 start_date: start,
                 end_date: end,
-                user_ids: this.selectedUsers
+                user_ids: this.selectedUsers,
+                statutory_include: (this.statutoryDeductions.sss || this.statutoryDeductions.philhealth || this.statutoryDeductions.pagibig) ? 1 : 0
             }).then((res) => {
                 this.progress = 100;
                 clearInterval(this.progressInterval);

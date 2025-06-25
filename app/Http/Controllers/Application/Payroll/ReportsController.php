@@ -75,6 +75,7 @@ class ReportsController extends Controller
         $end         = $request->input('end_date');
         $payrollType = $request->input('payroll_type');
         $createdBy   = auth()->id();
+        $statutoryInclude = $request->input('statutory_include', 1);
 
         $rates = PayrollComponent::where('group', 'rates')->pluck('value', 'code')->toArray();
         $earnings = PayrollComponent::where('group', 'earnings')->get()->map(fn($e) => [
@@ -87,11 +88,11 @@ class ReportsController extends Controller
             'amount' => (float) $d->value
         ])->toArray();
 
-        DB::transaction(function () use ($userIds, $start, $end, $payrollType, $createdBy, $rates, $earnings, $deductions) {
-
+        DB::transaction(function () use ($userIds, $start, $end, $payrollType, $createdBy, $rates, $earnings, $deductions, $statutoryInclude) {
             PayrollCount::where('date_range_start', $start)
                 ->where('date_range_end', $end)
                 ->where('payroll_type', $payrollType)
+                ->where('statutory_include', $statutoryInclude)
                 ->get()
                 ->each(function ($existing) use ($userIds) {
                     $existingUserIds = PayrollPayslip::where('payroll_count_id', $existing->id)
@@ -108,8 +109,8 @@ class ReportsController extends Controller
                     }
                 });
 
-            $payrollService = new PayrollService(null, $rates);
-            $payrollService->generatePayrollBatch($userIds, $start, $end, $payrollType, $createdBy, $earnings, $deductions);
+            $payrollService = new PayrollService(null, $rates, null, $statutoryInclude);
+            $payrollService->generatePayrollBatch($userIds, $start, $end, $payrollType, $createdBy, $earnings, $deductions, $statutoryInclude);
         });
 
         broadcast(new PayrollGenerated('payroll_ready'))->toOthers();

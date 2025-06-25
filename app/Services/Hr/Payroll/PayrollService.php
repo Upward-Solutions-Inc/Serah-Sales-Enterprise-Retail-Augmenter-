@@ -14,15 +14,17 @@ class PayrollService
     protected $salary;
     protected $components;
     protected $dtrLogs;
+    protected $statutoryInclude = 1;
 
-    public function __construct(PayrollSalary $salary = null, array $components = [], $dtrLogs = null)
+    public function __construct(PayrollSalary $salary = null, array $components = [], $dtrLogs = null, $statutoryInclude = 1)
     {
         $this->salary = $salary;
         $this->components = $components;
         $this->dtrLogs = $dtrLogs;
+        $this->statutoryInclude = $statutoryInclude;
     }
 
-    public function generatePayrollBatch(array $userIds, $start, $end, $payrollType, $createdBy, array $earnings, array $deductions): void
+    public function generatePayrollBatch(array $userIds, $start, $end, $payrollType, $createdBy, array $earnings, array $deductions, $statutoryInclude = 1): void
     {
         $logs = DtrLog::whereIn('user_id', $userIds)
             ->whereBetween('date', [$start, $end])
@@ -49,6 +51,7 @@ class PayrollService
             'payroll_type'     => $payrollType,
             'total_employees'  => count($userIds),
             'created_by'       => $createdBy,
+            'statutory_include' => $statutoryInclude,
         ]);
     
         foreach ($userIds as $userId) {
@@ -60,7 +63,7 @@ class PayrollService
     
             $dtrLogs = $logs->get($userId, collect());
     
-            $payroll = new self($salary, $this->components, $dtrLogs);
+            $payroll = new self($salary, $this->components, $dtrLogs, $statutoryInclude); // Pass statutoryInclude to each instance
             $result = $payroll->computePayroll([
                 'earnings' => $earnings,
                 'deductions' => $deductions,
@@ -226,10 +229,20 @@ class PayrollService
         $f_sss = (float) ($this->components['f_sss'] ?? 0);
         $f_philhealth = (float) ($this->components['f_philhealth'] ?? 0);
         $f_pagibig = (float) ($this->components['f_pagibig'] ?? 0);
-    
-        $sss = $monthlySalary < 1000 ? 0 : ($monthlySalary <= 3250 ? $f_sss : $monthlySalary * $sssRate);
-        $philhealth = $monthlySalary < 10000 ? $f_philhealth : $monthlySalary * $philhealthRate;
-        $pagibig = $monthlySalary < 1500 ? $f_pagibig : $monthlySalary * $pagibigRate;
+
+        $sss = 0;
+        $philhealth = 0;
+        $pagibig = 0;
+        if ($this->statutoryInclude) {
+            $sss = $monthlySalary < 1000 ? 0 : ($monthlySalary <= 3250 ? $f_sss : $monthlySalary * $sssRate);
+            if ($monthlySalary == 0) {
+                $philhealth = 0;
+                $pagibig = 0;
+            } else {
+                $philhealth = $monthlySalary < 10000 ? $f_philhealth : $monthlySalary * $philhealthRate;
+                $pagibig = $monthlySalary < 1500 ? $f_pagibig : $monthlySalary * $pagibigRate;
+            }
+        }
 
         $otherEarnings = $this->calculateGrossPay($data['earnings'] ?? []);
         $overtimeAmount = $this->calculateOvertimeFromDtrLogs();

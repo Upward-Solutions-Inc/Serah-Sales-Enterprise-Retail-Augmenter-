@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('date_range_end');
             $table->string('payroll_type');
             $table->unsignedInteger('total_employees')->default(0);
+            $table->boolean('statutory_include')->default(1);
 
             $table->decimal('total_basic_pay', 15, 2)->default(0);
             $table->decimal('total_overtime_pay', 15, 2)->default(0);

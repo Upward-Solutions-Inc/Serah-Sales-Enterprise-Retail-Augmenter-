@@ -21,6 +21,7 @@ class PayrollCountsSeeder extends Seeder
             'date_range_end' => now(),
             'payroll_type' => 'Semi-Monthly',
             'total_employees' => 1,
+            'statutory_include' => 1,
             'total_basic_pay' => 900000,
             'total_overtime_pay' => 50000,
             'total_night_differential' => 50000,

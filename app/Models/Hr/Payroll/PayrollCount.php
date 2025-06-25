@@ -13,6 +13,7 @@ class PayrollCount extends Model
         'date_range_end',
         'payroll_type',
         'total_employees',
+        'statutory_include',
         'total_basic_pay',
         'total_overtime_pay',
         'total_night_differential',
