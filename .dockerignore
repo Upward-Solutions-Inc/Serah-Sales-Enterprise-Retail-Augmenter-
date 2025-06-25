@@ -1,7 +1,43 @@
-node_modules
-.gitignore
-.git
-Dockerfile
-docker-compose.yml
+# Ignore node modules
+node_modules/
+
+# Ignore vendor (handled by composer install in Dockerfile)
+vendor/
+
+# Ignore environment files
+.env
+.env.*
+
+# Ignore logs and cache
+storage/*.key
+storage/app/public
+storage/debugbar
+storage/framework
+storage/logs
+bootstrap/cache
+
+# Ignore test and development files
+tests/
+*.log
+*.test.js
+*.spec.js
+
+# Ignore IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Ignore other unnecessary files
 npm-debug.log
 yarn-error.log
+coverage/
+public/storage
+public/hot
+
+# Ignore docker-compose override files
+docker-compose.override.yml
+
+# Ignore build artifacts
+/build
+/dist
