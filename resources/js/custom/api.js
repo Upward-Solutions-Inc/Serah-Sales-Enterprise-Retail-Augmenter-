@@ -79,5 +79,9 @@ export const ProductMeasurements = {
 export const ProductRecipes = {
   fetchDropdowns: '/inventory/product_recipes/dropdowns',
   fetchIngredients: '/inventory/product_recipes/ingredients',
-  fetchProducts: '/inventory/product_recipes/products'
+  fetchProducts: '/inventory/product_recipes/products',
+  show: id => `/inventory/product_recipes/${id}`,
+  store: '/inventory/product_recipes',
+  update: id => `/inventory/product_recipes/${id}`,
+  delete: id => `/inventory/product_recipes/${id}`
 }

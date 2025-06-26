@@ -17,12 +17,12 @@ class Recipe extends Model
 
     public function product()
     {
-        return $this->belongsTo(\App\Models\Product::class);
+        return $this->belongsTo(\App\Models\Product::class)->withDefault();
     }
 
     public function category()
     {
-        return $this->belongsTo(\App\Models\Category::class);
+        return $this->belongsTo(\App\Models\Category::class)->withDefault();
     }
 
     public function ingredients()

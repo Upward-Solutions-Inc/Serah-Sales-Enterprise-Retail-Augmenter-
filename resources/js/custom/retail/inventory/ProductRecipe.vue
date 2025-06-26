@@ -246,6 +246,8 @@ export default {
         ingredients: ''
       },
       recipes: [],
+      editingRecipeId: null,
+      isEditMode: false,
 
       ingredientError: '', // <-- error for ingredient
       productError: '', // <-- error for product
@@ -318,6 +320,7 @@ export default {
   mounted() {
     this.fetchProducts();
     this.fetchIngredients();
+    this.fetchRecipes();
     // Clear modal fields when modal is closed
     $('#addRecipeModal').on('hidden.bs.modal', () => {
       this.clearRecipeModalFields();
@@ -326,26 +329,6 @@ export default {
   methods: {
     clearSearch() {
       this.searchQuery = ''
-    },
-    clearRecipeModalFields() {
-      this.selectedProduct = '';
-      this.selectedCategory = '';
-      this.categoryDisabled = false;
-      this.recipeIngredients = [];
-      this.selectedIngredientId = '';
-      this.ingredientAmount = '';
-      this.newRecipe = { name: '', ingredients: '' };
-      // Clear error messages
-      this.ingredientError = '';
-      this.productError = '';
-      this.categoryError = '';
-      this.recipeError = '';
-      this.amountExceeds = false;
-    },
-    changePage(page) {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page
-      }
     },
     fetchProducts() {
       this.isLoading = true;
@@ -368,6 +351,24 @@ export default {
         })
         .catch(() => {
           Swal.fire('Error', 'Failed to load ingredients.', 'error');
+        });
+    },
+    fetchRecipes() {
+      this.isLoading = true;
+      api.get(ProductRecipes.fetchProducts) // You may want a dedicated endpoint for all recipes
+        .then(res => {
+          // Adapt this if you have a dedicated endpoint for all recipes
+          this.recipes = (res.data.products || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            ingredients: p.ingredients ? p.ingredients.length : 0
+          }));
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Failed to load recipes.', 'error');
+        })
+        .finally(() => {
+          this.isLoading = false;
         });
     },
 
@@ -415,10 +416,39 @@ export default {
     },
 
     viewRecipe(recipe) {
-      alert(`Viewing recipe: ${recipe.name}`)
+      api.get(ProductRecipes.show(recipe.id)).then(res => {
+        const r = res.data;
+        this.selectedProduct = r.product_id;
+        this.selectedCategory = this.products.find(p => p.id === r.product_id)?.category_id || '';
+        this.recipeIngredients = (r.ingredients || []).map(i => ({
+          id: i.ingredient_id,
+          name: this.allIngredients.find(a => a.id === i.ingredient_id)?.name || '',
+          unit: i.unit,
+          image: this.allIngredients.find(a => a.id === i.ingredient_id)?.image || '',
+          amount: i.amount
+        }));
+        this.editingRecipeId = r.id;
+        this.isEditMode = true;
+        $('#addRecipeModal').modal('show');
+      });
     },
     deleteRecipe(id) {
-      this.recipes = this.recipes.filter(r => r.id !== id)
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will delete the recipe and all its ingredients.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!'
+      }).then(result => {
+        if (result.isConfirmed) {
+          api.delete(ProductRecipes.delete(id)).then(() => {
+            Swal.fire('Deleted!', 'Recipe has been deleted.', 'success');
+            this.fetchRecipes();
+          }).catch(() => {
+            Swal.fire('Error', 'Failed to delete recipe.', 'error');
+          });
+        }
+      });
     },
     saveRecipe() {
       let hasError = false;
@@ -441,11 +471,50 @@ export default {
         this.recipeError = '';
       }
       if (hasError) return;
-      const id = this.recipes.length + 1
-      this.recipes.push({ id, ...this.newRecipe })
-      this.newRecipe = { name: '', ingredients: '' }
-      $('#addRecipeModal').modal('hide')
-      this.clearRecipeModalFields(); // clear fields after save
+      const payload = {
+        product_id: this.selectedProduct,
+        ingredients: this.recipeIngredients.map(i => ({
+          ingredient_id: i.id,
+          amount: i.amount,
+          unit: i.unit
+        }))
+      };
+      const request = this.isEditMode
+        ? api.put(ProductRecipes.update(this.editingRecipeId), payload)
+        : api.post(ProductRecipes.store, payload);
+      request.then(res => {
+        if (res.data.success) {
+          Swal.fire('Success', `Recipe ${this.isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+          this.fetchRecipes();
+          $('#addRecipeModal').modal('hide');
+          this.clearRecipeModalFields();
+        } else {
+          Swal.fire('Error', res.data.message || 'Failed to save recipe.', 'error');
+        }
+      }).catch(err => {
+        Swal.fire('Error', err.response?.data?.message || 'Failed to save recipe.', 'error');
+      });
+    },
+    clearRecipeModalFields() {
+      this.selectedProduct = '';
+      this.selectedCategory = '';
+      this.categoryDisabled = false;
+      this.recipeIngredients = [];
+      this.selectedIngredientId = '';
+      this.ingredientAmount = '';
+      this.newRecipe = { name: '', ingredients: '' };
+      this.ingredientError = '';
+      this.productError = '';
+      this.categoryError = '';
+      this.recipeError = '';
+      this.amountExceeds = false;
+      this.editingRecipeId = null;
+      this.isEditMode = false;
+    },
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page
+      }
     },
   }
 }

@@ -12,8 +12,8 @@ class RecipeSeeder extends Seeder
         // Example: Insert a recipe for product_id 1, category_id 1
         DB::table('recipes')->insert([
             [
-                'product_id' => 3,
-                'category_id' => 2,
+                'product_id' => 3, // or null
+                'category_id' => 2, // or null
                 'name' => 'Sample Recipe',
                 'created_at' => now(),
                 'updated_at' => now(),

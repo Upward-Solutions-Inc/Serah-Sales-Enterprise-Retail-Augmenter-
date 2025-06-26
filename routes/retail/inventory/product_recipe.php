@@ -7,3 +7,7 @@ Route::get('/product_recipe', [ProductRecipeController::class, 'index'])->name('
 Route::get('/product_recipes/dropdowns', [ProductRecipeController::class, 'fetchDropdowns']);
 Route::get('/product_recipes/ingredients', [ProductRecipeController::class, 'fetchIngredients']);
 Route::get('/product_recipes/products', [ProductRecipeController::class, 'fetchProducts']);
+Route::get('/product_recipes/{id}', [ProductRecipeController::class, 'show']);
+Route::post('/product_recipes', [ProductRecipeController::class, 'store']);
+Route::put('/product_recipes/{id}', [ProductRecipeController::class, 'update']);
+Route::delete('/product_recipes/{id}', [ProductRecipeController::class, 'destroy']);
