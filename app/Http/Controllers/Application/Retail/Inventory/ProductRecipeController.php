@@ -36,7 +36,13 @@ class ProductRecipeController extends Controller
 
     public function fetchIngredients()
     {
-        $ingredients = Ingredient::select('id', 'ingredient_name as name', 'unit', 'image')->get();
+        $ingredients = Ingredient::select('id', 'ingredient_name as name', 'unit', 'image', 'amount')->get();
         return response()->json($ingredients);
+    }
+
+    public function fetchProducts()
+    {
+        $products = Product::active()->select('id', 'name')->get();
+        return response()->json(['products' => $products]);
     }
 }

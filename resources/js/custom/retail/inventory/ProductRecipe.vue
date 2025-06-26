@@ -127,59 +127,79 @@
                 <option disabled value="">Select product</option>
                 <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
+              <div v-if="productError" class="text-danger mt-1"><small>{{ productError }}</small></div>
             </div>
 
             <div class="form-group">
               <label>Category:</label>
-              <select class="form-control" v-model="selectedCategory" disabled>
+              <select class="form-control" v-model="selectedCategory" :disabled="categoryDisabled">
                 <option disabled value="">Select category</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
+              <div v-if="categoryError" class="text-danger mt-1"><small>{{ categoryError }}</small></div>
             </div>
 
             <!-- Inline Add Ingredient -->
-            <div class="form-row align-items-end">
-              <div class="form-group col-md-6">
-                <label>Ingredient:</label>
-                <select class="form-control" v-model="selectedIngredientId">
-                  <option disabled value="">Select ingredient</option>
-                  <option v-for="ing in allIngredients" :key="ing.id" :value="ing.id">
-                    {{ ing.name }} ({{ ing.unit }})
-                  </option>
-                </select>
+            <div class="form-row align-items-end ingredient-row">
+              <div class="form-group col-12 mb-0">
+                <div class="d-flex">
+                  <div class="flex-grow-1 mr-2">
+                    <label>Ingredient:</label>
+                    <select class="form-control" v-model="selectedIngredientId">
+                      <option disabled value="">Select ingredient</option>
+                      <option v-for="ing in allIngredients" :key="ing.id" :value="ing.id">
+                        {{ ing.name }} ({{ ing.amount }} {{ ing.unit }})
+                      </option>
+                    </select>
+                    <small v-if="!selectedIngredientId && ingredientError" class="text-danger error-helper">Ingredient is required.</small>
+                    <small v-else class="error-helper">&nbsp;</small>
+                  </div>
+                  <div class="d-flex flex-column" style="min-width:230px;">
+                    <label>Amount:</label>
+                    <div class="d-flex">
+                      <input type="number" class="form-control mr-2" v-model="ingredientAmount" />
+                    </div>
+                    <small v-if="!ingredientAmount && ingredientError" class="text-danger error-helper">Amount is required.</small>
+                    <small v-else-if="amountExceeds" class="text-danger error-helper">Amount exceeds remaining measurement.</small>
+                    <small v-else class="error-helper">&nbsp;</small>
+                  </div>
+                  <div class=" mt-4 flex-grow-0">
+                      <button class="mt-2 btn btn-success" style="height: 40px;" @click="confirmAddIngredient">
+                        <i class="fas fa-plus"></i>
+                        Add
+                      </button>
+                  </div>
+                </div>
               </div>
-              <div class="form-group col-md-4">
-                <label>Amount:</label>
-                <input type="number" class="form-control" v-model="ingredientAmount" />
-              </div>
-              <div class="form-group col-md-2">
-                <button class="btn btn-success w-100" @click="confirmAddIngredient">
-                  <i class="fas fa-plus"></i>
-                </button>
+            </div>
+            <div v-if="ingredientError" class="text-danger mb-2"><small>{{ ingredientError }}</small></div>
+
+            <!-- Ingredient List -->
+            <div class="row mt-3">
+              <div class="col-12">
+                <div class="recipe-ingredients-list">
+                  <div
+                    v-for="(ingredient, index) in recipeIngredients"
+                    :key="index"
+                    class="d-flex align-items-center mb-2"
+                    style="background: transparent; padding: 10px; border-radius: 6px; color: var(--text-color, #e0e0e0);"
+                  >
+                    <img :src="ingredient.image" class="mr-2" style="width: 24px; height: 24px; filter: brightness(0.8);" />
+                    <span class="flex-grow-1">
+                      {{ ingredient.name }}
+                    </span>
+                    <span class="d-flex align-items-center">
+                      <span class="ingredient-amount mr-2">{{ ingredient.amount }}</span>
+                      <span>{{ ingredient.unit }}</span>
+                    </span>
+                  </div>
+                  <div v-if="recipeError" class="text-danger mt-1"><small>{{ recipeError }}</small></div>
+                </div>
               </div>
             </div>
 
-            <!-- Ingredient List -->
-            <div class="recipe-ingredients-list mt-3">
-              <div
-                v-for="(ingredient, index) in recipeIngredients"
-                :key="index"
-                class="d-flex align-items-center mb-2"
-                style="background: #fdf9ef; padding: 10px; border-radius: 6px;"
-              >
-                <img :src="ingredient.image" class="mr-2" style="width: 24px; height: 24px;" />
-                <span class="flex-grow-1">
-                  <strong>(C)</strong> {{ ingredient.name }}
-                </span>
-                <input
-                  type="number"
-                  class="form-control text-right mx-2"
-                  style="width: 80px;"
-                  v-model="ingredient.amount"
-                />
-                <span>{{ ingredient.unit }}</span>
-              </div>
-            </div>
+            <!-- Ingredient Error Message -->
+            <div v-if="ingredientError" class="alert alert-danger mt-2"><small>{{ ingredientError }}</small></div>
           </div>
 
           <div class="modal-footer">
@@ -210,6 +230,7 @@ export default {
 
       selectedProduct: '',
       selectedCategory: '',
+      categoryDisabled: false,
       recipeIngredients: [],
       products: [],
       categories: [],
@@ -224,7 +245,13 @@ export default {
         name: '',
         ingredients: ''
       },
-      recipes: []
+      recipes: [],
+
+      ingredientError: '', // <-- error for ingredient
+      productError: '', // <-- error for product
+      categoryError: '', // <-- error for category
+      recipeError: '', // <-- error for recipe
+      amountExceeds: false,
     }
   },
   computed: {
@@ -256,18 +283,64 @@ export default {
       const selected = this.products.find(p => p.id === newVal);
       if (selected && selected.category_id) {
         this.selectedCategory = selected.category_id;
+        this.categoryDisabled = true;
       } else {
         this.selectedCategory = '';
+        this.categoryDisabled = false;
       }
+      if (newVal) this.productError = '';
+    },
+    selectedCategory(newVal) {
+      if (newVal) this.categoryError = '';
+    },
+    selectedIngredientId(newVal) {
+      if (newVal && this.ingredientAmount) {
+        this.ingredientError = '';
+      }
+      this.amountExceeds = false; // clear error when changing ingredient
+    },
+    ingredientAmount(newVal) {
+      if (newVal && this.selectedIngredientId) {
+        this.ingredientError = '';
+      }
+      // Check if entered amount exceeds available
+      const found = this.allIngredients.find(i => i.id === this.selectedIngredientId);
+      if (found && newVal && parseFloat(newVal) > parseFloat(found.amount)) {
+        this.amountExceeds = true;
+      } else {
+        this.amountExceeds = false;
+      }
+    },
+    recipeIngredients(newVal) {
+      if (newVal.length > 0) this.recipeError = '';
     }
   },
   mounted() {
     this.fetchProducts();
     this.fetchIngredients();
+    // Clear modal fields when modal is closed
+    $('#addRecipeModal').on('hidden.bs.modal', () => {
+      this.clearRecipeModalFields();
+    });
   },
   methods: {
     clearSearch() {
       this.searchQuery = ''
+    },
+    clearRecipeModalFields() {
+      this.selectedProduct = '';
+      this.selectedCategory = '';
+      this.categoryDisabled = false;
+      this.recipeIngredients = [];
+      this.selectedIngredientId = '';
+      this.ingredientAmount = '';
+      this.newRecipe = { name: '', ingredients: '' };
+      // Clear error messages
+      this.ingredientError = '';
+      this.productError = '';
+      this.categoryError = '';
+      this.recipeError = '';
+      this.amountExceeds = false;
     },
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
@@ -276,7 +349,7 @@ export default {
     },
     fetchProducts() {
       this.isLoading = true;
-      api.get(ProductRecipes.fetchProducts)
+      api.get(ProductRecipes.fetchDropdowns) // <-- use correct endpoint
         .then(res => {
           this.products = res.data.products;
           this.categories = res.data.categories;
@@ -307,10 +380,26 @@ export default {
         amount: 0
       })
     },
+    getIngredientRemaining(id) {
+      const ing = this.allIngredients.find(i => i.id === id);
+      return ing ? ing.amount : 0;
+    },
+    getIngredientUnit(id) {
+      const ing = this.allIngredients.find(i => i.id === id);
+      return ing ? ing.unit : '';
+    },
     confirmAddIngredient() {
       const found = this.allIngredients.find(i => i.id === this.selectedIngredientId)
-      if (!found || !this.ingredientAmount) return Swal.fire('Error', 'Please select an ingredient and amount.', 'error')
-
+      if (!found || !this.ingredientAmount) {
+        this.ingredientError = 'Please select an ingredient and amount.';
+        return;
+      }
+      if (parseFloat(this.ingredientAmount) > parseFloat(found.amount)) {
+        this.amountExceeds = true;
+        return;
+      } else {
+        this.amountExceeds = false;
+      }
       this.recipeIngredients.push({
         id: found.id,
         name: found.name,
@@ -318,9 +407,10 @@ export default {
         image: found.image || '/placeholder.png',
         amount: this.ingredientAmount
       })
-
       this.selectedIngredientId = ''
       this.ingredientAmount = ''
+      this.ingredientError = '';
+      this.amountExceeds = false;
       $('#addIngredientModal').modal('hide')
     },
 
@@ -331,15 +421,62 @@ export default {
       this.recipes = this.recipes.filter(r => r.id !== id)
     },
     saveRecipe() {
-      if (!this.newRecipe.name || !this.newRecipe.ingredients) {
-        alert('Please fill out all fields.')
-        return
+      let hasError = false;
+      if (!this.selectedProduct) {
+        this.productError = 'Product is required.';
+        hasError = true;
+      } else {
+        this.productError = '';
       }
+      if (!this.selectedCategory) {
+        this.categoryError = 'Category is required.';
+        hasError = true;
+      } else {
+        this.categoryError = '';
+      }
+      if (!this.recipeIngredients.length) {
+        this.recipeError = 'At least one ingredient is required.';
+        hasError = true;
+      } else {
+        this.recipeError = '';
+      }
+      if (hasError) return;
       const id = this.recipes.length + 1
       this.recipes.push({ id, ...this.newRecipe })
       this.newRecipe = { name: '', ingredients: '' }
       $('#addRecipeModal').modal('hide')
-    }
+      this.clearRecipeModalFields(); // clear fields after save
+    },
   }
 }
 </script>
+
+<style scoped>
+.error-helper {
+  min-height: 20px;
+}
+.recipe-ingredients-list {
+  /* Remove background and set adaptive text color */
+  background: transparent !important;
+  color: var(--text-color, #e0e0e0);
+}
+.recipe-ingredients-list input.form-control {
+  background: transparent !important;
+  color: var(--text-color, #e0e0e0) !important;
+  border: 1px solid #444 !important;
+}
+.recipe-ingredients-list img {
+  filter: brightness(0.8);
+}
+.ingredient-amount {
+  display: inline-block;
+  min-width: 40px;
+  text-align: right;
+  background: transparent;
+  color: var(--text-color, #e0e0e0);
+  border: none;
+  font-weight: 500;
+  font-size: 1rem;
+  margin-right: 4px;
+}
+</style>
