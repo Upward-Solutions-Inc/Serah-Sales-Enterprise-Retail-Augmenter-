@@ -355,13 +355,12 @@ export default {
     },
     fetchRecipes() {
       this.isLoading = true;
-      api.get(ProductRecipes.fetchProducts) // You may want a dedicated endpoint for all recipes
+      api.get(ProductRecipes.fetchList)
         .then(res => {
-          // Adapt this if you have a dedicated endpoint for all recipes
-          this.recipes = (res.data.products || []).map(p => ({
-            id: p.id,
-            name: p.name,
-            ingredients: p.ingredients ? p.ingredients.length : 0
+          this.recipes = (res.data.recipes || []).map(r => ({
+            id: r.id,
+            name: r.product_name || r.name || 'Unnamed',
+            ingredients: r.ingredients ? r.ingredients.length : 0
           }));
         })
         .catch(() => {
@@ -471,8 +470,15 @@ export default {
         this.recipeError = '';
       }
       if (hasError) return;
+      // Determine category_id: use selectedCategory if set, else use product's category_id, else null
+      let categoryId = this.selectedCategory;
+      if (!categoryId) {
+        const selectedProduct = this.products.find(p => p.id === this.selectedProduct);
+        categoryId = selectedProduct && selectedProduct.category_id ? selectedProduct.category_id : null;
+      }
       const payload = {
         product_id: this.selectedProduct,
+        category_id: categoryId,
         ingredients: this.recipeIngredients.map(i => ({
           ingredient_id: i.id,
           amount: i.amount,

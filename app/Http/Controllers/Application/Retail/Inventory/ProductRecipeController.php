@@ -8,6 +8,8 @@ use App\Models\Pos\Product\Product\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Retail\Recipe\Recipe;
+use App\Models\Retail\Recipe\RecipeIngredient;
+use App\Models\Pos\Product\Category\Category;
 
 class ProductRecipeController extends Controller
 {
@@ -58,6 +60,7 @@ class ProductRecipeController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
+            'category_id' => 'nullable|exists:categories,id',
             'ingredients' => 'required|array|min:1',
             'ingredients.*.ingredient_id' => 'required|exists:ingredients,id',
             'ingredients.*.amount' => 'required|numeric|min:0.01',
@@ -67,7 +70,9 @@ class ProductRecipeController extends Controller
         try {
             $recipe = Recipe::create([
                 'product_id' => $validated['product_id'],
+                'category_id' => $validated['category_id'] ?? null,
             ]);
+            \Log::info('Recipe created:', $recipe ? $recipe->toArray() : ['null']);
             foreach ($validated['ingredients'] as $ing) {
                 $recipe->ingredients()->create([
                     'ingredient_id' => $ing['ingredient_id'],
@@ -118,5 +123,20 @@ class ProductRecipeController extends Controller
         $recipe->ingredients()->delete();
         $recipe->delete();
         return response()->json(['success' => true]);
+    }
+
+    public function fetchAllRecipes()
+    {
+        $recipes = Recipe::with(['ingredients', 'product:id,name'])
+            ->get()
+            ->map(function ($recipe) {
+                return [
+                    'id' => $recipe->id,
+                    'name' => $recipe->product->name ?? '', // Add 'name' for frontend
+                    'product_name' => $recipe->product->name ?? '',
+                    'ingredients' => $recipe->ingredients,
+                ];
+            });
+        return response()->json(['recipes' => $recipes]);
     }
 }

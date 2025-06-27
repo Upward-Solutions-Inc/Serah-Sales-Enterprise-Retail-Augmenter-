@@ -11,3 +11,5 @@ Route::get('/product_recipes/{id}', [ProductRecipeController::class, 'show']);
 Route::post('/product_recipes', [ProductRecipeController::class, 'store']);
 Route::put('/product_recipes/{id}', [ProductRecipeController::class, 'update']);
 Route::delete('/product_recipes/{id}', [ProductRecipeController::class, 'destroy']);
+Route::get('/product_recipes', [ProductRecipeController::class, 'fetchAllRecipes']);
+Route::get('/product_recipes/list', [ProductRecipeController::class, 'fetchAllRecipes']);

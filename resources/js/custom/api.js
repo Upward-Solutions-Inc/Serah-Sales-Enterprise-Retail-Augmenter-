@@ -83,5 +83,6 @@ export const ProductRecipes = {
   show: id => `/inventory/product_recipes/${id}`,
   store: '/inventory/product_recipes',
   update: id => `/inventory/product_recipes/${id}`,
-  delete: id => `/inventory/product_recipes/${id}`
+  delete: id => `/inventory/product_recipes/${id}`,
+  fetchList: '/inventory/product_recipes/list'
 }
