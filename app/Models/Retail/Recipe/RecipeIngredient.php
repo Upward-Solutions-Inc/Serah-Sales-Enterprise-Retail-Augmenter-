@@ -23,6 +23,6 @@ class RecipeIngredient extends Model
 
     public function ingredient()
     {
-        return $this->belongsTo(\App\Models\Ingredient::class);
+        return $this->belongsTo(\App\Models\Retail\Ingredients\Ingredient::class);
     }
 }
