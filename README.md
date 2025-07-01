@@ -168,4 +168,9 @@ GROSS PAY
 - the process will happen in services that will throw response in the contoller, vice versa.
 - then the POS will the one will trigger all the reponses
 - example once there will a buy in the POS the invertory stocks will adjust, also the hierarchy of items e.g. box-miniBox-pcs.
- 
+
+
+
+>Docker commands
+- docker system prune -a --volumes -f
+- docker compose up --build -d

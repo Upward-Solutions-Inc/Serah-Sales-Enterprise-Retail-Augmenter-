@@ -44,4 +44,3 @@ EXPOSE 8000 6001
 
 # Run Laravel + WebSockets with safe storage link
 CMD sh -c "php artisan websockets:serve --port=6001 & php artisan serve --host=0.0.0.0 --port=8000"
-
