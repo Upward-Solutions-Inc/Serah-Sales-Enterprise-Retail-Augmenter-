@@ -366,6 +366,25 @@ export default {
         .catch(() => {
           Swal.fire('Error', 'Failed to load recipes.', 'error');
         })
+        // .catch((error) => {
+        //   let message = 'Failed to load recipes.';
+        //   if (error.response) {
+        //     // Server responded with a status code outside 2xx
+        //     message += `\nStatus: ${error.response.status}`;
+        //     if (error.response.data && error.response.data.message) {
+        //       message += `\nMessage: ${error.response.data.message}`;
+        //     } else if (typeof error.response.data === 'string') {
+        //       message += `\n${error.response.data}`;
+        //     }
+        //   } else if (error.request) {
+        //     // Request was made but no response received
+        //     message += '\nNo response from server.';
+        //   } else {
+        //     // Something else happened
+        //     message += `\n${error.message}`;
+        //   }
+        //   Swal.fire('Error', message, 'error');
+        // })
         .finally(() => {
           this.isLoading = false;
         });

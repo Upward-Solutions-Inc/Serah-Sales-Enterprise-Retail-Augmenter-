@@ -4,6 +4,8 @@ namespace App\Models\Retail\Recipe;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Retail\Recipe\Recipe;
+use App\Models\Retail\Ingredients\Ingredient;
 
 class RecipeIngredient extends Model
 {
@@ -23,6 +25,6 @@ class RecipeIngredient extends Model
 
     public function ingredient()
     {
-        return $this->belongsTo(\App\Models\Retail\Ingredients\Ingredient::class);
+        return $this->belongsTo(Ingredient::class);
     }
 }
