@@ -62,6 +62,7 @@
                       <i class="fas fa-ellipsis-v" data-toggle="dropdown" style="cursor: pointer;"></i>
                       <div class="dropdown-menu">
                         <a class="dropdown-item" href="#" @click="viewRecipe(recipe)">View</a>
+                        <a class="dropdown-item" href="#" @click="editRecipe(recipe)">Edit</a>
                         <a class="dropdown-item text-danger" href="#" @click="deleteRecipe(recipe.id)">Delete</a>
                       </div>
                     </div>
@@ -113,7 +114,11 @@
       <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Create Recipe</h5>
+            <h5 class="modal-title">
+              <span v-if="modalMode === 'create'">Create Recipe</span>
+              <span v-else-if="modalMode === 'edit'">Edit Recipe</span>
+              <span v-else>View Recipe</span>
+            </h5>
             <button type="button" class="close" data-dismiss="modal">
               <span>&times;</span>
             </button>
@@ -123,7 +128,7 @@
             <!-- Product and Category -->
             <div class="form-group">
               <label>Product:</label>
-              <select class="form-control" v-model="selectedProduct">
+              <select class="form-control" v-model="selectedProduct" :disabled="modalMode === 'view'">
                 <option disabled value="">Select product</option>
                 <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
@@ -132,7 +137,7 @@
 
             <div class="form-group">
               <label>Category:</label>
-              <select class="form-control" v-model="selectedCategory" :disabled="categoryDisabled">
+              <select class="form-control" v-model="selectedCategory" :disabled="categoryDisabled || modalMode === 'view'">
                 <option disabled value="">Select category</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
@@ -140,12 +145,12 @@
             </div>
 
             <!-- Inline Add Ingredient -->
-            <div class="form-row align-items-end ingredient-row">
+            <div class="form-row align-items-end ingredient-row" v-if="modalMode !== 'view'">
               <div class="form-group col-12 mb-0">
                 <div class="d-flex">
                   <div class="flex-grow-1 mr-2">
                     <label>Ingredient:</label>
-                    <select class="form-control" v-model="selectedIngredientId">
+                    <select class="form-control" v-model="selectedIngredientId" :disabled="modalMode === 'view'">
                       <option disabled value="">Select ingredient</option>
                       <option v-for="ing in allIngredients" :key="ing.id" :value="ing.id">
                         {{ ing.name }} ({{ ing.amount }} {{ ing.unit }})
@@ -157,14 +162,14 @@
                   <div class="d-flex flex-column" style="min-width:230px;">
                     <label>Amount:</label>
                     <div class="d-flex">
-                      <input type="number" class="form-control mr-2" v-model="ingredientAmount" />
+                      <input type="number" class="form-control mr-2" v-model="ingredientAmount" :disabled="modalMode === 'view'" />
                     </div>
                     <small v-if="!ingredientAmount && ingredientError" class="text-danger error-helper">Amount is required.</small>
                     <small v-else-if="amountExceeds" class="text-danger error-helper">Amount exceeds remaining measurement.</small>
                     <small v-else class="error-helper">&nbsp;</small>
                   </div>
                   <div class=" mt-4 flex-grow-0">
-                      <button class="mt-2 btn btn-success" style="height: 40px;" @click="confirmAddIngredient">
+                      <button class="mt-2 btn btn-success" style="height: 40px;" @click="confirmAddIngredient" :disabled="modalMode === 'view'">
                         <i class="fas fa-plus"></i>
                         Add
                       </button>
@@ -172,7 +177,7 @@
                 </div>
               </div>
             </div>
-            <div v-if="ingredientError" class="text-danger mb-2"><small>{{ ingredientError }}</small></div>
+            <div v-if="ingredientError && modalMode !== 'view'" class="text-danger mb-2"><small>{{ ingredientError }}</small></div>
 
             <!-- Ingredient List -->
             <div class="row mt-3">
@@ -204,7 +209,13 @@
 
           <div class="modal-footer">
             <button class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" @click="saveRecipe">Save</button>
+            <button class="btn btn-primary" @click="saveRecipe" v-if="modalMode !== 'view'" :disabled="isSaving">
+              <span v-if="isSaving">
+                <loader :visible="true" style="width: 20px; height: 20px; margin-right: 8px; display: inline-block; vertical-align: middle;" />
+                Saving...
+              </span>
+              <span v-else>Save</span>
+            </button>
           </div>
         </div>
       </div>
@@ -248,12 +259,14 @@ export default {
       recipes: [],
       editingRecipeId: null,
       isEditMode: false,
+      modalMode: 'create', // 'create', 'view', 'edit'
 
       ingredientError: '', // <-- error for ingredient
       productError: '', // <-- error for product
       categoryError: '', // <-- error for category
       recipeError: '', // <-- error for recipe
       amountExceeds: false,
+      isSaving: false, // flag to prevent spamming save
     }
   },
   computed: {
@@ -360,31 +373,14 @@ export default {
           this.recipes = (res.data.recipes || []).map(r => ({
             id: r.id,
             name: r.product_name || r.name || 'Unnamed',
-            ingredients: r.ingredients ? r.ingredients.length : 0
+            ingredients: r.ingredients ? r.ingredients.length : 0,
+            // Add the full recipe object for edit
+            _full: r
           }));
         })
         .catch(() => {
           Swal.fire('Error', 'Failed to load recipes.', 'error');
         })
-        // .catch((error) => {
-        //   let message = 'Failed to load recipes.';
-        //   if (error.response) {
-        //     // Server responded with a status code outside 2xx
-        //     message += `\nStatus: ${error.response.status}`;
-        //     if (error.response.data && error.response.data.message) {
-        //       message += `\nMessage: ${error.response.data.message}`;
-        //     } else if (typeof error.response.data === 'string') {
-        //       message += `\n${error.response.data}`;
-        //     }
-        //   } else if (error.request) {
-        //     // Request was made but no response received
-        //     message += '\nNo response from server.';
-        //   } else {
-        //     // Something else happened
-        //     message += `\n${error.message}`;
-        //   }
-        //   Swal.fire('Error', message, 'error');
-        // })
         .finally(() => {
           this.isLoading = false;
         });
@@ -438,6 +434,26 @@ export default {
         const r = res.data;
         this.selectedProduct = r.product_id;
         this.selectedCategory = this.products.find(p => p.id === r.product_id)?.category_id || '';
+        this.categoryDisabled = true;
+        this.recipeIngredients = (r.ingredients || []).map(i => ({
+          id: i.ingredient_id,
+          name: this.allIngredients.find(a => a.id === i.ingredient_id)?.name || '',
+          unit: i.unit,
+          image: this.allIngredients.find(a => a.id === i.ingredient_id)?.image || '',
+          amount: i.amount
+        }));
+        this.editingRecipeId = r.id;
+        this.isEditMode = false;
+        this.modalMode = 'view';
+        $('#addRecipeModal').modal('show');
+      });
+    },
+    editRecipe(recipe) {
+      api.get(ProductRecipes.show(recipe.id)).then(res => {
+        const r = res.data;
+        this.selectedProduct = r.product_id;
+        this.selectedCategory = r.category_id || (this.products.find(p => p.id === r.product_id)?.category_id || '');
+        this.categoryDisabled = !!this.selectedCategory;
         this.recipeIngredients = (r.ingredients || []).map(i => ({
           id: i.ingredient_id,
           name: this.allIngredients.find(a => a.id === i.ingredient_id)?.name || '',
@@ -447,6 +463,7 @@ export default {
         }));
         this.editingRecipeId = r.id;
         this.isEditMode = true;
+        this.modalMode = 'edit';
         $('#addRecipeModal').modal('show');
       });
     },
@@ -469,6 +486,7 @@ export default {
       });
     },
     saveRecipe() {
+      if (this.isSaving) return;
       let hasError = false;
       if (!this.selectedProduct) {
         this.productError = 'Product is required.';
@@ -489,6 +507,7 @@ export default {
         this.recipeError = '';
       }
       if (hasError) return;
+      this.isSaving = true;
       // Determine category_id: use selectedCategory if set, else use product's category_id, else null
       let categoryId = this.selectedCategory;
       if (!categoryId) {
@@ -518,6 +537,8 @@ export default {
         }
       }).catch(err => {
         Swal.fire('Error', err.response?.data?.message || 'Failed to save recipe.', 'error');
+      }).finally(() => {
+        this.isSaving = false;
       });
     },
     clearRecipeModalFields() {
@@ -535,6 +556,7 @@ export default {
       this.amountExceeds = false;
       this.editingRecipeId = null;
       this.isEditMode = false;
+      this.modalMode = 'create';
     },
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
