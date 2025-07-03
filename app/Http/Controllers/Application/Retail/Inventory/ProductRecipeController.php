@@ -27,11 +27,8 @@ class ProductRecipeController extends Controller
             ->with('category:id,name')
             ->get();
 
-        $categories = $products
-            ->pluck('category')
-            ->unique('id')
-            ->values()
-            ->filter();
+        // Fetch all categories directly from the categories table
+        $categories = Category::select('id', 'name')->get();
 
         return response()->json([
             'products' => $products,
