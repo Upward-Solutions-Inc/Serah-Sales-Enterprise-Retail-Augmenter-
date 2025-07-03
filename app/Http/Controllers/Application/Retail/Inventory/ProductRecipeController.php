@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\Retail\Recipe\Recipe;
 use App\Models\Retail\Recipe\RecipeIngredient;
 use App\Models\Pos\Product\Category\Category;
+use App\Services\Retail\RecipeService;
 
 class ProductRecipeController extends Controller
 {
@@ -68,11 +69,18 @@ class ProductRecipeController extends Controller
         ]);
         DB::beginTransaction();
         try {
+            $service = new RecipeService();
+            // Validate ingredient stock
+            $check = $service->validateRecipe($validated['product_id'], $validated['ingredients']);
+            if (!$check['success']) {
+                return response()->json(['success' => false, 'message' => $check['message'], 'insufficient' => $check['insufficient']], 422);
+            }
+            // Deduct ingredient stocks
+            $service->allocateIngredientsForRecipe($validated['ingredients']);
             $recipe = Recipe::create([
                 'product_id' => $validated['product_id'],
                 'category_id' => $validated['category_id'] ?? null,
             ]);
-            \Log::info('Recipe created:', $recipe ? $recipe->toArray() : ['null']);
             foreach ($validated['ingredients'] as $ing) {
                 $recipe->ingredients()->create([
                     'ingredient_id' => $ing['ingredient_id'],
@@ -99,7 +107,24 @@ class ProductRecipeController extends Controller
         ]);
         DB::beginTransaction();
         try {
+            $service = new RecipeService();
             $recipe = Recipe::findOrFail($id);
+            // Restore previous ingredient stocks
+            $oldIngredients = $recipe->ingredients->map(function($i) {
+                return [
+                    'ingredient_id' => $i->ingredient_id,
+                    'amount' => $i->amount
+                ];
+            })->toArray();
+            $service->restoreIngredientsForRecipe($oldIngredients);
+            // Validate new allocation
+            $check = $service->validateRecipe($validated['product_id'], $validated['ingredients']);
+            if (!$check['success']) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => $check['message'], 'insufficient' => $check['insufficient']], 422);
+            }
+            // Deduct new allocation
+            $service->allocateIngredientsForRecipe($validated['ingredients']);
             $recipe->update(['product_id' => $validated['product_id']]);
             $recipe->ingredients()->delete();
             foreach ($validated['ingredients'] as $ing) {
