@@ -182,24 +182,24 @@
             <!-- Ingredient List -->
             <div class="row mt-3">
               <div class="col-12">
-                <div class="recipe-ingredients-list">
-                  <div
-                    v-for="(ingredient, index) in recipeIngredients"
-                    :key="index"
-                    class="d-flex align-items-center mb-2"
-                    style="background: transparent; padding: 10px; border-radius: 6px;"
-                  >
-                    <img :src="ingredient.image" class="mr-2" style="width: 24px; height: 24px; filter: brightness(0.8);" />
-                    <span class="flex-grow-1">
-                      {{ ingredient.name }}
+                <ul class="list-unstyled">
+                  <li v-for="(ingredient, idx) in recipeIngredients" :key="ingredient.id" class="d-flex align-items-center mb-2">
+                    <img :src="ingredient.image || '/placeholder.png'" alt="" style="width:32px;height:32px;object-fit:cover;margin-right:10px;">
+                    <span class="mr-4">{{ ingredient.name }}</span>
+                    <span v-if="editIngredientIdx !== idx">
+                      {{ formatIngredientAmount(ingredient.amount) }} {{ ingredient.unit }}
                     </span>
-                    <span class="d-flex align-items-center">
-                      <span class="mr-2">{{ formatIngredientAmount(ingredient.amount) }}</span>
-                      <span>{{ ingredient.unit }}</span>
-                    </span>
-                  </div>
-                  <div v-if="recipeError" class="text-danger mt-1"><small>{{ recipeError }}</small></div>
-                </div>
+                    <input v-else type="number" min="1" step="1" :value="parseInt(editIngredientAmount)" @input="editIngredientAmount = $event.target.value ? Math.floor($event.target.value) : ''" style="width:200px;" class="form-control d-inline-block mr-1 ingredient-edit-input" />
+                    <span v-if="editIngredientIdx === idx">{{ ingredient.unit }}</span>
+                    <div class="ml-auto">
+                      <button v-if="modalMode === 'edit' && editIngredientIdx !== idx" class="btn btn-sm btn-primary mr-1" @click="startEditIngredient(idx, ingredient)">Edit</button>
+                      <button v-if="modalMode === 'edit' && editIngredientIdx === idx" class="btn btn-sm btn-success mr-1" @click="saveEditIngredient(idx)">Save</button>
+                      <button v-if="modalMode === 'edit' && editIngredientIdx === idx" class="btn btn-sm btn-secondary mr-1" @click="cancelEditIngredient">Cancel</button>
+                      <button v-if="modalMode === 'edit'" class="btn btn-sm btn-danger" @click="removeIngredient(idx)">Delete</button>
+                    </div>
+                  </li>
+                </ul>
+                <div v-if="deleteIngredientError" class="text-danger mt-1"><small>{{ deleteIngredientError }}</small></div>
               </div>
             </div>
 
@@ -267,6 +267,11 @@ export default {
       recipeError: '', // <-- error for recipe
       amountExceeds: false,
       isSaving: false, // flag to prevent spamming save
+
+      editIngredientIdx: null,
+      editIngredientAmount: '',
+
+      deleteIngredientError: '',
     }
   },
   computed: {
@@ -476,11 +481,22 @@ export default {
         confirmButtonText: 'Yes, delete it!'
       }).then(result => {
         if (result.isConfirmed) {
-          api.delete(ProductRecipes.delete(id)).then(() => {
-            Swal.fire('Deleted!', 'Recipe has been deleted.', 'success');
-            this.fetchRecipes();
-          }).catch(() => {
-            Swal.fire('Error', 'Failed to delete recipe.', 'error');
+          // Fetch the recipe's ingredients before deleting
+          api.get(ProductRecipes.show(id)).then(res => {
+            const recipe = res.data;
+            const ingredientsToRestore = (recipe.ingredients || []).map(i => ({
+              ingredient_id: i.ingredient_id,
+              amount: i.amount
+            }));
+            // Call backend to restore ingredients (optional: you can do this in backend destroy)
+            api.delete(ProductRecipes.delete(id)).then(() => {
+              // Optionally, you can call a custom endpoint to restore, but best to do in backend
+              Swal.fire('Deleted!', 'Recipe has been deleted.', 'success');
+              this.fetchRecipes();
+              this.fetchIngredients(); // Refresh ingredient stocks
+            }).catch(() => {
+              Swal.fire('Error', 'Failed to delete recipe.', 'error');
+            });
           });
         }
       });
@@ -557,6 +573,7 @@ export default {
       this.editingRecipeId = null;
       this.isEditMode = false;
       this.modalMode = 'create';
+      this.deleteIngredientError = '';
     },
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
@@ -567,8 +584,49 @@ export default {
     // helper to display whole number for ingredient amount
     formatIngredientAmount(amount) {
       if (amount == null || amount === '') return '';
-      let formatted = parseFloat(amount);
-      return Number.isInteger(formatted) ? formatted.toString() : formatted.toFixed(2).replace(/\.00$/, '');
+      return parseInt(amount).toString();
+    },
+
+    // Ingredient edit/delete methods
+    startEditIngredient(idx, ingredient) {
+      this.editIngredientIdx = idx;
+      this.editIngredientAmount = parseInt(ingredient.amount);
+    },
+    saveEditIngredient(idx) {
+      if (!this.editIngredientAmount || isNaN(this.editIngredientAmount) || parseInt(this.editIngredientAmount) <= 0) {
+        this.ingredientError = 'Please enter a valid amount.';
+        return;
+      }
+      // Optionally: check if exceeds available stock
+      const ing = this.allIngredients.find(i => i.id === this.recipeIngredients[idx].id);
+      if (ing && parseInt(this.editIngredientAmount) > parseFloat(ing.amount)) {
+        this.ingredientError = 'Amount exceeds available stock.';
+        return;
+      }
+      this.$set(this.recipeIngredients, idx, {
+        ...this.recipeIngredients[idx],
+        amount: parseInt(this.editIngredientAmount)
+      });
+      this.editIngredientIdx = null;
+      this.editIngredientAmount = '';
+      this.ingredientError = '';
+    },
+    cancelEditIngredient() {
+      this.editIngredientIdx = null;
+      this.editIngredientAmount = '';
+      this.ingredientError = '';
+    },
+    removeIngredient(idx) {
+      if (this.recipeIngredients.length === 1) {
+        this.deleteIngredientError = 'At least one ingredient is required. You cannot delete the last ingredient.';
+        return;
+      }
+      this.recipeIngredients.splice(idx, 1);
+      this.deleteIngredientError = '';
+      // If editing this ingredient, cancel edit
+      if (this.editIngredientIdx === idx) {
+        this.cancelEditIngredient();
+      }
     },
   }
 }
@@ -617,5 +675,34 @@ export default {
 .recipe-ingredients-list .ingredient-unit {
   font-size: 1rem;
   margin-left: 2px;
+}
+
+.ingredient-edit-input {
+  width: 120px !important;
+  min-width: 80px;
+  max-width: 180px;
+  text-align: right;
+  border: 1px solid #444;
+  background: #222 !important;
+  color: #fff !important;
+}
+.btn-primary, .btn-success, .btn-secondary, .btn-danger {
+  border: none !important;
+}
+.btn-primary {
+  background-color: #007bff !important;
+  color: #fff !important;
+}
+.btn-success {
+  background-color: #28a745 !important;
+  color: #fff !important;
+}
+.btn-secondary {
+  background-color: #6c757d !important;
+  color: #fff !important;
+}
+.btn-danger {
+  background-color: #dc3545 !important;
+  color: #fff !important;
 }
 </style>

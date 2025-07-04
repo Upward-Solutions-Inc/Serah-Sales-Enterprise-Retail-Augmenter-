@@ -142,6 +142,15 @@ class ProductRecipeController extends Controller
     public function destroy($id)
     {
         $recipe = Recipe::findOrFail($id);
+        // Restore ingredient stocks before deleting
+        $ingredientsToRestore = $recipe->ingredients->map(function($i) {
+            return [
+                'ingredient_id' => $i->ingredient_id,
+                'amount' => $i->amount
+            ];
+        })->toArray();
+        $service = new \App\Services\Retail\RecipeService();
+        $service->restoreIngredientsForRecipe($ingredientsToRestore);
         $recipe->ingredients()->delete();
         $recipe->delete();
         return response()->json(['success' => true]);
