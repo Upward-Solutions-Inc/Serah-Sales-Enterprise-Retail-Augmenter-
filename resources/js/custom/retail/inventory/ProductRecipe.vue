@@ -187,14 +187,14 @@
                     v-for="(ingredient, index) in recipeIngredients"
                     :key="index"
                     class="d-flex align-items-center mb-2"
-                    style="background: transparent; padding: 10px; border-radius: 6px; color: var(--text-color, #e0e0e0);"
+                    style="background: transparent; padding: 10px; border-radius: 6px;"
                   >
                     <img :src="ingredient.image" class="mr-2" style="width: 24px; height: 24px; filter: brightness(0.8);" />
                     <span class="flex-grow-1">
                       {{ ingredient.name }}
                     </span>
                     <span class="d-flex align-items-center">
-                      <span class="ingredient-amount mr-2">{{ formatIngredientAmount(ingredient.amount) }}</span>
+                      <span class="mr-2">{{ formatIngredientAmount(ingredient.amount) }}</span>
                       <span>{{ ingredient.unit }}</span>
                     </span>
                   </div>
@@ -581,25 +581,41 @@ export default {
 .recipe-ingredients-list {
   /* Remove background and set adaptive text color */
   background: transparent !important;
-  color: var(--text-color, #e0e0e0);
 }
 .recipe-ingredients-list input.form-control {
   background: transparent !important;
-  color: var(--text-color, #e0e0e0) !important;
+  color: var(--text-color, #212529) !important;
   border: 1px solid #444 !important;
 }
 .recipe-ingredients-list img {
   filter: brightness(0.8);
 }
+.recipe-ingredients-list .ingredient-unit {
+  color: var(--text-color, #212529); /* Use adaptive color, default to dark for light mode */
+}
+
+@media (prefers-color-scheme: light) {
+  .ingredient-unit {
+    color: #212529 !important; /* Force black in light mode */
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .ingredient-unit {
+    color: #fff !important; /* Force white in dark mode */
+  }
+}
+
 .ingredient-amount {
   display: inline-block;
   min-width: 40px;
   text-align: right;
   background: transparent;
-  color: var(--text-color, #e0e0e0);
   border: none;
-  font-weight: 500;
   font-size: 1rem;
   margin-right: 4px;
+}
+.recipe-ingredients-list .ingredient-unit {
+  font-size: 1rem;
+  margin-left: 2px;
 }
 </style>
