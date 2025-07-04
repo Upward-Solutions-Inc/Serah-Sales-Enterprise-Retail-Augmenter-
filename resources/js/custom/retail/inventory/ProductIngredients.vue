@@ -355,7 +355,11 @@ export default {
   methods: {
     // helper functions
     formatAmount(amount, unit) {
-      return `${parseInt(amount)} ${unit}`.trim();
+      // Remove .00 if present, otherwise return as is
+      if (amount == null || amount === '') return '';
+      let formatted = parseFloat(amount);
+      formatted = Number.isInteger(formatted) ? formatted.toString() : formatted.toFixed(2).replace(/\.00$/, '');
+      return `${formatted} ${unit}`.trim();
     },
     handleImageError(event, item) {
       event.target.onerror = null;
@@ -429,7 +433,7 @@ export default {
       formData.append('ingredient_name', this.newIngredients.ingredient_name);
       formData.append('measurement_type', this.newIngredients.measurement_type);
       formData.append('unit', this.newIngredients.unit);
-      formData.append('amount', this.newIngredients.amount);
+      formData.append('amount', parseInt(this.newIngredients.amount));
       formData.append('brand', this.newIngredients.brand || '');
       formData.append('category', this.newIngredients.category || '');
 
@@ -467,6 +471,7 @@ export default {
         api.get(ProductIngredients.show(id)).then(res => {
           this.newIngredients = {
             ...res.data,
+            amount: res.data.amount ? parseInt(res.data.amount) : '',
             imagePreview: res.data.image || null,
             imageFile: null
           };
@@ -482,6 +487,7 @@ export default {
       this.fetchMeasurements().then(() => {
         this.newIngredients = {
           ...ingredient,
+          amount: ingredient.amount ? parseInt(ingredient.amount) : '',
           imagePreview: ingredient.image || null,
           imageFile: null
         };
@@ -498,7 +504,7 @@ export default {
       formData.append('ingredient_name', this.newIngredients.ingredient_name);
       formData.append('measurement_type', this.newIngredients.measurement_type);
       formData.append('unit', this.newIngredients.unit);
-      formData.append('amount', this.newIngredients.amount);
+      formData.append('amount', parseInt(this.newIngredients.amount));
       formData.append('brand', this.newIngredients.brand || '');
       formData.append('category', this.newIngredients.category || '');
       if (this.newIngredients.imageFile) {

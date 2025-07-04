@@ -153,7 +153,7 @@
                     <select class="form-control" v-model="selectedIngredientId" :disabled="modalMode === 'view'">
                       <option disabled value="">Select ingredient</option>
                       <option v-for="ing in allIngredients" :key="ing.id" :value="ing.id">
-                        {{ ing.name }} ({{ ing.amount }} {{ ing.unit }})
+                        {{ ing.name }} - {{ formatIngredientAmount(ing.amount) }} {{ ing.unit }}
                       </option>
                     </select>
                     <small v-if="!selectedIngredientId && ingredientError" class="text-danger error-helper">Ingredient is required.</small>
@@ -194,7 +194,7 @@
                       {{ ingredient.name }}
                     </span>
                     <span class="d-flex align-items-center">
-                      <span class="ingredient-amount mr-2">{{ ingredient.amount }}</span>
+                      <span class="ingredient-amount mr-2">{{ formatIngredientAmount(ingredient.amount) }}</span>
                       <span>{{ ingredient.unit }}</span>
                     </span>
                   </div>
@@ -562,6 +562,13 @@ export default {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page
       }
+    },
+
+    // helper to display whole number for ingredient amount
+    formatIngredientAmount(amount) {
+      if (amount == null || amount === '') return '';
+      let formatted = parseFloat(amount);
+      return Number.isInteger(formatted) ? formatted.toString() : formatted.toFixed(2).replace(/\.00$/, '');
     },
   }
 }
