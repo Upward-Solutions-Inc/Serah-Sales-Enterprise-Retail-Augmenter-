@@ -147,7 +147,8 @@ class PayrollService
     public function calculateBasicPayFromDtrLogs(): float
     {
         $pay = 0;
-        $hourlyRate = round($this->salary->monthly_salary / (22 * 8), 2);
+        // Use full precision for hourly rate, do not round here
+        $hourlyRate = $this->salary->monthly_salary / (22 * 8);
     
         foreach ($this->dtrLogs ?? [] as $log) {
             $workHours = (float) ($log->total_work_hours ?? 0);
@@ -158,7 +159,8 @@ class PayrollService
             $pay += $regularHours * $hourlyRate; // include day + night regular hours
         }
     
-        return $pay;
+        // Only round when returning the final value
+        return round($pay, 2);
     }     
 
     public function calculateNightDiffFromDtrLogs(): float
